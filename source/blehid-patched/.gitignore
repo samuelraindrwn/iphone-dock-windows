@@ -1,0 +1,54 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+.nuget/
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Publish output
+publish/
+*.publishsettings
+PublishScripts/
+
+# Misc
+*.pdb
+*.cache
+*.tmp
+*.log
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Real device identities: Bluetooth addresses and hostnames stay out of the repo.
+*.local.md
+tests/devices.local.md
+
+# Android bug reports: huge, and full of unrelated device and account data.
+bugreport-*/
+*.btsnoop
+btsnoop_hci.log

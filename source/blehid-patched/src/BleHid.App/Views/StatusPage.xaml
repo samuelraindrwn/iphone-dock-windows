@@ -1,0 +1,102 @@
+<Page x:Class="BleHid.App.Views.StatusPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:conv="clr-namespace:BleHid.App.Converters"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+      Title="Status">
+
+  <Page.Resources>
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
+    <conv:InverseBoolConverter x:Key="InverseBool" />
+  </Page.Resources>
+
+  <!-- No page-level ScrollViewer: NavigationView already hosts pages inside one, and a nested
+       scroller swallows the wheel without being able to scroll. -->
+  <StackPanel Margin="24,0,24,24">
+
+      <ui:TextBlock Text="Status" FontTypography="TitleLarge" Margin="0,0,0,4" />
+      <ui:TextBlock Text="Publish the keyboard and mouse services, then pair from the device you want to control."
+                    FontTypography="Body" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap" Margin="0,0,0,20" />
+
+      <ui:InfoBar Severity="Warning" IsClosable="False" Margin="0,0,0,16"
+                  Title="Not advertising"
+                  Message="Start the peripheral to make this PC discoverable as a Bluetooth keyboard."
+                  IsOpen="{Binding IsRunning, Converter={StaticResource InverseBool}}" />
+
+      <ui:CardControl Icon="{ui:SymbolIcon Bluetooth24}" Margin="0,0,0,8">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <ui:TextBlock Text="BLE HID peripheral" FontTypography="BodyStrong" />
+            <ui:TextBlock FontTypography="Caption"
+                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                          Text="{Binding AdvertisementStatus, StringFormat='Advertisement: {0}'}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+
+        <StackPanel Orientation="Horizontal">
+          <ui:Button Content="Start" Appearance="Primary" Click="OnStart"
+                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"
+                     Visibility="{Binding IsRunning, Converter={StaticResource InverseBoolToVisibility}}" />
+          <ui:Button Content="Stop" Click="OnStop"
+                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"
+                     Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+      </ui:CardControl>
+
+      <ui:CardControl Icon="{ui:SymbolIcon LockClosed24}" Margin="0,0,0,8">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <ui:TextBlock Text="Require encryption" FontTypography="BodyStrong" />
+            <ui:TextBlock FontTypography="Caption"
+                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                          Text="Hosts must bond before they can read reports. Can only be changed while stopped." />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch IsChecked="{Binding RequireEncryption, Mode=TwoWay}"
+                         IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBool}}" />
+      </ui:CardControl>
+
+      <Grid Margin="0,0,0,20">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="8" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ui:CardControl Grid.Column="0" Icon="{ui:SymbolIcon Keyboard24}">
+          <ui:CardControl.Header>
+            <ui:TextBlock Text="Keyboard subscribers" FontTypography="BodyStrong" />
+          </ui:CardControl.Header>
+          <ui:TextBlock Text="{Binding KeyboardSubscribers}" FontTypography="TitleLarge" />
+        </ui:CardControl>
+
+        <ui:CardControl Grid.Column="2" Icon="{ui:SymbolIcon Cursor24}">
+          <ui:CardControl.Header>
+            <ui:TextBlock Text="Mouse subscribers" FontTypography="BodyStrong" />
+          </ui:CardControl.Header>
+          <ui:TextBlock Text="{Binding MouseSubscribers}" FontTypography="TitleLarge" />
+        </ui:CardControl>
+      </Grid>
+
+      <ui:TextBlock Text="Logs" FontTypography="Subtitle" Margin="0,0,0,8" />
+      <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+              BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+              BorderThickness="1" CornerRadius="8" Height="220">
+        <ScrollViewer x:Name="LogScroller" VerticalScrollBarVisibility="Auto" Padding="12">
+          <ItemsControl ItemsSource="{Binding Log}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Border>
+
+  </StackPanel>
+</Page>

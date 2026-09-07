@@ -1,0 +1,82 @@
+<Page x:Class="BleHid.App.Views.CapturePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:conv="clr-namespace:BleHid.App.Converters"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+      Title="Capture">
+
+  <Page.Resources>
+    <conv:InverseBoolConverter x:Key="InverseBool" />
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+  </Page.Resources>
+
+  <StackPanel Margin="24,0,24,24">
+
+      <ui:TextBlock Text="Capture" FontTypography="TitleLarge" Margin="0,0,0,4" />
+      <ui:TextBlock Text="Redirect this PC's keyboard and mouse to the selected host."
+                    FontTypography="Body" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap" Margin="0,0,0,20" />
+
+      <ui:InfoBar Severity="Warning" IsClosable="False" Margin="0,0,0,16"
+                  Title="Capture takes over this PC"
+                  Message="While capture is on, this window stops receiving input. Press Ctrl+Alt+Q to stop, or Ctrl+D+C to switch to the next host."
+                  IsOpen="{Binding IsCapturing}" />
+
+      <ui:InfoBar Severity="Informational" IsClosable="False" Margin="0,0,0,16"
+                  Title="No subscriber yet"
+                  Message="Capture needs a host subscribed to the keyboard report. Start the peripheral and pair a device first."
+                  IsOpen="{Binding CanCapture, Converter={StaticResource InverseBool}}" />
+
+      <ui:CardControl Icon="{ui:SymbolIcon Keyboard24}" Margin="0,0,0,8">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <ui:TextBlock Text="Capture keyboard and mouse" FontTypography="BodyStrong" />
+            <ui:TextBlock FontTypography="Caption" TextWrapping="Wrap"
+                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                          Text="{Binding Target, StringFormat='Sending to: {0}'}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:ToggleSwitch x:Name="CaptureToggle"
+                         IsChecked="{Binding IsCapturing, Mode=OneWay}"
+                         IsEnabled="{Binding CanCapture}"
+                         Click="OnToggleCapture" />
+      </ui:CardControl>
+
+      <ui:CardControl Icon="{ui:SymbolIcon Timer24}" Margin="0,0,0,8">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <ui:TextBlock Text="Minimum pointer interval" FontTypography="BodyStrong" />
+            <ui:TextBlock FontTypography="Caption" TextWrapping="Wrap"
+                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                          Text="Windows 11 automatically uses each host's negotiated interval. Raise this minimum to trade smoothness for lower queueing." />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Slider Width="160" Minimum="5" Maximum="50" TickFrequency="5" IsSnapToTickEnabled="True"
+                  VerticalAlignment="Center"
+                  Value="{Binding PointerIntervalMs, Mode=TwoWay}"
+                  IsEnabled="{Binding IsCapturing, Converter={StaticResource InverseBool}}" />
+          <ui:TextBlock Width="52" Margin="12,0,0,0" VerticalAlignment="Center"
+                        Text="{Binding PointerIntervalMs, StringFormat='{}{0} ms'}" />
+        </StackPanel>
+      </ui:CardControl>
+
+      <ui:TextBlock Text="Shortcuts" FontTypography="Subtitle" Margin="0,20,0,8" />
+
+      <ui:CardControl Icon="{ui:SymbolIcon ArrowSwap24}" Margin="0,0,0,8">
+        <ui:CardControl.Header>
+          <ui:TextBlock Text="Switch to the next host" FontTypography="BodyStrong" />
+        </ui:CardControl.Header>
+        <ui:TextBlock Text="Ctrl + D + C" FontFamily="Cascadia Mono, Consolas" />
+      </ui:CardControl>
+
+      <ui:CardControl Icon="{ui:SymbolIcon Dismiss24}">
+        <ui:CardControl.Header>
+          <ui:TextBlock Text="Stop capture" FontTypography="BodyStrong" />
+        </ui:CardControl.Header>
+        <ui:TextBlock Text="Ctrl + Alt + Q" FontFamily="Cascadia Mono, Consolas" />
+      </ui:CardControl>
+
+  </StackPanel>
+</Page>

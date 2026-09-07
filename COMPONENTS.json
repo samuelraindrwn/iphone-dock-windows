@@ -1,0 +1,19 @@
+{
+  "application": { "name": "TestDock", "version": "0.4.0", "runtime": ".NET 10 Windows Desktop", "architecture": "x64" },
+  "components": [
+    {
+      "name": "UxPlay Windows", "version": "2.0.0.1736", "modified": false,
+      "source": "https://github.com/leapbtw/uxplay-windows/tree/2.0.0.1736",
+      "download": "https://github.com/leapbtw/uxplay-windows/releases/download/2.0.0.1736/uxplay-windows.zip",
+      "archiveSha256": "9d3a51c15fc9db857351195e7eb7bbb21700d9ae25d936a54bcf8536b62cca18"
+    },
+    {
+      "name": "Windows BLE HID CLI", "version": "v0.4.0-testdock.4", "modified": true,
+      "modifications": "source/blehid-patched/TESTDOCK-MODIFICATIONS.md",
+      "runtime": ".NET 10, framework-dependent; compiled locally from included modified source",
+      "source": "https://github.com/abhishek-raj/windows-ble-hid/tree/v0.4.0",
+      "download": "https://github.com/abhishek-raj/windows-ble-hid/releases/download/v0.4.0/BleHid-Cli-v0.4.0-win-x64.zip",
+      "archiveSha256": "8936a1d0e938fe330b9e2d74c9e090dd1d500ba631ef0444f8c7014b9ddfed31"
+    }
+  ]
+}

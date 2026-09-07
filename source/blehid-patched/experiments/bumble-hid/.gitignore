@@ -1,0 +1,13 @@
+# Local identity and bond keys - never commit these.
+device.json
+keys.json
+keys.json.tmp
+
+.venv/
+__pycache__/
+
+# Vendor firmware blobs downloaded by bumble-rtk-fw-download.
+rtk_fw/
+
+# Debug captures contain peer Bluetooth addresses.
+*.log

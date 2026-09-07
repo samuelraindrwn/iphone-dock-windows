@@ -1,0 +1,59 @@
+<Page x:Class="BleHid.App.Views.HostsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:conv="clr-namespace:BleHid.App.Converters"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+      Title="Hosts">
+
+  <Page.Resources>
+    <conv:InverseBoolConverter x:Key="InverseBool" />
+  </Page.Resources>
+
+  <StackPanel Margin="24,0,24,24">
+
+      <ui:TextBlock Text="Hosts" FontTypography="TitleLarge" Margin="0,0,0,4" />
+      <ui:TextBlock Text="Devices that have subscribed to the keyboard report. Choose which one receives input."
+                    FontTypography="Body" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    TextWrapping="Wrap" Margin="0,0,0,20" />
+
+      <ui:CardControl Icon="{ui:SymbolIcon Target24}" Margin="0,0,0,16">
+        <ui:CardControl.Header>
+          <StackPanel>
+            <ui:TextBlock Text="Current target" FontTypography="BodyStrong" />
+            <ui:TextBlock FontTypography="Caption" TextWrapping="Wrap"
+                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                          Text="{Binding Target}" />
+          </StackPanel>
+        </ui:CardControl.Header>
+        <ui:Button Content="Refresh" Icon="{ui:SymbolIcon ArrowSync24}" Click="OnRefresh"
+                   IsEnabled="{Binding IsRunning}" />
+      </ui:CardControl>
+
+      <ui:InfoBar x:Name="NoHostsBar" Severity="Informational" IsClosable="False" Margin="0,0,0,16"
+                  Title="No hosts yet"
+                  Message="Pair from the device you want to control. On a Windows host, pick the entry shown as a PC rather than the audio one." />
+
+      <ui:TextBlock Text="Send input to" FontTypography="Subtitle" Margin="0,0,0,8" />
+
+      <ItemsControl ItemsSource="{Binding Targets}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ui:CardControl Margin="0,0,0,8">
+              <ui:CardControl.Header>
+                <StackPanel>
+                  <ui:TextBlock Text="{Binding Title}" FontTypography="BodyStrong" />
+                  <ui:TextBlock Text="{Binding Detail}" FontTypography="Caption" TextWrapping="Wrap"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+              </ui:CardControl.Header>
+              <RadioButton GroupName="InputTarget"
+                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                           Checked="OnTargetChecked" />
+            </ui:CardControl>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+  </StackPanel>
+</Page>

@@ -1,0 +1,8 @@
+{
+    "name": "Bumble HID",
+    "address": "F0:F1:F2:F3:F4:F5",
+    "identity_address_type": 1,
+    "advertising_interval": 30,
+    "keystore": "JsonKeyStore:keys.json",
+    "irk": "REPLACE_WITH_32_HEX_CHARS"
+}

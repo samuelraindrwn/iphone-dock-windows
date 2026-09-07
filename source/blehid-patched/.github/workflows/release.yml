@@ -1,0 +1,115 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    # Windows only: the test project targets net8.0-windows10.0.19041.0 like the code it covers.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Test
+        run: >
+          dotnet test tests/BleHid.Core.Tests/BleHid.Core.Tests.csproj
+          -c Release
+          --logger "trx;LogFileName=results.trx"
+          --results-directory TestResults
+
+      # tests/Invoke-HandoverTests.ps1 and tests/MANUAL-TESTS.md cannot run here: both need a
+      # Bluetooth radio, which GitHub-hosted runners do not have. Run them before tagging.
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/*.trx
+
+  build:
+    needs: test
+    # Must be Windows: the project targets net8.0-windows10.0.19041.0 and uses WinRT projections.
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        rid: [win-x64, win-arm64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish CLI
+        run: >
+          dotnet publish src/BleHid.Cli/BleHid.Cli.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:DebugType=none
+          -o artifacts/cli/${{ matrix.rid }}
+
+      - name: Publish desktop app
+        run: >
+          dotnet publish src/BleHid.App/BleHid.App.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:DebugType=none
+          -o artifacts/app/${{ matrix.rid }}
+
+      - name: Verify both executables are present
+        run: |
+          $missing = @()
+          if (-not (Test-Path "artifacts/cli/${{ matrix.rid }}/BleHid.Cli.exe")) { $missing += 'BleHid.Cli.exe' }
+          if (-not (Test-Path "artifacts/app/${{ matrix.rid }}/BleHid.App.exe")) { $missing += 'BleHid.App.exe' }
+          if ($missing) { throw "missing from the package: $($missing -join ', ')" }
+
+      # Two archives because the two have different shapes: the CLI is one portable executable,
+      # while the desktop app needs its WPF native DLLs beside it.
+      - name: Package
+        run: |
+          Copy-Item LICENSE, README.md artifacts/cli/${{ matrix.rid }}
+          Copy-Item LICENSE, README.md artifacts/app/${{ matrix.rid }}
+          Compress-Archive -Path artifacts/cli/${{ matrix.rid }}/* -DestinationPath BleHid-Cli-${{ github.ref_name }}-${{ matrix.rid }}.zip
+          Compress-Archive -Path artifacts/app/${{ matrix.rid }}/* -DestinationPath BleHid-App-${{ github.ref_name }}-${{ matrix.rid }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BleHid-Cli-${{ github.ref_name }}-${{ matrix.rid }}
+          path: BleHid-Cli-${{ github.ref_name }}-${{ matrix.rid }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BleHid-App-${{ github.ref_name }}-${{ matrix.rid }}
+          path: BleHid-App-${{ github.ref_name }}-${{ matrix.rid }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: '*.zip'
+          draft: true
+          generate_release_notes: true

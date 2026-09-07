@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.22000.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>BleHid.App</RootNamespace>
+    <AssemblyName>BleHid.App</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- WFAC010 asks for the WinForms DPI property instead, but the manifest has to declare it:
+         the capture hook reports physical pixels and must not be virtualised. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BleHid.Core\BleHid.Core.csproj" />
+  </ItemGroup>
+
+  <!-- WinForms is here only for the tray icon; its implicit usings collide with WPF on
+       Application, MessageBox, Color and Size. -->
+  <ItemGroup>
+    <Using Remove="System.Drawing" />
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WPF-UI" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>
