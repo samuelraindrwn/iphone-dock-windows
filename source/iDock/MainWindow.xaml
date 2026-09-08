@@ -109,7 +109,7 @@
    <Border x:Name="AppFooter" Grid.Row="2" BorderBrush="{StaticResource Hairline}" BorderThickness="0,1,0,0" Padding="30,12">
     <Grid>
      <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-     <StackPanel VerticalAlignment="Center"><TextBlock Text="iDock for Windows · v0.5.0" FontSize="12" FontWeight="SemiBold" /><TextBlock Text="Koneksi lokal · Tanpa akun · Tidak berafiliasi dengan Apple" FontSize="11" Foreground="{StaticResource MutedText}" Margin="0,4,0,0" /></StackPanel>
+     <StackPanel VerticalAlignment="Center"><TextBlock Text="{x:Static local:ProductInfo.VersionLabel}" FontSize="12" FontWeight="SemiBold" /><TextBlock Text="Koneksi lokal · Tanpa akun · Tidak berafiliasi dengan Apple" FontSize="11" Foreground="{StaticResource MutedText}" Margin="0,4,0,0" /></StackPanel>
      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
       <Button x:Name="RepositoryButton" Content="GitHub" Tag="repository" Click="ProjectLink_Click" Style="{StaticResource QuietButton}" FontSize="12" Padding="10,6" AutomationProperties.Name="Buka repository iDock di GitHub" />
       <Button x:Name="IssuesButton" Content="Laporkan masalah" Tag="issues" Click="ProjectLink_Click" Style="{StaticResource QuietButton}" FontSize="12" Padding="10,6" Margin="4,0,0,0" AutomationProperties.Name="Laporkan masalah di GitHub" />

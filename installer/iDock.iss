@@ -6,7 +6,7 @@
   #error ReleaseDir is required
 #endif
 #ifndef AppVersion
-  #define AppVersion "0.5.0"
+  #define AppVersion "0.5.1"
 #endif
 
 [Setup]
@@ -20,6 +20,7 @@ AppUpdatesURL=https://github.com/samuelraindrwn/iphone-dock-windows/releases
 DefaultDirName={autopf}\iDock
 DisableDirPage=yes
 UsePreviousAppDir=no
+UsePreviousTasks=yes
 DefaultGroupName=iDock for Windows
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
@@ -47,6 +48,7 @@ VersionInfoProductVersion={#AppVersion}
 
 [Tasks]
 Name: desktopicon; Description: "Create a desktop shortcut"; GroupDescription: "Shortcuts:"; Flags: unchecked
+Name: publicwifi; Description: "Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)"; GroupDescription: "Optional network access - enable only if you trust local wireless peers:"; Flags: unchecked
 
 [Files]
 ; No root data/logs/local helpers enter the validated generated payload.
@@ -82,6 +84,9 @@ begin
     '" -InstallerProcessId ' + IntToStr(GetCurrentProcessId());
   if (Mode = 'PreflightUninstall') or (Mode = 'Uninstall') then
     Args := Args + ' -UninstallerPath "' + ExpandConstant('{uninstallexe}') + '"';
+  if (Mode = 'Preflight') or (Mode = 'Install') then
+    if WizardIsTaskSelected('publicwifi') then
+      Args := Args + ' -AllowPublicWireless';
   Result := ExecAndLogOutput(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
     Args, '', SW_HIDE, ewWaitUntilTerminated, Code, nil) and (Code = 0);
 end;
@@ -110,16 +115,16 @@ begin
   end;
   ExtractTemporaryFile('Configure-Firewall.ps1');
   if not RunFirewallHelper(ExpandConstant('{tmp}\Configure-Firewall.ps1'), 'Preflight') then
-    Result := 'Setup could not safely prepare the application folder or its two private-network Firewall rules. ' +
-      'Close iDock and UxPlay, then retry. If this persists, ask your administrator to review iDock.AirPlay.TCP.Private.v1 ' +
-      'and iDock.AirPlay.UDP.Private.v1. Bonjour and Bluetooth were not changed.';
+    Result := 'Setup could not safely prepare the application folder or its Firewall rules. ' +
+      'Close iDock and UxPlay, then retry. If this persists, review the setup log and ask your administrator to check ' +
+      'iDock.AirPlay TCP/UDP Private.v1 and PublicWireless.v1 rules. A modified rule must be reviewed before changing the Public Wi-Fi option. Bonjour and Bluetooth were not changed.';
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then begin
     if not RunFirewallHelper(ExpandConstant('{app}\installer\Configure-Firewall.ps1'), 'Install') then
-      RaiseException('The application files were installed, but private-network Firewall configuration failed. ' +
+      RaiseException('The application files were installed, but the selected Firewall configuration failed. ' +
         'Run Setup again after reviewing the iDock Firewall rules. Bonjour and Bluetooth were not changed.');
   end;
 end;
@@ -131,6 +136,6 @@ begin
       RaiseException('iDock is still running or the installation path cannot be verified. Close the application and retry uninstall.');
     if not RunFirewallHelper(ExpandConstant('{app}\installer\Configure-Firewall.ps1'), 'Uninstall') then
       SuppressibleMsgBox('Some iDock Firewall rules could not be removed. Ask your administrator to review ' +
-        'the two iDock.AirPlay rules. Other Firewall rules, Bonjour, pairing and user data are preserved.', mbInformation, MB_OK, IDOK);
+        'the iDock.AirPlay Private.v1 and PublicWireless.v1 rules. Other Firewall rules, Bonjour, pairing and user data are preserved.', mbInformation, MB_OK, IDOK);
   end;
 end;

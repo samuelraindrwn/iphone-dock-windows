@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag matching COMPONENTS.json (for example v0.5.0)'
+        description: 'Existing release tag matching COMPONENTS.json (for example v0.5.1)'
         required: true
         type: string
 
@@ -44,7 +44,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:REQUESTED_TAG -notmatch '^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
-            throw 'Select an existing three-part release tag such as v0.5.0. Branches and arbitrary refs are not release inputs.'
+            throw 'Select an existing three-part release tag such as v0.5.1. Branches and arbitrary refs are not release inputs.'
           }
           "tag=$($env:REQUESTED_TAG)" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
@@ -195,6 +195,8 @@ jobs:
           iDock for Windows $version includes an offline Windows x64 installer and a portable ZIP. Both include the .NET runtime; a separate SDK/runtime installation is not required to run the app.
 
           - Use the Setup EXE for guided installation, or extract the complete portable ZIP and follow docs/INSTALL.md.
+          - Setup keeps Private-network receiver permissions by default. The optional Public Wi-Fi permission allows local peers on every Public wireless network; enable it only after reviewing the network guidance in docs/INSTALL.md.
+          - Once an AirPlay video window has appeared, closing it (or ending the stream so the window disappears) ends this iDock session after a short grace period. Minimizing the window keeps the session running.
           - Verify downloads against SHA256SUMS.txt. This pipeline does not code-sign iDock; Windows may show an unknown-publisher or SmartScreen warning.
           - Compatibility depends on Windows, the Bluetooth adapter/driver, iOS/iPadOS and the network. This is an independent project, not an Apple product.
 

@@ -35,6 +35,8 @@ Gunakan Tab untuk berpindah kontrol, tombol panah pada pilihan/slider, serta Ent
 
 Video dan kontrol adalah dua koneksi berbeda. Keduanya bisa dipakai terpisah. Tulisan receiver dibuka berarti proses video sudah dimulai, bukan konfirmasi bahwa perangkat telah mengirim gambar.
 
+Jika nama receiver terlihat tetapi gambar tidak tersambung, periksa [profil jaringan dan izin receiver](TROUBLESHOOTING.md#receiver-tidak-muncul-atau-video-tidak-tersambung). Installer 0.5.1 menyediakan pilihan Public Wi-Fi tanpa manual build; pahami [cakupan dan cara mencabutnya](INSTALL.md#izin-wi-fi-public) sebelum memilih.
+
 ## Kontrol mouse dan keyboard
 
 Untuk pairing pertama:
@@ -99,7 +101,17 @@ Rotasi belum otomatis. Setelah perangkat ditegakkan kembali, pilih Portrait lagi
 
 Lepaskan tombol mouse/keyboard yang sedang ditahan, tekan **Ctrl + Alt + Q**, lalu klik **Hentikan sesi** atau tutup iDock for Windows. Proses receiver/kontrol yang dimulai iDock for Windows beserta turunannya dihentikan. Proses aplikasi lain tidak ditargetkan.
 
-Pairing, pengaturan, log, dan Bonjour Service tetap tersimpan. Menutup jendela UxPlay sendiri dapat hanya menyembunyikannya ke system tray; gunakan menu tray **Quit** untuk menutup UxPlay secara langsung. Kehilangan koneksi host yang dipilih juga memicu pengembalian input ke laptop, tetapi hotkey darurat tetap perlu diketahui. Pemulihan koneksi tidak menjadi izin untuk mengalihkan input otomatis; periksa status dan pilih target dengan sengaja. Jalur fallback yang kehilangan koneksi memerlukan restart kontrol.
+Pada **0.5.1**, tombol **X** pada jendela video **AirPlay Video Stream** juga mengakhiri mirroring dan kontrol yang dimulai oleh sesi iDock, lalu input kembali ke Windows. Setelah jendela video pernah muncul, iDock menunggu jendela tersebut hilang terus-menerus selama sekitar **dua detik** sebelum mengakhiri sesi. Jeda ini memberi kesempatan jendela pengganti muncul saat perubahan tampilan; bukan jaminan waktu respons ketika Windows sedang macet.
+
+- **Minimize** atau menyembunyikan jendela yang masih ada tidak mengakhiri sesi.
+- Jika jendela video pengganti muncul dalam jeda tersebut, sesi tetap berjalan.
+- Menghentikan **Screen Mirroring dari iPhone/iPad** juga dapat mengakhiri kontrol apabila tindakan itu menghilangkan jendela video. Pemantauan ini mendeteksi hilangnya jendela, bukan hanya klik X.
+- Jendela pengaturan UxPlay berbeda dari jendela video. Menutup pengaturannya dapat hanya menyembunyikannya ke system tray. Gunakan **Hentikan sesi** untuk penghentian yang jelas; menu tray **Quit** tersedia jika UxPlay masih berjalan.
+- Sebelum ada jendela video yang teramati, ketiadaan jendela tidak otomatis mengakhiri kontrol yang digunakan sendiri.
+
+Pemantauan mengenali jendela native **D3D11/D3D12** dari GStreamer yang dibundel. Renderer khusus atau jendela video yang dimodifikasi belum diverifikasi; gunakan **Hentikan sesi** jika penutupan otomatis tidak terdeteksi. Kegagalan membaca status jendela dicatat di log dan tidak dianggap sebagai bukti bahwa video sudah ditutup.
+
+Pairing, pengaturan, log, dan Bonjour Service tetap tersimpan. Setelah sesi berakhir, klik **Buka mirroring** dan/atau **Aktifkan kontrol** untuk memulai kembali; target input tidak otomatis dialihkan ke perangkat. Kehilangan koneksi host yang dipilih juga memicu pengembalian input ke laptop, tetapi hotkey darurat tetap perlu diketahui. Jalur fallback yang kehilangan koneksi memerlukan restart kontrol.
 
 Untuk mencatat kestabilan pada konfigurasi perangkat Anda, ikuti [checklist manual](STABILITY-TESTS.md). Checklist adalah target uji, bukan klaim bahwa semua konfigurasi sudah lulus sesi panjang atau reconnect berulang.
 

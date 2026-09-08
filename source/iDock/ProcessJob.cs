@@ -43,6 +43,29 @@ internal sealed class ProcessJob : IDisposable
     public bool IsRunning => !handle.IsClosed &&
         QueryInformationJobObject(handle, 1, out var info, (uint)Marshal.SizeOf<Accounting>(), IntPtr.Zero)
         && info.ActiveProcesses > 0;
+    // Lifecycle monitoring must distinguish an API read failure from an exited job.
+    internal bool ReadIsRunning()
+    {
+        if (handle.IsClosed) return false;
+        if (!QueryInformationJobObject(handle, 1, out var info, (uint)Marshal.SizeOf<Accounting>(), IntPtr.Zero))
+            throw new Win32Exception();
+        return info.ActiveProcesses > 0;
+    }
+    internal bool ContainsProcess(uint processId)
+    {
+        if (handle.IsClosed || processId == 0) return false;
+        using var process = OpenProcess(0x1000, false, processId); // PROCESS_QUERY_LIMITED_INFORMATION
+        if (process.IsInvalid)
+        {
+            var error = Marshal.GetLastWin32Error();
+            if (error == 87) return false; // The enumerated process has already exited.
+            throw new Win32Exception(error);
+        }
+        // Test the opened process object against this exact job, not a saved PID/name.
+        // A recycled PID or a same-name receiver in another session cannot match.
+        if (!IsProcessInJob(process, handle, out var belongs)) throw new Win32Exception();
+        return belongs;
+    }
     public void Dispose() { handle.Dispose(); Process.Dispose(); }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct StartupInfo
@@ -86,6 +109,11 @@ internal sealed class ProcessJob : IDisposable
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool AssignProcessToJobObject(SafeFileHandle job, IntPtr process);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern SafeProcessHandle OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint processId);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsProcessInJob(SafeProcessHandle process, SafeFileHandle job, [MarshalAs(UnmanagedType.Bool)] out bool belongs);
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool QueryInformationJobObject(SafeFileHandle job, int type, out Accounting info, uint length, IntPtr returnedLength);

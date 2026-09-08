@@ -12,6 +12,7 @@ public partial class MainWindow : Window
 {
     private readonly EngineManager engines = new(AppContext.BaseDirectory);
     private readonly DispatcherTimer poll = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly DispatcherTimer mirrorPoll = new() { Interval = TimeSpan.FromMilliseconds(250) };
     private readonly string logs = Path.Combine(UserStorage.Root, "logs");
     private readonly ControlStatusTracker controlStatus = new();
     private readonly DispatcherTimer sensitivitySave = new() { Interval = TimeSpan.FromMilliseconds(200) };
@@ -19,7 +20,7 @@ public partial class MainWindow : Window
     private bool sensitivityReady, sensitivityPending;
     private string blePending = "";
     private long bleOffset;
-    private bool busy, closing, closed;
+    private bool busy, closing, closed, endingSession, mirrorReadWarning;
     private bool mirrorWasRunning, controlWasRunning;
 
     public MainWindow(bool preview = false, string? settingsPath = null)
@@ -43,9 +44,11 @@ public partial class MainWindow : Window
         UpdateSensitivityLabel();
         sensitivitySave.Tick += (_, _) => SaveSensitivity();
         sensitivityReady = true;
-        Append($"{ProductInfo.DisplayName} 0.5 — startup Bluetooth memeriksa iklan dan koneksi HID secara terpisah.");
+        Append($"{ProductInfo.DisplayName} {ProductInfo.Version} — startup Bluetooth memeriksa iklan dan koneksi HID secara terpisah.");
         poll.Tick += (_, _) => Refresh();
         poll.Start();
+        mirrorPoll.Tick += (_, _) => CheckMirrorLifecycle();
+        mirrorPoll.Start();
         Closing += WindowClosing;
     }
     private void UpdateSensitivityLabel() => SensitivityValue.Text =
@@ -136,6 +139,7 @@ public partial class MainWindow : Window
     private async void Mirror_Click(object sender, RoutedEventArgs e) => await Run(() =>
     {
         engines.StartMirror();
+        mirrorReadWarning = false;
         mirrorWasRunning = true;
         MirrorStatus.Text = "Penerima AirPlay dibuka — pilih uxplay-windows di perangkat";
         Append("UxPlay dibuka. Tampilan video muncul setelah Screen Mirroring tersambung. Setup awal mungkin meminta instalasi Bonjour.");
@@ -179,15 +183,52 @@ public partial class MainWindow : Window
             return "Adapter tidak mendukung mode kontrol. Mirroring tetap dapat digunakan.";
         return "Bluetooth belum siap. Lihat log untuk kondisi adapter, izin, dan status radio.";
     }
-    private async void Stop_Click(object sender, RoutedEventArgs e) => await Run(async () =>
+    private async void Stop_Click(object sender, RoutedEventArgs e) => await Run(() =>
     {
-        await engines.StopAsync();
-        MirrorStatus.Text = "Sesi dihentikan";
-        controlStatus.Stop(clearFailure: true);
-        ControlStatus.Text = controlStatus.DisplayText;
-        mirrorWasRunning = controlWasRunning = false;
-        Append($"Sesi {ProductInfo.DisplayName} dihentikan. Pairing dan layanan Bonjour yang sudah dipasang tetap tersimpan.");
+        EndSession("Sesi dihentikan", $"Sesi {ProductInfo.DisplayName} dihentikan.");
+        return Task.CompletedTask;
     });
+    private void EndSession(string status, string reason)
+    {
+        if (closing || closed || endingSession) return;
+        endingSession = true;
+        // Disable observation before closing owned jobs. Job disposal requests
+        // termination of our backend, releasing its hooks; no global stop is sent.
+        mirrorWasRunning = controlWasRunning = false;
+        try
+        {
+            engines.Dispose();
+            blePending = "";
+            controlStatus.Stop(clearFailure: true);
+            ControlStatus.Text = controlStatus.DisplayText;
+            MirrorStatus.Text = status;
+            Append(reason + " Input kembali ke laptop. Pairing, pengaturan, dan layanan Bonjour tetap tersimpan.");
+        }
+        finally { endingSession = false; SetButtons(); }
+    }
+    private void CheckMirrorLifecycle()
+    {
+        if (closing || closed || endingSession || !mirrorWasRunning) return;
+        try
+        {
+            var state = engines.PollMirrorLifecycle();
+            if (state == MirrorLifecycleEvent.ReadFailed)
+            {
+                if (!mirrorReadWarning)
+                    Append("Status jendela video belum dapat dibaca. Sesi tetap berjalan; gunakan Hentikan sesi jika diperlukan.");
+                mirrorReadWarning = true;
+                return;
+            }
+            mirrorReadWarning = false;
+            if (state == MirrorLifecycleEvent.VideoWindowClosed)
+                EndSession("Sesi dihentikan — jendela video telah berakhir",
+                    "Jendela video tidak ada selama 2 detik; sesi mirroring dan kontrol dihentikan.");
+            else if (state == MirrorLifecycleEvent.ReceiverExited)
+                EndSession("Receiver berhenti — sesi dihentikan",
+                    "Proses receiver berakhir. Jika setup Bonjour baru selesai, buka mirroring lagi.");
+        }
+        catch (Exception ex) { DiagnosticStatus.Text = ex.Message; Append("Pemantauan mirroring: " + ex.Message); }
+    }
     private void OpenLogs_Click(object sender, RoutedEventArgs e)
     {
         try { Process.Start(new ProcessStartInfo(logs) { UseShellExecute = true }); }
@@ -202,16 +243,11 @@ public partial class MainWindow : Window
     }
     private void Refresh()
     {
-        if (closed) return;
+        if (closed || closing || endingSession) return;
         try
         {
+            CheckMirrorLifecycle();
             if (controlWasRunning) ReadBleLog();
-            if (mirrorWasRunning && !engines.MirrorRunning)
-            {
-                mirrorWasRunning = false;
-                MirrorStatus.Text = "Receiver berhenti — cek setup UxPlay / Bonjour";
-                Append("Proses receiver berhenti. Kalau instalasi Bonjour baru selesai, klik Buka mirroring lagi.");
-            }
             if (controlWasRunning && !engines.ControlRunning)
             {
                 controlWasRunning = false;
@@ -251,7 +287,7 @@ public partial class MainWindow : Window
     private void WindowClosing(object? sender, CancelEventArgs e)
     {
         if (closed || closing) return;
-        closing = true; poll.Stop(); SaveSensitivity(); SetButtons();
+        closing = true; poll.Stop(); mirrorPoll.Stop(); SaveSensitivity(); SetButtons();
         // Job disposal is synchronous. Calling Close again inside Closing re-enters WPF
         // when StopAsync completes inline and causes an InvalidOperationException.
         try { engines.Dispose(); }

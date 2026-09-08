@@ -8,6 +8,8 @@ Catatan penggunaan dasar saat ini terbatas pada satu konfigurasi iPhone 11/Windo
 
 UI, installer, dan dokumentasi publik menjadi bagian distribusi aplikasi; [checklist rilis](RELEASING.md) melacak validasi paket, bukan memperluas janji kompatibilitas perangkat.
 
+Perubahan 0.5.1 dan batas bukti pengujiannya dicatat terpisah di [catatan versi](RELEASE-NOTES-0.5.1.md). Keberhasilan perbaikan lokal pada satu instalasi 0.5.0 tidak menutup pekerjaan validasi installer baru.
+
 ## 1. Perluasan kompatibilitas iOS/iPadOS
 
 - [ ] Bangun matriks pengujian lintas model iPhone/iPad, versi iOS/iPadOS, versi Windows, dan adapter/driver Bluetooth. Catat hasil mirroring, pairing, pointer/keyboard, orientasi, reconnect, serta fitur yang tidak tersedia.

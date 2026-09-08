@@ -25,6 +25,7 @@ internal static class Verification
         catch (InvalidOperationException) { missingUserDataRejected = true; }
         Check(missingUserDataRejected, "Installed application never falls back to writing in Program Files");
         UiVerification.Run(Check);
+        MirrorLifecycleVerification.Run(Check);
 
         var assembly = typeof(App).Assembly;
         Check(assembly.GetName().Name == "iDock",
@@ -298,7 +299,10 @@ internal static class Verification
             var job = new ProcessJob(EngineManager.StartInfo(exe, "--child-wait"));
             using var owned = Process.GetProcessById(job.Process.Id);
             Check(job.IsRunning, "Started engine is tracked by its job");
+            Check(job.ContainsProcess((uint)owned.Id), "Native job membership recognizes the owned receiver process object");
+            Check(!job.ContainsProcess((uint)unrelated.Id), "Native job membership rejects an unrelated same-name process");
             job.Dispose();
+            Check(!job.ContainsProcess((uint)owned.Id) && !job.ReadIsRunning(), "Disposed jobs cannot authorize a stale or recycled process identity");
             Check(owned.WaitForExit(3000), "Closing job stops the owned engine");
             Check(!unrelated.HasExited, "Unrelated same-name process is preserved");
         }
@@ -317,6 +321,7 @@ internal static class Verification
             }
             Check(pid > 0, "Engine can spawn an immediate descendant");
             using var descendant = Process.GetProcessById(pid);
+            Check(job.ContainsProcess((uint)pid), "Native job membership includes receiver descendants without name or title matching");
             job.Dispose();
             Check(descendant.WaitForExit(3000), "Closing job also stops immediate descendants");
         }

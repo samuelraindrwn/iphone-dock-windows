@@ -4,7 +4,11 @@ Mirror your iPhone or iPad to Windows and use a compatible Bluetooth adapter for
 
 Setup includes the application, its .NET runtime, AirPlay receiver, Bluetooth backend, licenses and developer source. No SDK or manual build is needed to use the installed application.
 
-Connect the computer and Apple device to the same trusted private network. Setup adds only two iDock AirPlay Firewall rules for the Private profile and local subnet. It never disables the Firewall or changes the network profile. Managed or guest networks may require administrator assistance.
+Connect the computer and Apple device to the same trusted local network. By default, Setup adds two iDock AirPlay Firewall rules for the Private profile and local subnet. It never disables the Firewall or changes the network profile. Managed or guest networks may require administrator assistance.
+
+If Windows labels your trusted Wi-Fi as Public, you can select the optional Public Wi-Fi task on the next page. This adds two separate receiver-only rules for local-subnet peers on wireless interfaces. The option is unchecked on a new installation; when upgrading or running Setup again, review the remembered task selection. It applies to ALL current and future Public Wi-Fi networks, not only the current Wi-Fi name. Nearby peers on those local networks may reach the AirPlay receiver while it is running. Do not enable this option on networks you do not trust. It does not grant access through Public wired connections or change Windows network trust.
+
+To revoke the optional access, run Setup again and uncheck the Public Wi-Fi task, or uninstall iDock. Setup removes only its exact, unmodified optional rules; if an administrator has changed them, Setup stops for review instead of overwriting them. Uninstall preserves modified or unrelated rules. Independently created troubleshooting rules are not managed by this installer.
 
 When you first open mirroring, UxPlay may ask to install Bonjour Service with a separate Windows administrator prompt. Follow that upstream prompt if you trust this package. An existing Bonjour service is left unchanged by Setup. Bluetooth pairing and enabling AssistiveTouch on the Apple device are still necessary for control.
 

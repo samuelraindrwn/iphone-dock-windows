@@ -38,7 +38,21 @@ Perangkat di panduan ini berarti iPhone/iPad pada iOS/iPadOS; iPad belum diverif
 
 Jika iDock for Windows mengatakan UxPlay sudah berjalan, buka ikon UxPlay di system tray. Pilih **Quit** sebelum membuka sesi receiver baru; jangan menghapus proses lain secara massal.
 
-Aturan receiver yang disiapkan installer dibatasi ke **Private/LocalSubnet**. Jaringan yang berstatus Public atau memakai subnet terpisah tidak otomatis dibuka. Tinjau keamanan jaringan serta kebijakan administrator sebelum mengubah profil atau aturan; installer tidak mengubah profil jaringan komputer. Bonjour yang sudah ada juga tidak dipindahkan diam-diam ke folder iDock.
+Sejak 0.5.1, jika jendela video yang pernah terlihat hilang terus-menerus selama sekitar dua detik, iDock mengakhiri mirroring **dan kontrol** milik sesi tersebut. Ini termasuk menutup jendela video dengan X, dan dapat terjadi saat menghentikan Screen Mirroring dari perangkat. Minimize tidak mengakhiri sesi selama jendelanya masih ada. Jika kontrol ikut berhenti sesudah video ditutup, itu perilaku penutupan sesi, bukan otomatis kegagalan pairing; lihat [cara memulai ulang](USAGE.md#mengakhiri-sesi).
+
+Pisahkan tiga tahap berikut saat membaca status dan log:
+
+| Gejala | Arti dan pemeriksaan berikutnya |
+| --- | --- |
+| iDock menampilkan receiver dibuka | Proses UxPlay telah dimulai. Ini belum membuktikan discovery atau sambungan video berhasil. Periksa proses receiver dan pesan setup/keluar pada log launcher. |
+| Nama receiver tidak muncul di perangkat | Periksa jaringan yang saling dapat mengakses, Bonjour/discovery, isolasi klien, dan profil aturan yang berlaku. |
+| Nama receiver muncul, tetapi koneksi gagal atau tidak ada gambar | Nama dapat ditemukan melalui Bonjour walau port receiver masih diblokir. Periksa profil jaringan aktif, izin untuk path receiver yang benar, dan log receiver pada waktu percobaan. Log launcher yang hanya mencatat proses dibuka tidak menyingkirkan masalah jaringan. |
+
+Installer memakai **Private/LocalSubnet** secara default. Sejak 0.5.1, opsi **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** dapat dipilih saat pemasangan atau dengan menjalankan ulang installer; pengguna tidak perlu membangun aplikasi. Opsi ini tidak dicentang pada instalasi baru. Baca [cakupan dan pencabutannya](INSTALL.md#izin-wi-fi-public): Public + Wireless + LocalSubnet hanya untuk receiver yang dipasang, tetapi menetap pada **semua Wi-Fi Public**, bukan satu SSID atau perangkat yang sudah dipercaya.
+
+Jangan otomatis mengganti Public menjadi Private untuk mencoba memperbaiki mirroring. Aturan Bonjour yang sudah ada dapat hanya berlaku pada salah satu profil; perubahan tersebut dapat menukar masalah koneksi video menjadi masalah discovery. Installer tidak mengubah profil jaringan, layanan/aturan Bonjour, atau kebijakan Firewall global. Aturan blok administrator, kebijakan organisasi, VPN, dan client isolation tetap memerlukan peninjauan yang sesuai; jangan mematikan pengamanan untuk melewatinya.
+
+Pada satu setup iPhone 11/Windows 11, pengguna mengonfirmasi **installer 0.5.0** berhasil mirroring setelah aturan receiver tambahan dibatasi ke antarmuka/IP/subnet IPv4 lokal. Kemudian, smoke test **0.5.1** dengan opsi installer Public Wi-Fi aktif berhasil menurut pengguna setelah aturan repair sementara dilepas. Pemeriksaan lokal memastikan versi dan aturan yang terpasang; ini bukan bukti semua jaringan/IPv6 sudah berfungsi. Skrip perbaikan khusus komputer bukan langkah instalasi publik; lihat [hasil dan batas pengujian 0.5.1](RELEASE-NOTES-0.5.1.md).
 
 ## Bluetooth Connected, tetapi kontrol belum terhubung
 
@@ -98,7 +112,7 @@ Pada UxPlay Windows versi yang dipatok, buka konfigurasi melalui ikon UxPlay di 
 -vsync no
 ```
 
-Kembalikan input ke laptop, klik kanan ikon UxPlay → **Restart**, lalu sambungkan ulang Screen Mirroring bila terputus. Restart hanya receiver tidak memerlukan pairing Bluetooth ulang.
+Kembalikan input ke laptop, klik kanan ikon UxPlay → **Restart**, lalu sambungkan ulang Screen Mirroring bila terputus. Pada 0.5.1, hilangnya jendela video selama sekitar dua detik dapat mengakhiri seluruh sesi; bila itu terjadi, klik **Buka mirroring** dan **Aktifkan kontrol** lagi sesuai kebutuhan. Pairing Bluetooth tidak perlu dihapus untuk restart ini.
 
 ### Uji batas 60 FPS
 
@@ -120,6 +134,7 @@ Pilih **Diagnostik → Buka log**, kemudian buat laporan melalui [GitHub Issues 
 Versi iDock / commit:
 Jenis paket: installer / portable rilis / build manual
 Windows / build:
+Untuk masalah video: profil jaringan aktif / Wi-Fi atau Ethernet / opsi Public Wi-Fi dipilih atau tidak:
 Model iPhone atau iPad / versi iOS atau iPadOS:
 Model adapter Bluetooth / versi driver:
 Masalah: build / video / input / lainnya
@@ -132,6 +147,8 @@ Potongan log yang sudah disamarkan:
 ```
 
 Bedakan hasil pengamatan dari perkiraan. Jika belum menguji suatu langkah, tulis “Belum diuji”; jangan menyatakan semua model atau versi terdampak berdasarkan satu perangkat.
+
+Untuk masalah video, catat apakah nama receiver tidak terlihat, terlihat tetapi gagal tersambung, atau sudah menampilkan gambar lalu terputus. Sertakan waktu percobaan dan bedakan log launcher dari pesan/log receiver yang tersedia. Tidak perlu membagikan SSID, alamat IP publik, atau seluruh konfigurasi Firewall.
 
 Path relatif log launcher adalah `logs\idock.log`, laporan diagnosis `logs\bluetooth-diagnostics.txt`, dan log backend `data\blehid\logs\blehid.log`. Basisnya **`%LOCALAPPDATA%\iDock` untuk installer**, atau folder aplikasi untuk portable/build manual default. [Tabel lokasi data](INSTALL.md#lokasi-data) memberikan path lengkap.
 

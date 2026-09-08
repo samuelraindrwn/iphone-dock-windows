@@ -12,11 +12,13 @@ Tampilkan layar iPhone/iPad di Windows, lalu gunakan mouse dan keyboard laptop u
 
 ### 1. Instal aplikasi
 
-Buka [GitHub Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest), pilih rilis yang tersedia, lalu unduh **`iDock-Setup-0.5.0-win-x64.exe`** dari bagian **Assets** untuk versi 0.5.0. Jika rilis belum tersedia, gunakan [build dari source](docs/DEVELOPMENT.md); tautan unduhan bukan konfirmasi bahwa suatu rilis sudah diterbitkan.
+Buka [GitHub Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest), pilih rilis yang tersedia, lalu unduh **`iDock-Setup-0.5.1-win-x64.exe`** dari bagian **Assets** untuk versi 0.5.1. Jika versi tersebut belum terbit, gunakan rilis yang tersedia atau tunggu paket berikutnya; [build dari source](docs/DEVELOPMENT.md) adalah pilihan developer, bukan syarat penggunaan installer. Tautan unduhan bukan konfirmasi bahwa suatu rilis sudah diterbitkan.
 
 Jalankan installer, tinjau permintaan izin Windows, lalu buka **iDock for Windows** melalui Start Menu. Installer Windows x64 menyertakan runtime aplikasi: **pengguna tidak perlu memasang Git, SDK, atau .NET terpisah**. Paket portable juga tersedia sebagai alternatif; jangan mengunduh arsip **Source code** jika hanya ingin menggunakan aplikasi.
 
 Installer belum ditandatangani secara digital. Periksa asal unduhan, versi, dan checksum sebelum menjalankannya; jangan menonaktifkan SmartScreen, antivirus, atau Firewall. Lihat [verifikasi unduhan](docs/INSTALL.md#verifikasi-unduhan).
+
+Secara default izin receiver hanya berlaku pada jaringan **Private/LocalSubnet**. Installer 0.5.1 menyediakan pilihan tambahan untuk **Wi-Fi berprofil Public**, tidak dicentang pada instalasi baru. Aktifkan hanya setelah memahami [cakupan izin jaringan](docs/INSTALL.md#izin-wi-fi-public): izin berlaku pada semua Wi-Fi Public, bukan hanya nama jaringan saat pemasangan. Profil jaringan, Bonjour, dan Bluetooth tidak diubah.
 
 ### 2. Tampilkan layar perangkat
 
@@ -25,6 +27,8 @@ Installer belum ditandatangani secara digital. Periksa asal unduhan, versi, dan 
 3. Di perangkat, pilih **Control Center → Screen Mirroring → uxplay-windows**. Layar tampil pada jendela video terpisah.
 
 Jika Windows meminta izin Firewall, izinkan hanya komponen yang benar pada jaringan tepercaya yang digunakan. Jangan mematikan Firewall.
+
+Nama receiver yang muncul di perangkat belum membuktikan jalur video dapat tersambung. Jika nama terlihat tetapi koneksi gagal, lihat [diagnosis mirroring](docs/TROUBLESHOOTING.md#receiver-tidak-muncul-atau-video-tidak-tersambung).
 
 ### 3. Aktifkan mouse dan keyboard
 
@@ -39,6 +43,7 @@ Halaman pairing berada di **Settings**, bukan menu AssistiveTouch yang mengamban
 
 - Antarmuka terang satu halaman: **Panduan** di atas, diikuti kartu mirroring/kontrol, **Pengaturan pointer**, dan **Diagnostik**. Semua bagian dapat dicapai dengan menggulir.
 - Mirroring AirPlay di jendela terpisah melalui UxPlay Windows.
+- Menutup jendela video **AirPlay Video Stream** mengakhiri sesi mirroring/kontrol setelah jeda singkat; minimize tidak. Lihat [perilaku penutupan sesi](docs/USAGE.md#mengakhiri-sesi).
 - Pointer relatif, klik, drag, scroll, dan keyboard melalui Bluetooth HID.
 - Sensitivitas pointer **0.25×–3.00×** yang tersimpan otomatis.
 - Koreksi arah **portrait/landscape manual**, tanpa pairing ulang.
@@ -78,6 +83,7 @@ Gunakan **.NET 10 SDK x64** untuk membangun. Build default bersifat *framework-d
 - [Pemecahan masalah dan pelaporan bug](docs/TROUBLESHOOTING.md)
 - [Build, pengujian, dan kontribusi developer](docs/DEVELOPMENT.md)
 - [Checklist rilis dan installer](docs/RELEASING.md)
+- [Perubahan dan status pengujian 0.5.1](docs/RELEASE-NOTES-0.5.1.md)
 - [Arsitektur serta penyimpanan data](docs/ARCHITECTURE.md)
 - [Kriteria dan checklist kestabilan](docs/STABILITY-TESTS.md)
 - [Roadmap iOS/iPadOS, latensi, dan perbaikan bug](docs/ROADMAP.md)

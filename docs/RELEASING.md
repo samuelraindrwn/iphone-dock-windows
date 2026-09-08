@@ -4,13 +4,13 @@
 
 Dokumen ini untuk maintainer. Rilis publik berisi aplikasi siap pakai serta petunjuk pengguna; publikasi tidak mengubah status kompatibilitas perangkat yang belum diuji menjadi didukung.
 
-## Artefak rilis 0.5.0
+## Artefak rilis 0.5.1
 
-- **`iDock-Setup-0.5.0-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
-- **`iDock-0.5.0-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
+- **`iDock-Setup-0.5.1-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
+- **`iDock-0.5.1-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
 - **`SHA256SUMS.txt`**: SHA-256 artefak unduhan.
 - **`installer-build.json`**: versi, runtime, compiler, dan metadata penyusunan installer.
-- Catatan rilis: fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
+- [Catatan rilis 0.5.1](RELEASE-NOTES-0.5.1.md): fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
 
 Arsip **Source code** yang dibuat GitHub otomatis bukan installer maupun paket aplikasi siap pakai. Source proyek tetap tersedia melalui repository. `installer-build.json` adalah laporan penyusunan paket, bukan sertifikat lolos instalasi pada Windows bersih.
 
@@ -37,7 +37,8 @@ Periksa seluruh isi paket: binary launcher/backend, dependensi UxPlay, runtime, 
 
 - Lokasi aplikasi: `%ProgramFiles%\iDock`, biasanya `C:\Program Files\iDock`. Marker `installed.mode` memilih data/log per pengguna di `%LOCALAPPDATA%\iDock`.
 - Installer tidak memindahkan data portable atau mengubah pairing Bluetooth secara otomatis.
-- Aturan receiver milik installer dibatasi ke **profil Private dan LocalSubnet**. Jangan mengubah profil jaringan komputer, mematikan Firewall, atau menimpa aturan lain yang kebetulan memiliki nama serupa.
+- Aturan receiver **Private/LocalSubnet** versi sebelumnya tetap dipertahankan. Task `publicwifi` menambahkan aturan terpisah **Public/Wireless/LocalSubnet** untuk receiver; tidak dicentang pada instalasi baru dan pilihan terdahulu dapat diingat saat upgrade. Jelaskan bahwa izin menetap pada **semua Wi-Fi Public**, bukan satu SSID atau autentikasi peer. Jangan mengubah profil jaringan, kebijakan Firewall global, atau aturan aplikasi lain.
+- Menjalankan ulang installer dan menghilangkan pilihan Public Wi-Fi mencabut hanya aturan Public yang tepat dimiliki installer. Collision/aturan yang dimodifikasi menyebabkan preflight meminta peninjauan, bukan penimpaan. Uninstall mempertimbangkan kedua keluarga aturan dan mempertahankan aturan yang dimodifikasi/ambigu.
 - Bonjour yang sudah ada tidak direkonfigurasi diam-diam. Pada setup baru, UxPlay dapat meminta pemasangan Bonjour saat mirroring pertama kali.
 - Uninstall mempertahankan data pengguna serta pairing. Bonjour adalah layanan bersama: layanan dan binary yang diperlukan tidak boleh dihapus hanya karena launcher dilepas.
 - Penggunaan harian berjalan sebagai pengguna biasa; data tidak ditulis ke Program Files.
@@ -46,14 +47,18 @@ Periksa seluruh isi paket: binary launcher/backend, dependensi UxPlay, runtime, 
 
 Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefak:
 
+- [ ] **Lepas pengaruh perbaikan sementara:** jika mesin uji memakai helper perbaikan lokal, pemilik komputer mengembalikan input, menutup sesi, lalu menjalankan opsi penghapusan helper tersebut secara manual sebagai Administrator setelah meninjau cakupannya. Hapus hanya aturan repair yang tepat dimiliki helper; simpan jurnal dan jangan menghapus aturan lain. Periksa bahwa aturan repair sudah tidak aktif sebelum menguji installer baru. Tanpa langkah ini, repair dapat menutupi bug installer. Installer 0.5.0 tidak membersihkan keluarga aturan repair tersebut.
 - [ ] Source, versi aplikasi, dokumentasi, nama installer, dan tag rilis konsisten.
 - [ ] Build manual framework-dependent dan paket self-contained berhasil dibuat.
 - [ ] Pemeriksaan launcher/UI, data path, backend, dan penutupan aplikasi lulus.
+- [ ] **Penutupan video pada perangkat nyata:** sesudah video muncul, X mengakhiri video/kontrol serta mengembalikan input ke Windows setelah jeda pemantauan. Minimize/hide yang mempertahankan jendela tidak menghentikan sesi; jendela pengganti dalam dua detik membatalkan penghentian. Uji juga Stop Screen Mirroring dari perangkat, rotasi, dan kontrol tanpa video. Pairing/pengaturan tetap ada dan proses aplikasi lain tidak disentuh.
 - [ ] Installer dikompilasi; hash artefak sesuai `SHA256SUMS.txt`.
 - [ ] **Windows bersih tanpa SDK/runtime:** installer dapat dipasang dan aplikasi terbuka sebagai pengguna biasa.
 - [ ] **Koneksi pertama:** Bonjour, prompt izin, aturan jaringan terbatas, AirPlay, serta pairing HID diuji dengan perangkat nyata.
 - [ ] **Bonjour sudah ada:** konfigurasi, layanan, aplikasi pemakai lain, serta aturan Firewall yang tidak dimiliki iDock tetap utuh.
-- [ ] **Upgrade:** pengaturan/data pengguna tidak hilang; proses aktif ditangani dengan aman.
+- [ ] **Public Wi-Fi:** pada instalasi baru opsi tidak dicentang; uji pilihan mati/hidup, jalankan ulang installer untuk mencabutnya, dan verifikasi tepat Public + Wireless + LocalSubnet + executable receiver tanpa edge traversal. Uji bahwa cakupan tidak mencakup Ethernet Public atau Domain. Catat hasil IPv4 dan IPv6 terpisah.
+- [ ] **Aturan dan kebijakan:** collision, aturan administrator yang dimodifikasi, duplikasi, kegagalan parsial, serta rollback tidak mengubah aturan lain, profil jaringan, Bonjour, Bluetooth, atau kebijakan global. Aturan blok/kebijakan organisasi dilaporkan, bukan dilewati.
+- [ ] **Upgrade 0.5.0 → 0.5.1:** pengaturan/data pengguna tidak hilang; proses aktif ditangani dengan aman; Private.v1 tetap utuh dan pilihan Public tidak muncul tanpa persetujuan. Uji juga pemasangan ulang dengan pilihan sebelumnya tersimpan serta pencabutan pilihan.
 - [ ] **Uninstall:** launcher dilepas, pengguna lain/aplikasi pemakai Bonjour tidak rusak, data serta pairing dipertahankan.
 - [ ] ZIP portable diekstrak ke lokasi berbeda yang aman dan dapat berjalan tanpa runtime terpasang; tetap memakai data lokal paket.
 - [ ] Keyboard, scaling/DPI, ukuran jendela minimum, scroll, slider, orientasi, dan tampilan status diperiksa. Urutan bagian tetap **Panduan → kartu mirroring/kontrol → Pengaturan pointer → Diagnostik**, dengan pintasan terlihat di bagian atas.
@@ -62,7 +67,7 @@ Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefa
 - [ ] Catatan kompatibilitas, masalah yang diketahui, serta hasil uji perangkat sesuai bukti; yang belum diuji ditulis jelas.
 - [ ] Isi paket dan screenshot diperiksa agar tidak mengungkap data pribadi.
 
-**Uji fresh install/upgrade/uninstall pada Windows bersih belum otomatis terpenuhi oleh kompilasi atau tes WPF.** Sampai ada laporan uji tersebut, tandai sebagai **belum diuji**, bukan lulus. [Checklist perangkat nyata](STABILITY-TESTS.md) memiliki kriteria terpisah untuk reconnect, sesi panjang, dan keselamatan input.
+**Smoke test lokal 0.5.1 sudah mendapat konfirmasi pengguna:** mirroring dengan opsi Public Wi-Fi aktif tanpa aturan repair sementara, serta penutupan sesi lewat X. Versi/payload terpasang, aturan, dan kejadian penutupan diperiksa; lihat [hash artefak dan batas bukti](RELEASE-NOTES-0.5.1.md#smoke-test-lokal--8-september-2026). Ini belum menyelesaikan uji fresh Windows, upgrade/uninstall lengkap, matriks pilihan jaringan, atau penutupan saat target input masih di perangkat. Checklist majemuk di atas tetap tidak boleh dicentang hanya berdasarkan smoke test. Build ulang CI perlu verifikasi tersendiri; [checklist perangkat nyata](STABILITY-TESTS.md) memiliki kriteria terpisah untuk reconnect, sesi panjang, dan keselamatan input.
 
 ## GitHub Actions
 
@@ -79,8 +84,8 @@ Keduanya memakai Windows x64 dan .NET 10 SDK, menjalankan pemeriksaan installer 
 
 Workflow [Build release draft](../.github/workflows/release.yml) menyediakan dua cara pemicu:
 
-1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.5.0`**.
-2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.5.0`.
+1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.5.1`**.
+2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.5.1`.
 
 Tag wajib berbentuk `vMAJOR.MINOR.PATCH`, dan versinya harus sama dengan `COMPONENTS.json` serta project aplikasi. Workflow tidak membuat atau memindahkan tag. Pastikan commit yang ditag sudah menyertakan seluruh source, script, dokumentasi, dan workflow yang diperlukan.
 

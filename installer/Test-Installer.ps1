@@ -1,5 +1,6 @@
 #Requires -Version 5.1
-# Hardware-free installer checks. No COM Firewall, installer, service or radio is opened.
+# Hardware-free checks. COM rule objects are tested in memory only; no real
+# Firewall policy, installer, service or radio is modified or opened.
 $ErrorActionPreference = 'Stop'
 $WarningPreference = 'SilentlyContinue' # Expected preservation warnings are exercised by the mocks.
 . (Join-Path $PSScriptRoot 'Configure-Firewall.ps1')
@@ -9,6 +10,8 @@ class iDockTestFirewallRules : System.Collections.IEnumerable {
     [int]$AddCalls = 0
     [int]$RemoveCalls = 0
     [int]$FailOnAdd = 0
+    [int]$FailOnRemove = 0
+    [string]$MutateOnFailedRemove = ''
     [System.Collections.IEnumerator] GetEnumerator() { return $this.Items.GetEnumerator() }
     [void] Add([object]$rule) {
         $this.AddCalls++
@@ -17,6 +20,12 @@ class iDockTestFirewallRules : System.Collections.IEnumerable {
     }
     [void] Remove([string]$name) {
         $this.RemoveCalls++
+        if ($this.FailOnRemove -eq $this.RemoveCalls) {
+            foreach ($item in $this.Items) {
+                if ($item.Name -eq $this.MutateOnFailedRemove) { $item.RemoteAddresses = '*' }
+            }
+            throw 'Simulated remove failure'
+        }
         for ($index = $this.Items.Count - 1; $index -ge 0; $index--) {
             if ($this.Items[$index].Name -eq $name) { $this.Items.RemoveAt($index) }
         }
@@ -112,6 +121,126 @@ Invoke-iDockFirewallChanges $policy $definitions 'Install'
 Invoke-iDockFirewallChanges $policy $definitions 'Uninstall'
 Assert-Installer ($policy.Rules.Items.Count -eq 1 -and $policy.Rules.Items[0].Name -eq 'Another application') 'unrelated rules survive entire lifecycle'
 
+$publicDefinitions = @(Get-iDockPublicWirelessDefinitions 'C:\Program Files\iDock')
+$allDefinitions = @(Get-iDockFirewallDefinitions 'C:\Program Files\iDock' -AllowPublicWireless)
+Assert-Installer ($allDefinitions.Count -eq 4 -and $publicDefinitions.Count -eq 2) 'opt-in adds exactly two separate rules'
+for ($index = 0; $index -lt 2; $index++) {
+    Assert-Installer (Test-iDockOwnedFirewallRule $allDefinitions[$index] $definitions[$index]) 'v0.5.0 private definitions remain exact during opt-in'
+}
+foreach ($definition in $publicDefinitions) {
+    Assert-Installer ($definition.Profiles -eq 4) 'public opt-in only uses Public profile'
+    Assert-Installer ($definition.InterfaceTypes -ceq 'Wireless') 'public opt-in excludes wired interfaces'
+    Assert-Installer ($definition.RemoteAddresses -ceq 'LocalSubnet' -and $definition.LocalAddresses -ceq '*') 'public local subnet scope without user-specific addresses'
+    Assert-Installer ($definition.ApplicationName -ceq 'C:\Program Files\iDock\vendor\uxplay\uxplay-windows.exe') 'public receiver-only application scope'
+    Assert-Installer (-not $definition.EdgeTraversal -and $definition.EdgeTraversalOptions -eq 0) 'public rules have no edge traversal'
+    Assert-Installer ($definition.Name -match '\.PublicWireless\.v1$') 'public family has distinct ownership names'
+    foreach ($property in $definition.PSObject.Properties.Name) {
+        $modified = Copy-TestDefinition $definition
+        $modified.$property = 'administrator change'
+        Assert-Installer (-not (Test-iDockOwnedFirewallRule $modified $definition)) "public ownership compares full INetFwRule3 $property"
+    }
+}
+foreach ($definition in $allDefinitions) {
+    # No policy object is created or Rules.Add called for these COM objects.
+    $memoryRule = New-Object -ComObject HNetCfg.FWRule
+    foreach ($property in $definition.PSObject.Properties.Name) {
+        if ($null -ne $definition.$property) { $memoryRule.$property = $definition.$property }
+    }
+    Assert-Installer (Test-iDockOwnedFirewallRule $memoryRule $definition) 'real in-memory COM defaults and selected scope roundtrip'
+    [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($memoryRule)
+}
+
+$policy = New-TestPolicy
+Invoke-iDockFirewallChanges $policy $definitions 'Preflight' $publicDefinitions
+Assert-Installer ($policy.Rules.AddCalls -eq 0 -and $policy.Rules.RemoveCalls -eq 0) 'default preflight validates both families read-only'
+Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions
+Assert-Installer ($policy.Rules.Items.Count -eq 2 -and $policy.Rules.RemoveCalls -eq 0) 'unchecked fresh install remains private-only'
+$privateBefore = @($policy.Rules.Items)
+Invoke-iDockFirewallChanges $policy $allDefinitions 'Install'
+Assert-Installer ($policy.Rules.Items.Count -eq 4 -and $policy.Rules.AddCalls -eq 4) 'v0.5.0 upgrade opt-in adds only public pair'
+Assert-Installer ([object]::ReferenceEquals($policy.Rules.Items[0], $privateBefore[0]) -and [object]::ReferenceEquals($policy.Rules.Items[1], $privateBefore[1])) 'upgrade preserves existing private objects'
+Invoke-iDockFirewallChanges $policy $allDefinitions 'Install'
+Assert-Installer ($policy.Rules.AddCalls -eq 4 -and $policy.Rules.RemoveCalls -eq 0) 'opt-in repeat is idempotent'
+Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions
+Assert-Installer ($policy.Rules.Items.Count -eq 2 -and $policy.Rules.RemoveCalls -eq 2) 'deselection actively revokes public pair'
+Assert-Installer ([object]::ReferenceEquals($policy.Rules.Items[0], $privateBefore[0]) -and [object]::ReferenceEquals($policy.Rules.Items[1], $privateBefore[1])) 'deselection never recreates private rules'
+Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions
+Assert-Installer ($policy.Rules.RemoveCalls -eq 2) 'repeat deselection makes no unnecessary removals'
+
+$policy = New-TestPolicy
+Invoke-iDockFirewallChanges $policy $allDefinitions 'Install'
+Assert-Installer ($policy.Rules.Items.Count -eq 4) 'fresh opt-in creates all four rules'
+Invoke-iDockFirewallChanges $policy $allDefinitions 'Uninstall'
+Assert-Installer ($policy.Rules.Items.Count -eq 0 -and $policy.Rules.RemoveCalls -eq 4) 'uninstall considers both families independent of task selection'
+
+foreach ($property in $publicDefinitions[0].PSObject.Properties.Name | Where-Object { $_ -ne 'Name' }) {
+    $policy = New-TestPolicy
+    $modified = Copy-TestDefinition $publicDefinitions[0]
+    $modified.$property = 'administrator change'
+    $null = $policy.Rules.Items.Add($modified)
+    Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $allDefinitions 'Preflight' } "opt-in collision $property fails preflight"
+    Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $definitions 'Preflight' $publicDefinitions } "deselection collision $property fails preflight"
+    Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions } "deselection never overwrites modified $property"
+    Assert-Installer ($policy.Rules.AddCalls -eq 0 -and $policy.Rules.RemoveCalls -eq 0) 'modified public rule causes no writes in either plan'
+}
+$policy = New-TestPolicy
+$null = $policy.Rules.Items.Add((Copy-TestDefinition $publicDefinitions[0]))
+$null = $policy.Rules.Items.Add((Copy-TestDefinition $publicDefinitions[0]))
+Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $definitions 'Preflight' $publicDefinitions } 'duplicate public names block deselection before changes'
+Invoke-iDockFirewallChanges $policy $allDefinitions 'Uninstall'
+Assert-Installer ($policy.Rules.Items.Count -eq 2 -and $policy.Rules.RemoveCalls -eq 0) 'uninstall preserves ambiguous public names'
+
+$policy = New-TestPolicy
+foreach ($definition in $allDefinitions) { $null = $policy.Rules.Items.Add((Copy-TestDefinition $definition)) }
+$policy.Rules.Items[2].RemoteAddresses = '*'
+Invoke-iDockFirewallChanges $policy $allDefinitions 'Uninstall'
+Assert-Installer ($policy.Rules.Items.Count -eq 1 -and $policy.Rules.Items[0].Name -eq $publicDefinitions[0].Name -and $policy.Rules.Items[0].RemoteAddresses -eq '*') 'uninstall removes exact rules but preserves modified public rule'
+
+$policy = New-TestPolicy
+foreach ($definition in $definitions) { $null = $policy.Rules.Items.Add((Copy-TestDefinition $definition)) }
+$privateBefore = @($policy.Rules.Items)
+$policy.Rules.FailOnAdd = 2
+Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $allDefinitions 'Install' } 'partial opt-in upgrade failure is reported'
+Assert-Installer ($policy.Rules.Items.Count -eq 2 -and $policy.Rules.RemoveCalls -eq 1) 'failed public pair removes only its newly created first rule'
+Assert-Installer ([object]::ReferenceEquals($policy.Rules.Items[0], $privateBefore[0]) -and [object]::ReferenceEquals($policy.Rules.Items[1], $privateBefore[1])) 'failed opt-in leaves preexisting private objects untouched'
+
+$policy = New-TestPolicy
+$policy.Rules.FailOnAdd = 4
+Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $allDefinitions 'Install' } 'fresh opt-in fourth add failure reported'
+Assert-Installer ($policy.Rules.Items.Count -eq 0 -and $policy.Rules.RemoveCalls -eq 3) 'fresh failed opt-in rolls back only newly created rules'
+
+$policy = New-TestPolicy
+foreach ($definition in $allDefinitions) { $null = $policy.Rules.Items.Add((Copy-TestDefinition $definition)) }
+$privateBefore = @($policy.Rules.Items[0], $policy.Rules.Items[1])
+$policy.Rules.FailOnRemove = 2
+Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions } 'partial deselection failure is reported'
+Assert-Installer ($policy.Rules.Items.Count -eq 4 -and $policy.Rules.AddCalls -eq 1) 'partial deselection restores exactly the removed public rule'
+foreach ($definition in $allDefinitions) {
+    $restored = @(Get-iDockFirewallMatches $policy $definition.Name)
+    Assert-Installer ($restored.Count -eq 1 -and (Test-iDockOwnedFirewallRule $restored[0] $definition)) 'deselection rollback preserves exact starting scopes'
+}
+Assert-Installer ([object]::ReferenceEquals($policy.Rules.Items[0], $privateBefore[0]) -and [object]::ReferenceEquals($policy.Rules.Items[1], $privateBefore[1])) 'deselection rollback never touches preexisting private objects'
+
+$policy = New-TestPolicy
+foreach ($definition in $publicDefinitions) { $null = $policy.Rules.Items.Add((Copy-TestDefinition $definition)) }
+$policy.Rules.FailOnRemove = 2
+Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions } 'failed mixed create/revoke plan is reported'
+Assert-Installer ($policy.Rules.Items.Count -eq 2) 'mixed rollback restores original rule count'
+foreach ($definition in $publicDefinitions) {
+    $restored = @(Get-iDockFirewallMatches $policy $definition.Name)
+    Assert-Installer ($restored.Count -eq 1 -and (Test-iDockOwnedFirewallRule $restored[0] $definition)) 'mixed rollback restores public scope without retaining new private rules'
+}
+
+$policy = New-TestPolicy
+foreach ($definition in $allDefinitions) { $null = $policy.Rules.Items.Add((Copy-TestDefinition $definition)) }
+$policy.Rules.FailOnRemove = 2
+$policy.Rules.MutateOnFailedRemove = $publicDefinitions[1].Name
+Assert-InstallerThrows { Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions } 'concurrently modified deselection failure is reported'
+$changed = @(Get-iDockFirewallMatches $policy $publicDefinitions[1].Name)
+Assert-Installer ($changed.Count -eq 1 -and $changed[0].RemoteAddresses -eq '*') 'rollback never overwrites concurrent administrator scope change'
+$restored = @(Get-iDockFirewallMatches $policy $publicDefinitions[0].Name)
+Assert-Installer ($restored.Count -eq 1 -and (Test-iDockOwnedFirewallRule $restored[0] $publicDefinitions[0])) 'rollback still restores independently removed exact rule'
+
 $testDirectory = 'C:\Program Files\iDock'
 Assert-iDockInstallerProcesses $testDirectory @() 100
 Assert-Installer $true 'empty process inventory is idle'
@@ -165,6 +294,12 @@ Assert-Installer ($iss -match 'function InitializeUninstall\(\): Boolean') 'unin
 Assert-Installer ($iss -match 'PreflightUninstall') 'uninstall preflight independent of rule changes'
 Assert-Installer ($iss -match 'InstallerProcessId.*GetCurrentProcessId') 'exact uninstaller PID passed'
 Assert-Installer ($iss -match 'ExecAndLogOutput') 'helper failure details recorded in setup log'
+Assert-Installer ($iss -match 'Name: publicwifi;.*ALL Public Wi-Fi networks.*Flags: unchecked') 'public wireless consent is explicit and unchecked by default'
+Assert-Installer ($iss -match 'UsePreviousTasks=yes') 'upgrades display prior task choice for review instead of silently resetting consent'
+Assert-Installer ($iss -match "WizardIsTaskSelected\('publicwifi'\)" -and $iss -match "Args := Args \+ ' -AllowPublicWireless'") 'selected task explicitly passes opt-in switch'
+Assert-Installer ($iss -match "if \(Mode = 'Preflight'\) or \(Mode = 'Install'\) then") 'uninstaller never depends on setup task selection'
+Assert-Installer ($helper -match "PublicWirelessAllowed -or \$" + "Operation -eq 'Uninstall'") 'uninstaller always enumerates both families'
+Assert-Installer ($helper -notmatch 'LocalRepair|(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])') 'public installer has no local repair identity or hardcoded IPv4 network'
 Assert-Installer ($iss -match 'mDNSResponder\.exe"; DestDir:.*onlyifdoesntexist uninsneveruninstall') 'shared Bonjour retained, never replaced'
 Assert-Installer ($iss -match 'installed\.mode"; DestDir:.*uninsneveruninstall') 'retained folder can be reinstalled'
 Assert-Installer ($iss -notmatch '\[UninstallDelete\]|\[InstallDelete\]') 'no broad file deletions'

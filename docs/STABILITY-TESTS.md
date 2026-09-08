@@ -1,4 +1,4 @@
-# Checklist kestabilan iDock for Windows 0.5.0
+# Checklist kestabilan iDock for Windows 0.5.1
 
 [Kembali ke README](../README.md) · [Cara pakai](USAGE.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
@@ -7,6 +7,8 @@ Dokumen ini berisi **target pengujian manual, bukan laporan tes yang sudah dilak
 Checklist dapat digunakan untuk mencatat hasil iPhone/iPad pada iOS/iPadOS. Catatan penggunaan dasar terbatas pada satu konfigurasi iPhone 11; iPad belum diverifikasi. Buat laporan terpisah per versi aplikasi, model perangkat, versi OS, dan adapter/driver.
 
 Pengguna melaporkan penggunaan pada setup iPhone 11/Windows 11 terasa cukup stabil. Laporan pengalaman tersebut penting, tetapi tidak menggantikan catatan siklus, durasi, atau hasil uji model lain. Pengujian fresh install, upgrade, dan uninstall juga memiliki [checklist rilis](RELEASING.md#checklist-sebelum-publikasi) terpisah.
+
+Catatan historis: mirroring pada **installer 0.5.0** berhasil menurut pengguna setelah izin receiver tambahan dibatasi ke antarmuka/IP/subnet IPv4 lokal. Pada **8 September 2026**, pengguna juga mengonfirmasi smoke test terbatas **0.5.1**: mirroring dengan opsi Public Wi-Fi aktif setelah repair sementara dilepas, serta penutupan sesi melalui X. Pemeriksaan lokal memastikan versi/payload terpasang dan aturan installer; log mencatat dua penghentian setelah jendela hilang. Target input sudah berada di Windows sebelum penutupan yang terekam, sehingga pemulihan melalui X ketika input masih tertangkap belum terbukti. Ini bukan kelulusan seluruh checklist; hash artefak, batas bukti, dan pengujian yang tersisa ada di [catatan 0.5.1](RELEASE-NOTES-0.5.1.md).
 
 ## Kriteria penerimaan per konfigurasi
 
@@ -22,7 +24,11 @@ Kriteria ini adalah sasaran pengujian, bukan sertifikasi produksi atau jaminan l
 
 ## Apa yang berubah
 
-Versi 0.5 mencoba memperbaiki penolakan startup ketika Windows melaporkan advertising `Aborted / Success`, tetapi koneksi HID lama masih ada. Ini pengecualian sempit, bukan mengabaikan setiap error Bluetooth:
+Versi 0.5.1 menambahkan izin receiver **Public/Wireless/LocalSubnet** melalui pilihan installer yang tidak dicentang pada instalasi baru. Izin Private lama tetap dipertahankan. Uji opsi ini secara terpisah dari Bluetooth, setelah aturan perbaikan lokal dibersihkan secara manual oleh pemilik komputer. Jangan mengubah profil jaringan untuk membuat hasil terlihat lulus.
+
+Versi ini juga mengakhiri sesi ketika jendela video yang sebelumnya teramati hilang terus-menerus selama dua detik. X pada jendela video dan Stop Screen Mirroring dari perangkat dapat memicu jalur yang sama; minimize/hide yang mempertahankan jendela tidak. Jendela pengganti dalam masa jeda membatalkan penghentian. Konfirmasi X terbatas sudah tercatat di atas; varian lain tetap perlu diuji pada perangkat, bukan disimpulkan dari tes state machine saja.
+
+Perubahan backend pada seri **0.5** berikut tetap menjadi target regresi. Jalur ini mencoba memperbaiki penolakan startup ketika Windows melaporkan advertising `Aborted / Success`, tetapi koneksi HID lama masih ada. Ini pengecualian sempit, bukan mengabaikan setiap error Bluetooth:
 
 - `Started` tetap merupakan jalur normal. `StartedWithoutAllAdvertisementData` juga diterima: permintaan iklan berhasil, tetapi sebagian data iklan tidak ikut disiarkan; penemuan perangkat baru tetap perlu diuji. [Definisi Microsoft](https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattserviceprovideradvertisementstatus?view=winrt-26100)
 - Jalur koneksi lama hanya dicoba pada mode perlindungan yang dikonfigurasi `EncryptionRequired`, dengan status `Aborted` dan error `Success` yang teramati, serta pelanggan keyboard **dan** mouse milik perangkat yang sama dengan sesi GATT aktif.
@@ -38,6 +44,7 @@ Perubahan ini tidak mengubah pacing Bluetooth, konfigurasi video/FPS, sensitivit
 - [ ] Gunakan satu perangkat. Tutup dokumen/percakapan/formulir penting; siapkan Notepad kosong di Windows dan catatan uji tidak sensitif di perangkat.
 - [ ] Simpan pekerjaan dan lepaskan tombol yang sedang ditekan. Kenali **Ctrl + Alt + Q** dan tombol **Hentikan sesi**.
 - [ ] Gunakan folder instalasi tetap. Catat sensitivitas, orientasi, dan argumen UxPlay sebelum tes; jangan mengubahnya bersamaan dengan pengujian reconnect.
+- [ ] Catat profil jaringan, tipe antarmuka, serta status pilihan Public Wi-Fi. Jika pernah memakai repair khusus komputer, ikuti [persiapan manual pada checklist rilis](RELEASING.md#checklist-sebelum-publikasi) agar aturan lama tidak menutupi masalah paket yang diuji.
 - [ ] Sebelum mematikan radio atau sleep, pastikan aman bagi mouse, keyboard, headset, dan perangkat Bluetooth lain. Jangan lakukan uji dropout jika satu-satunya cara mengendalikan laptop akan terputus.
 
 Jalankan tes melalui antarmuka iDock for Windows. Tidak perlu perintah CLI yang otomatis mengambil input, mode tanpa enkripsi, penghapus pairing, atau skrip reset radio.
@@ -96,7 +103,7 @@ Lakukan satu kasus pada satu waktu dengan data uji tidak sensitif. Kondisi yang 
 | Kunci perangkat | Kembalikan input ke laptop, kunci perangkat, lalu buka kunci secara langsung. | Tidak ada input spontan atau backlog saat dibuka. Periksa ulang koneksi dan pilih host hanya dengan sengaja. |
 | Lock Windows | Kembalikan input ke laptop, kunci Windows, lalu masuk kembali. | Laptop tetap dapat dioperasikan. Tidak ada pengetikan yang bocor ke perangkat saat masuk; periksa target sebelum melanjutkan. |
 | Sleep/wake Windows | Simpan pekerjaan, pilih target lokal, sleep lalu bangunkan Windows. | Tidak ada auto-capture setelah bangun. Jika koneksi gagal/hilang, restart kontrol dan catat hasil, bukan menyatakan reconnect otomatis sukses. |
-| Video saja terputus | Hentikan Screen Mirroring di perangkat, tanpa mematikan Bluetooth. | Bedakan video putus dari HID putus; kontrol bisa masih tersambung. Segera gunakan hotkey lokal agar tidak mengirim input tanpa melihat target. |
+| Video saja terputus | Hentikan Screen Mirroring di perangkat, tanpa mematikan Bluetooth. | Jika jendela video hilang selama dua detik, seluruh sesi iDock berakhir dan input kembali lokal. Jika jendelanya tetap ada, kontrol dapat masih berjalan: segera gunakan hotkey lokal. Catat kondisi jendela dan target, bukan menganggap HID sudah terputus. |
 | Dropout radio penuh | Setelah memastikan perangkat lain aman, matikan Bluetooth perangkat melalui Settings, atau radio Windows secara manual, lalu hidupkan kembali. | Ketika kehilangan HID terdeteksi, input kembali lokal. Tidak ada replay input dan tidak otomatis mengontrol lagi setelah radio hidup. Restart kontrol bila sesi dinyatakan gagal. |
 | Dropout HID parsial | Hanya bila perangkat menyediakan cara normal memutus keyboard atau mouse secara terpisah, uji satu saja. Konfirmasi lewat log bahwa satu langganan benar-benar hilang. | Pada jalur fallback, kehilangan salah satu koneksi yang disyaratkan membatalkan kesiapan; input lokal dan restart kontrol diperlukan. |
 
@@ -116,6 +123,17 @@ Mematikan AssistiveTouch atau menyembunyikan pointer **belum membuktikan** langg
 - [ ] Bagian **Diagnostik** menampilkan status yang relevan dan **Buka log** mengarah ke lokasi data mode instalasi yang digunakan.
 
 Catat hasil sesuai ukuran jendela, scaling/DPI, dan cara input yang benar-benar diuji. Pemeriksaan layout tidak membuktikan koneksi Bluetooth atau kualitas video telah lulus uji perangkat.
+
+## F. Menutup jendela video
+
+Gunakan konten uji dan lepaskan tombol yang sedang ditahan. Pemantauan baru berlaku setelah jendela video milik sesi pernah muncul.
+
+- [ ] Dengan video/kontrol aktif, kembalikan input ke Windows lalu klik X pada **AirPlay Video Stream**. Setelah jeda sekitar dua detik, proses video/kontrol milik sesi berhenti dan Windows menerima input. Catat waktu nyata dan kegagalan; jangan menganggap ada batas real-time ketika sistem macet.
+- [ ] Minimize jendela video, lalu pulihkan. Sesi tidak berhenti hanya karena minimize. Menutup jendela pengaturan UxPlay bukan pengganti tes X pada video.
+- [ ] Putar perangkat dan amati penggantian jendela. Jendela pengganti dalam dua detik tidak mengakhiri sesi; jika penggantian lebih lama dan sesi berhenti, catat sebagai batas/perilaku yang perlu dievaluasi.
+- [ ] Hentikan Screen Mirroring dari perangkat. Jika jendela video hilang selama jeda, kontrol juga berakhir; tidak perlu menghapus pairing untuk memulai sesi berikutnya.
+- [ ] Gunakan kontrol tanpa pernah membuka video. Tidak adanya jendela video tidak menyebabkan penghentian otomatis.
+- [ ] Setelah setiap penutupan, pairing, sensitivitas, orientasi, Bonjour, dan aplikasi lain tetap utuh. Memulai lagi tidak mengalihkan target input ke perangkat tanpa hotkey.
 
 ## Kriteria berhenti dan laporan
 

@@ -93,6 +93,9 @@ function Invoke-iDockPortablePackaging {
     $zipName = 'iDock-' + $version + '-win-x64-portable.zip'
     $zipPath = Join-Path $output $zipName
     $temporary = Join-Path $output ('.portable-' + [Guid]::NewGuid().ToString('N') + '.partial')
+    # Windows PowerShell 5.1 must load the enum's assembly before resolving
+    # ZipArchiveMode in the Open call; FileSystem alone does not guarantee it.
+    Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [IO.Compression.ZipFile]::Open($temporary, [IO.Compression.ZipArchiveMode]::Create)
     try {

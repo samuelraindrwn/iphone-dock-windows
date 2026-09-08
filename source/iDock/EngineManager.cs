@@ -9,6 +9,7 @@ internal sealed class EngineManager : IDisposable
     private ProcessJob? control;
     private Process? diagnostic;
     private readonly string root;
+    private readonly MirrorWindowLifecycle mirrorLifecycle = new();
     public EngineManager(string root) => this.root = root;
     public bool MirrorRunning => mirror?.IsRunning == true;
     public bool ControlRunning => control?.IsRunning == true;
@@ -53,6 +54,15 @@ internal sealed class EngineManager : IDisposable
         var info = StartInfo(exe);
         info.WindowStyle = ProcessWindowStyle.Normal; // This is the interactive receiver the user just opened.
         mirror = new ProcessJob(info);
+        mirrorLifecycle.Begin();
+    }
+    internal MirrorLifecycleEvent PollMirrorLifecycle()
+    {
+        if (mirror is null) return MirrorLifecycleEvent.None;
+        var session = mirrorLifecycle.Generation;
+        var snapshot = mirrorLifecycle.Capture(mirror.ReadIsRunning, mirror.ContainsProcess);
+        return mirrorLifecycle.Observe(session, snapshot,
+            TimeSpan.FromSeconds((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency));
     }
     public void StartControl()
     {
@@ -94,9 +104,20 @@ internal sealed class EngineManager : IDisposable
     }
     public void Dispose()
     {
-        control?.Dispose(); control = null;
-        mirror?.Dispose(); mirror = null;
-        try { if (diagnostic is { HasExited: false }) diagnostic.Kill(); }
-        catch (InvalidOperationException) { }
+        mirrorLifecycle.Reset();
+        // Clear references before disposing so a queued refresh cannot inspect an
+        // ended job. Always attempt all owned cleanup even if one disposal fails.
+        var ownedControl = control; control = null;
+        var ownedMirror = mirror; mirror = null;
+        try { ownedControl?.Dispose(); }
+        finally
+        {
+            try { ownedMirror?.Dispose(); }
+            finally
+            {
+                try { if (diagnostic is { HasExited: false }) diagnostic.Kill(); }
+                catch (InvalidOperationException) { }
+            }
+        }
     }
 }
