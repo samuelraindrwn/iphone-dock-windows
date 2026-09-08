@@ -1,6 +1,6 @@
 # Arsitektur dan batas implementasi
 
-[Kembali ke README](../README.md) · [Instalasi/build](INSTALL.md)
+[Kembali ke README](../README.md) · [Instalasi](INSTALL.md) · [Developer](DEVELOPMENT.md)
 
 iDock for Windows adalah launcher WPF .NET 10 untuk dua jalur yang terpisah:
 
@@ -19,10 +19,11 @@ Video tidak membawa input. Backend tidak mengetahui koordinat absolut jendela Ux
 
 | Komponen | Tanggung jawab |
 | --- | --- |
-| `source/iDock` | WPF, tombol sesi/diagnosis, status dari log, slider sensitivitas, orientasi manual, pengelolaan proses. |
+| `source/iDock` | WPF satu halaman, panduan koneksi, tombol sesi, status dari log, pointer settings, pengelolaan proses, dan pemilihan data path. |
 | `source/blehid-patched` | Source backend Windows BLE HID yang dimodifikasi: layanan HID, input hooks, pemilihan target, pengiriman laporan, live pointer settings. |
 | UxPlay Windows 2.0.0.1736 | Receiver AirPlay berbasis komponen native; diunduh dan diverifikasi saat build, dijalankan sebagai proses terpisah. |
-| `scripts/build.ps1` / `scripts/test.ps1` | Penyusunan paket Windows dan pemeriksaan tanpa perangkat keras. |
+| `scripts/build.ps1` / `scripts/test.ps1` | Penyusunan paket Windows dan pemeriksaan tanpa perangkat keras; build default framework-dependent, opsi self-contained tersedia. |
+| `scripts/build-installer.ps1` / `installer` | Paket self-contained dan installer Windows dengan data per pengguna. |
 
 Launcher milik proyek menggunakan [lisensi MIT](../LICENSE). Backend berasal dari [Windows BLE HID v0.4.0](https://github.com/abhishek-raj/windows-ble-hid/tree/v0.4.0), dengan lisensi MIT dan atribusi aslinya tetap dipertahankan. Daftar perubahan ada di [IDOCK-MODIFICATIONS.md](../source/blehid-patched/IDOCK-MODIFICATIONS.md).
 
@@ -30,9 +31,11 @@ Launcher milik proyek menggunakan [lisensi MIT](../LICENSE). Backend berasal dar
 
 ## Siklus hidup dan keselamatan input
 
+Antarmuka launcher disusun dalam satu halaman yang dapat digulir: **Panduan** berada paling atas, lalu kartu **Layar perangkat** dan **Mouse & keyboard**, **Pengaturan pointer**, serta **Diagnostik**. Ringkasan pintasan tersedia di bagian atas. Urutan visual ini tidak menggabungkan jalur AirPlay dan HID atau mengubah cara memilih target input.
+
 `EngineManager` memulai UxPlay atau CLI BLE HID dari folder `vendor` relatif terhadap EXE. `ProcessJob` membuat proses dengan Windows Job Object sehingga penghentian sesi mencakup proses yang dimulai iDock for Windows beserta turunannya, bukan pencarian global untuk mematikan semua proses bernama sama.
 
-Backend menolak memasang input hooks sebelum pemeriksaan kesiapan lolos. Pada versi 0.5 eksperimental, jalur normal menerima `Started` atau `StartedWithoutAllAdvertisementData`; status terakhir berarti sebagian data iklan tidak ikut disiarkan, bukan jaminan perangkat baru dapat menemukan layanan.
+Backend menolak memasang input hooks sebelum pemeriksaan kesiapan lolos. Pada versi 0.5, jalur normal menerima `Started` atau `StartedWithoutAllAdvertisementData`; status terakhir berarti sebagian data iklan tidak ikut disiarkan, bukan jaminan perangkat baru dapat menemukan layanan.
 
 Ada pengecualian sempit untuk koneksi HID lama: mode perlindungan dikonfigurasi `EncryptionRequired`, status `Aborted / Success` teramati, pelanggan keyboard dan mouse milik perangkat yang sama memiliki sesi aktif, lalu dua notifikasi netral yang ditargetkan ke perangkat tersebut berhasil dan status/identitas koneksi diperiksa kembali dalam batas startup 10 detik. Notifikasi membawa pelepasan keyboard dan mouse tanpa gerakan/tombol/scroll. Ini bukan bukti independen enkripsi atau penerimaan input oleh aplikasi perangkat, dan tidak mengubah `Aborted` menjadi advertising yang sehat.
 
@@ -46,7 +49,7 @@ Hotkey kembali ke Windows diproses melalui antrean pengiriman input. Operasi BLE
 
 Backend menggabungkan gerakan relatif X/Y, lalu mengirimnya mengikuti pacing koneksi HID. Sensitivitas mengalikan perpindahan dan mempertahankan sisa pecahan agar gerakan kecil tidak hilang. Rotasi manual mengubah arah setelah scaling. Klik, keyboard, roda, descriptor HID, dan interval Bluetooth tidak diubah oleh slider/orientasi.
 
-Launcher menerbitkan JSON pengaturan secara atomik ke `data/blehid/pointer-settings.json`:
+Launcher menerbitkan JSON pengaturan secara atomik ke `data/blehid/pointer-settings.json` di bawah basis penyimpanan pengguna atau paket:
 
 ```json
 { "Sensitivity": 1.0, "RotationDegrees": 0 }
@@ -56,14 +59,23 @@ Sensitivitas dibatasi 0.25–3.0; rotasi menerima 0, 90, 180, atau 270. File lam
 
 ## Penyimpanan dan privasi
 
-iDock for Windows menetapkan `BLEHID_DATA_DIR` ke folder `data/blehid` milik paket. Konfigurasi/perangkat backend dan log runtime tidak termasuk source yang dipublikasikan. Pairing Bluetooth tetap dikelola oleh sistem Windows dan iOS/iPadOS. Konfigurasi UxPlay berada pada profil Windows; Bonjour dan Firewall dapat menyimpan path absolut komponen, sehingga lokasi aplikasi aktif harus stabil.
+iDock memilih basis penyimpanan dari marker **`installed.mode`** di folder aplikasi:
+
+- **Installer:** basis `%LOCALAPPDATA%\iDock`; pengaturan/log dapat ditulis oleh akun biasa meskipun binary berada di Program Files.
+- **Portable dan build manual default:** basis folder aplikasi; perilaku data/log lokal paket tetap dipertahankan.
+
+`BLEHID_DATA_DIR` ditetapkan ke `data\blehid` di bawah basis yang sama, sehingga launcher dan backend memakai pengaturan/log yang konsisten. File pointer adalah `data\blehid\pointer-settings.json`; log launcher ada di `logs\idock.log`. Marker bukan mekanisme migrasi: memasang installer tidak otomatis memindahkan data dari paket portable. [Lokasi lengkap](INSTALL.md#lokasi-data) tersedia di panduan instalasi.
+
+Konfigurasi/perangkat backend dan log runtime tidak termasuk source publik. Pairing Bluetooth dikelola Windows serta iOS/iPadOS. Konfigurasi UxPlay berada pada profil Windows; Bonjour dan Firewall dapat menyimpan path absolut komponen, sehingga lokasi aplikasi aktif harus stabil.
+
+Installer membuat aturan receiver miliknya sendiri dengan profil **Private** dan alamat remote **LocalSubnet**; ia tidak mengubah profil jaringan atau mengubah aturan milik aplikasi lain. Bonjour yang sudah ada tidak direkonfigurasi diam-diam. Uninstaller mempertahankan data pengguna, pairing, layanan Bonjour, serta binary Bonjour yang mungkin dipakai bersama. Mempertahankan komponen ini mencegah penghapusan launcher merusak layanan bersama, tetapi berarti uninstall tidak selalu mengosongkan seluruh folder aplikasi.
 
 Tidak ada unggahan log otomatis. Log dapat mengandung identitas perangkat, alamat Bluetooth, dan path pengguna. Pemilik harus meninjau/redaksi laporan sebelum mengunggahnya. Dokumentasi publik tidak menyertakan data pairing, diagnostik pribadi, atau screenshot layar pengguna.
 
 ## Verifikasi dan hal yang belum dijamin
 
-Pemeriksaan otomatis meliputi parsing status/error, penutupan WPF, kepemilikan proses, pengaturan atomik/live reload, sensitivitas, rotasi, dan perilaku data tidak valid. Hasil tersebut tidak membuktikan kompatibilitas adapter, koneksi perangkat, kualitas radio, atau latensi end-to-end. Perubahan kesiapan 0.5 tidak mengubah pacing BLE, pengaturan video/FPS, sensitivitas, atau rotasi. Target penerimaan perangkat nyata ada di [checklist kestabilan](STABILITY-TESTS.md); daftar itu belum merupakan laporan tes yang selesai.
+Pemeriksaan otomatis meliputi parsing status/error, penutupan WPF, kepemilikan proses, pengaturan atomik/live reload, sensitivitas, rotasi, data tidak valid, mode data path, template kontrol, urutan bagian dalam satu halaman, dan layout ukuran minimum. Hasil tersebut tidak membuktikan kompatibilitas adapter, koneksi perangkat, kualitas radio, atau latensi end-to-end. Target penerimaan perangkat nyata ada di [checklist kestabilan](STABILITY-TESTS.md); pengujian installer memiliki [checklist rilis](RELEASING.md) terpisah.
 
-Catatan penggunaan sebelumnya mencakup mirroring dan kontrol dasar pada satu konfigurasi iPhone 11/Windows 11. Catatan ini bukan hasil validasi lengkap versi 0.5 atau bukti latensi yang telah diukur. Penyebutan iPhone/iPad pada antarmuka memperluas istilah perangkat, bukan bukti kompatibilitas: iPad/iPadOS belum diverifikasi secara fisik. Koreksi arah landscape memiliki pemeriksaan matematis otomatis, tetapi pemetaan fisiknya perlu dikonfirmasi per setup. Label orientasi memakai sisi atas pada Portrait normal sebagai acuan, bukan lokasi notch/kamera; transformasi yang digunakan tidak berubah. Scroll, drag, mengetik, reconnect, dan kombinasi versi iOS/iPadOS/driver belum memiliki matriks uji perangkat lengkap.
+Catatan penggunaan mencakup mirroring dan kontrol pada satu konfigurasi iPhone 11/Windows 11 dengan laporan pengguna bahwa pemakaian terasa cukup stabil. Catatan tersebut bukan pengukuran latensi atau matriks kompatibilitas semua perangkat. iPad/iPadOS belum diverifikasi secara fisik. Koreksi landscape memiliki pemeriksaan matematis otomatis, tetapi pemetaan fisiknya perlu dikonfirmasi per setup. Label orientasi memakai sisi atas pada Portrait normal sebagai acuan, bukan lokasi notch/kamera. Scroll, drag, mengetik, reconnect, dan kombinasi iOS/iPadOS/driver belum memiliki matriks uji perangkat lengkap.
 
 iDock for Windows bukan implementasi Apple iPhone Mirroring resmi, bukan toolchain iOS/iPadOS, dan bukan pengganti Xcode debugger. Multi-touch, biometrik, konten terlindungi, orientasi otomatis, serta kontrol bebas latensi tidak dijanjikan.

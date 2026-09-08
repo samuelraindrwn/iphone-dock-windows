@@ -14,6 +14,18 @@ internal static class Verification
         void Check(bool condition, string label)
         { if (!condition) throw new Exception(label); log.AppendLine("PASS " + label); }
 
+        Check(UserStorage.ResolveRoot(@"C:\Portable\iDock", @"C:\Users\Example\AppData\Local", false) == @"C:\Portable\iDock",
+            "Portable installation preserves its existing data root");
+        Check(UserStorage.ResolveRoot(@"C:\Program Files\iDock", @"C:\Users\Example\AppData\Local", true) == @"C:\Users\Example\AppData\Local\iDock",
+            "Installed application stores mutable data under the current user profile");
+        Check(UserStorage.ResolveRoot(@"C:\Portable\iDock", "", false) == @"C:\Portable\iDock",
+            "Portable application does not require an installer data directory");
+        var missingUserDataRejected = false;
+        try { UserStorage.ResolveRoot(@"C:\Program Files\iDock", "", true); }
+        catch (InvalidOperationException) { missingUserDataRejected = true; }
+        Check(missingUserDataRejected, "Installed application never falls back to writing in Program Files");
+        UiVerification.Run(Check);
+
         var assembly = typeof(App).Assembly;
         Check(assembly.GetName().Name == "iDock",
             "Executable and assembly use the iDock technical identity");

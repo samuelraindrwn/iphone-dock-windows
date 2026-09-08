@@ -56,7 +56,7 @@ public partial class App : Application
             Dispatcher.BeginInvoke(new Action(testWindow.Close));
             return;
         }
-        Environment.SetEnvironmentVariable("BLEHID_DATA_DIR", Path.Combine(AppContext.BaseDirectory, "data", "blehid"));
+        Environment.SetEnvironmentVariable("BLEHID_DATA_DIR", Path.Combine(UserStorage.Root, "data", "blehid"));
         var window = new MainWindow(preview: e.Args.FirstOrDefault() == "--preview");
         MainWindow = window;
         if (e.Args.FirstOrDefault() == "--preview")
@@ -64,7 +64,10 @@ public partial class App : Application
             // Documentation previews must not disclose the developer's real device name.
             window.DeviceNameLabel.Text = "WINDOWS-LAPTOP";
             var height = e.Args.Length > 2 ? int.Parse(e.Args[2]) : 900;
-            var size = new Size(900, height);
+            var width = e.Args.Length > 3 ? int.Parse(e.Args[3]) : 1100;
+            if (width < 900 || width > 3000 || height < 600 || height > 4000)
+                throw new ArgumentOutOfRangeException(nameof(e), "Preview dimensions must fit the supported desktop range.");
+            var size = new Size(width, height);
             var content = window.Content;
             window.Content = null;
             var control = new ContentControl
@@ -77,7 +80,7 @@ public partial class App : Application
             surface.Measure(size);
             surface.Arrange(new Rect(size));
             surface.UpdateLayout();
-            var bitmap = new RenderTargetBitmap(900, height, 96, 96, PixelFormats.Pbgra32);
+            var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
             bitmap.Render(surface);
             var png = new PngBitmapEncoder();
             png.Frames.Add(BitmapFrame.Create(bitmap));

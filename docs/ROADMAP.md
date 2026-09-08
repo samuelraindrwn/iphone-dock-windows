@@ -6,6 +6,8 @@ Dokumen ini mencatat rencana pengembangan publik. Semua item **belum dianggap se
 
 Catatan penggunaan dasar saat ini terbatas pada satu konfigurasi iPhone 11/Windows 11. iPad belum diverifikasi. Usulan dan hasil pengujian dapat dikirim melalui [GitHub Issues](https://github.com/samuelraindrwn/iphone-dock-windows/issues) dengan mengikuti [panduan laporan](TROUBLESHOOTING.md#mengirim-laporan-masalah).
 
+UI, installer, dan dokumentasi publik menjadi bagian distribusi aplikasi; [checklist rilis](RELEASING.md) melacak validasi paket, bukan memperluas janji kompatibilitas perangkat.
+
 ## 1. Perluasan kompatibilitas iOS/iPadOS
 
 - [ ] Bangun matriks pengujian lintas model iPhone/iPad, versi iOS/iPadOS, versi Windows, dan adapter/driver Bluetooth. Catat hasil mirroring, pairing, pointer/keyboard, orientasi, reconnect, serta fitur yang tidak tersedia.

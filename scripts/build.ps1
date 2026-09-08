@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-Builds a clean, framework-dependent iDock for Windows package without changing the installed app.
+Builds a clean iDock for Windows package without changing the installed app.
 .EXAMPLE
 .\scripts\build.ps1
 .EXAMPLE
@@ -15,7 +15,9 @@ param(
     [string]$UxPlayArchive,
     [string]$OutputDirectory = 'dist\iDock',
     [string]$RestoreSource,
-    [string]$PackagesDirectory
+    [string]$PackagesDirectory,
+    [switch]$SelfContained,
+    [ValidateSet('win-x64')][string]$Runtime = 'win-x64'
 )
 
 . (Join-Path $PSScriptRoot 'common.ps1')
@@ -105,12 +107,15 @@ try {
 
     $launcherProject = Join-Path $repositoryRoot 'source\iDock\iDock.csproj'
     $backendProject = Join-Path $repositoryRoot 'source\blehid-patched\src\BleHid.Cli\BleHid.Cli.csproj'
+    $restoreRuntime = if ($SelfContained) { $Runtime } else { $null }
     foreach ($project in @($launcherProject, $backendProject)) {
-        Invoke-CheckedDotnet -Arguments (Get-iDockRestoreArguments $project $RestoreSource $PackagesDirectory)
+        Invoke-CheckedDotnet -Arguments (Get-iDockRestoreArguments $project $RestoreSource $PackagesDirectory $restoreRuntime)
     }
-    Invoke-CheckedDotnet -Arguments @('publish', $launcherProject, '--no-restore', '--configuration', 'Release', '--self-contained', 'false', '-p:PlatformTarget=x64', '--output', $stagePath)
+    $publishArguments = @('--no-restore', '--configuration', 'Release', '--self-contained', $SelfContained.IsPresent.ToString().ToLowerInvariant(), '-p:PlatformTarget=x64')
+    if ($SelfContained) { $publishArguments += @('--runtime', $Runtime) }
+    Invoke-CheckedDotnet -Arguments (@('publish', $launcherProject) + $publishArguments + @('--output', $stagePath))
     $backendOutput = Join-Path $stagePath 'vendor\blehid'
-    Invoke-CheckedDotnet -Arguments @('publish', $backendProject, '--no-restore', '--configuration', 'Release', '--self-contained', 'false', '-p:PlatformTarget=x64', '--output', $backendOutput)
+    Invoke-CheckedDotnet -Arguments (@('publish', $backendProject) + $publishArguments + @('--output', $backendOutput))
     foreach ($name in @('LICENSE', 'README.md', 'IDOCK-MODIFICATIONS.md')) {
         Copy-Item -LiteralPath (Join-Path $repositoryRoot ('source\blehid-patched\' + $name)) -Destination $backendOutput
     }
@@ -129,9 +134,36 @@ try {
     $null = New-Item -ItemType Directory -Path $upstreamOutput -Force
     Copy-Item -LiteralPath (Join-Path $repositoryRoot 'source\upstream\README.md') -Destination $upstreamOutput
     Copy-iDockSourceTree -SourceDirectory (Join-Path $repositoryRoot 'scripts') -DestinationDirectory (Join-Path $stagePath 'scripts')
+    if (Test-Path -LiteralPath (Join-Path $repositoryRoot 'installer') -PathType Container) {
+        Copy-iDockSourceTree -SourceDirectory (Join-Path $repositoryRoot 'installer') -DestinationDirectory (Join-Path $stagePath 'installer')
+    }
+    if (Test-Path -LiteralPath (Join-Path $repositoryRoot '.github') -PathType Container) {
+        Copy-iDockSourceTree -SourceDirectory (Join-Path $repositoryRoot '.github') -DestinationDirectory (Join-Path $stagePath '.github')
+    }
     foreach ($requiredFile in @('iDock.exe', 'iDock.dll', 'iDock.runtimeconfig.json', 'vendor\blehid\BleHid.Cli.exe', 'vendor\blehid\BleHid.Core.dll', 'vendor\blehid\Microsoft.Windows.SDK.NET.dll', 'vendor\blehid\WinRT.Runtime.dll', 'vendor\blehid\LICENSE', 'vendor\uxplay\uxplay-windows.exe', 'vendor\uxplay\mDNSResponder.exe', 'vendor\uxplay\Qt6Core.dll', 'vendor\uxplay\LICENSE.rtf', 'source\iDock\iDock.csproj', 'source\blehid-patched\src\BleHid.Cli\BleHid.Cli.csproj', 'source\blehid-patched\tests\BleHid.SafetyChecks\BleHid.SafetyChecks.csproj', 'source\blehid-patched\LICENSE', 'source\upstream\README.md', 'scripts\build.ps1', 'scripts\test.ps1', 'scripts\common.ps1', 'global.json')) {
         if (-not (Test-Path -LiteralPath (Join-Path $stagePath $requiredFile) -PathType Leaf)) {
             throw "The generated package is incomplete: $requiredFile"
+        }
+    }
+    if ($SelfContained) {
+        # Publish includes runtime binaries but does not copy their NuGet license
+        # files. Preserve the actual restored runtime's notices, never replace
+        # the first-party MIT LICENSE with a dependency's license.
+        $assets = Get-Content -LiteralPath (Join-Path (Split-Path -Parent $launcherProject) 'obj\project.assets.json') -Raw | ConvertFrom-Json
+        $frameworks = (Get-Content -LiteralPath (Join-Path $stagePath 'iDock.runtimeconfig.json') -Raw | ConvertFrom-Json).runtimeOptions.includedFrameworks
+        foreach ($framework in $frameworks) {
+            $packageId = ($framework.name + '.Runtime.' + $Runtime).ToLowerInvariant()
+            $packageRoot = $null
+            foreach ($folder in $assets.packageFolders.PSObject.Properties.Name) {
+                $candidate = Join-Path $folder ($packageId + '\' + $framework.version)
+                if (Test-Path -LiteralPath $candidate -PathType Container) { $packageRoot = $candidate; break }
+            }
+            if (-not $packageRoot) { throw "Cannot locate runtime license package: $packageId $($framework.version)" }
+            $noticeOutput = Join-Path $stagePath ('licenses\dotnet\' + $framework.name)
+            $null = New-Item -ItemType Directory -Path $noticeOutput -Force
+            $notices = @(Get-ChildItem -LiteralPath $packageRoot -File | Where-Object { $_.Name -in @('LICENSE', 'LICENSE.TXT', 'THIRD-PARTY-NOTICES.TXT') })
+            if (-not @($notices | Where-Object { $_.Name -like 'LICENSE*' }).Count) { throw "Runtime license is missing: $packageId" }
+            foreach ($notice in $notices) { Copy-Item -LiteralPath $notice.FullName -Destination $noticeOutput }
         }
     }
     $manifest = Get-Content -LiteralPath (Join-Path $repositoryRoot 'COMPONENTS.json') -Raw | ConvertFrom-Json
@@ -142,7 +174,8 @@ try {
         Version = $manifest.application.version
         BuiltAtUtc = [DateTime]::UtcNow.ToString('o')
         UxPlayArchiveSha256 = $expectedArchiveHash
-        Runtime = '.NET 10 Windows Desktop, framework-dependent, x64'
+        Runtime = $(if ($SelfContained) { '.NET 10 Windows Desktop, self-contained, win-x64' } else { '.NET 10 Windows Desktop, framework-dependent, x64' })
+        SelfContained = $SelfContained.IsPresent
     } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $stagePath '.idock-build.json') -Encoding UTF8
 
     Assert-NoReparsePoint $outputPath

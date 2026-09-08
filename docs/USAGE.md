@@ -2,16 +2,33 @@
 
 [Kembali ke README](../README.md) · [Instalasi](INSTALL.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
-Istilah **perangkat** merujuk ke iPhone/iPad dengan iOS/iPadOS. Versi 0.5 masih eksperimental. Catatan penggunaan dasar terbatas pada satu konfigurasi iPhone 11; iPad dan kompatibilitas lintas versi belum terverifikasi.
+Istilah **perangkat** merujuk ke iPhone/iPad dengan iOS/iPadOS. Penggunaan dasar sudah dilakukan pada konfigurasi iPhone 11/Windows 11. iPad serta kompatibilitas lintas model dan versi belum memiliki hasil pengujian yang terverifikasi.
 
 Selesaikan [instalasi seluruh paket](INSTALL.md) terlebih dahulu. Untuk penggunaan pertama, buka kunci perangkat, siapkan aplikasi uji tanpa data sensitif, dan mulai dari satu perangkat.
 
 Panduan cepat: [rutinitas harian](#rutinitas-harian) · [kontrol Bluetooth](#kontrol-mouse-dan-keyboard) · [sensitivitas](#sensitivitas-pointer) · [landscape](#portrait-dan-landscape) · [mengakhiri sesi](#mengakhiri-sesi).
 
+## Mengenal antarmuka
+
+Seluruh kontrol berada dalam satu halaman. Mulai dari bagian atas dan gulir ke bawah sesuai kebutuhan:
+
+| Urutan | Bagian | Isi |
+| --- | --- | --- |
+| 1 | **Panduan** | Tiga langkah koneksi pertama serta nama laptop untuk pairing. |
+| 2 | **Layar perangkat** dan **Mouse & keyboard** | Kartu untuk memulai mirroring/kontrol dan melihat status koneksi masing-masing. |
+| 3 | **Pengaturan pointer** | Sensitivitas dan orientasi pointer. |
+| 4 | **Diagnostik** | Status pemeriksaan dan log sesi; **Buka log** membuka folder log lokal. |
+
+Ringkasan pintasan ditampilkan di bagian atas: **Ctrl + D + C** mengalihkan target input dan **Ctrl + Alt + Q** mengembalikannya ke Windows. Tidak ada menu samping atau halaman terpisah yang perlu dibuka.
+
+Footer tetap di bagian bawah jendela menampilkan nama/versi aplikasi, tautan **GitHub** ke repository, dan **Laporkan masalah** ke halaman Issues. Sebelum membuat laporan, periksa serta samarkan informasi pribadi pada log atau screenshot yang akan dilampirkan.
+
+Gunakan Tab untuk berpindah kontrol, tombol panah pada pilihan/slider, serta Enter atau Space sesuai jenis kontrol. Kembalikan input ke Windows sebelum mengoperasikan antarmuka iDock.
+
 ## Rutinitas harian
 
-1. Buka `iDock.exe` dari folder instalasi tetap.
-2. Klik **Buka mirroring**. Di perangkat pilih **Control Center → Screen Mirroring → uxplay-windows**.
+1. Buka **iDock for Windows** melalui Start Menu; untuk portable, buka `iDock.exe` dari folder paket tetap.
+2. Pada kartu **Layar perangkat** di bawah **Panduan**, klik **Buka mirroring**. Di perangkat pilih **Control Center → Screen Mirroring → uxplay-windows**.
 3. Klik **Aktifkan kontrol**, tunggu perangkat input tersambung, lalu tekan **Ctrl + D + C** untuk memilih perangkat.
 4. Buka aplikasi yang ingin diuji. Letakkan jendela video UxPlay di samping editor.
 5. Untuk kembali mengetik di editor atau mengubah pengaturan iDock for Windows, tekan **Ctrl + Alt + Q**.
@@ -32,7 +49,7 @@ Nama menu perangkat pada panduan mengikuti tampilan berbahasa Inggris. Terjemaha
 
 Input awal tetap ke Windows, bukan langsung dialihkan saat pairing. Status `Connected` pada Bluetooth umum perangkat tidak cukup: iDock for Windows memerlukan koneksi HID keyboard/mouse.
 
-Jika muncul **“koneksi lama terverifikasi; iklan Bluetooth belum siap”**, versi 0.5 eksperimental memakai koneksi HID lama setelah pemeriksaan terbatas; advertising belum dinyatakan pulih. Pilih perangkat hanya dengan sengaja memakai hotkey, lalu coba interaksi ringan. Jika koneksi ini hilang dan sesi dinyatakan gagal, **restart kontrol** melalui **Hentikan sesi → Aktifkan kontrol**; buka mirroring kembali bila ikut berhenti. Tidak ada reset radio atau penghapusan pairing otomatis. Rincian dan batas pemeriksaannya ada di [troubleshooting](TROUBLESHOOTING.md#koneksi-lama-terverifikasi-iklan-bluetooth-belum-siap).
+Jika muncul **“koneksi lama terverifikasi; iklan Bluetooth belum siap”**, versi 0.5 memakai koneksi HID lama setelah pemeriksaan terbatas; advertising belum dinyatakan pulih. Pilih perangkat hanya dengan sengaja memakai hotkey, lalu coba interaksi ringan. Jika koneksi ini hilang dan sesi dinyatakan gagal, **restart kontrol** melalui **Hentikan sesi → Aktifkan kontrol**; buka mirroring kembali bila ikut berhenti. Tidak ada reset radio atau penghapusan pairing otomatis. Rincian dan batas pemeriksaannya ada di [troubleshooting](TROUBLESHOOTING.md#koneksi-lama-terverifikasi-iklan-bluetooth-belum-siap).
 
 | Kontrol | Fungsi |
 | --- | --- |
@@ -47,11 +64,11 @@ Posisi pointer perangkat tidak dipetakan satu-ke-satu ke posisi kursor Windows d
 
 Jika lebih dari satu host HID tersambung, backend memiliki siklus pemilihan target; selalu lihat status sebelum mengetik. Gunakan satu perangkat saat pengujian awal. Jangan mengetik informasi sensitif jika target belum jelas.
 
-Jika hotkey tidak mengembalikan input, hentikan pengujian dan ikuti [pemulihan input Windows](TROUBLESHOOTING.md#input-tidak-kembali-ke-windows). Versi eksperimental ini belum menjamin waktu respons hotkey ketika operasi Bluetooth macet.
+Jika hotkey tidak mengembalikan input, hentikan pengiriman input dan ikuti [pemulihan input Windows](TROUBLESHOOTING.md#input-tidak-kembali-ke-windows). Waktu respons hotkey belum dijamin ketika operasi Bluetooth macet.
 
 ## Sensitivitas pointer
 
-Slider **Sensitivitas pointer** mengatur jarak gerakan, bukan latensi atau FPS:
+Gulir ke bagian **Pengaturan pointer**. Slider **Sensitivitas pointer** mengatur jarak gerakan, bukan latensi atau FPS:
 
 - Rentang **0.25×–3.00×**; **1.00×** adalah normal.
 - Nilai di bawah 1 memperlambat gerakan; nilai di atas 1 mempercepatnya.
@@ -63,7 +80,7 @@ Antarmuka menyimpan setelah jeda perubahan sekitar 200 ms; backend membaca pemba
 
 ## Portrait dan landscape
 
-Gunakan **Orientasi kontrol** untuk mengoreksi arah pointer setelah layar perangkat diputar:
+Pada bagian **Pengaturan pointer**, gunakan **Orientasi kontrol** untuk mengoreksi arah pointer setelah layar perangkat diputar:
 
 | Posisi perangkat | Pilihan |
 | --- | --- |
@@ -84,10 +101,12 @@ Lepaskan tombol mouse/keyboard yang sedang ditahan, tekan **Ctrl + Alt + Q**, la
 
 Pairing, pengaturan, log, dan Bonjour Service tetap tersimpan. Menutup jendela UxPlay sendiri dapat hanya menyembunyikannya ke system tray; gunakan menu tray **Quit** untuk menutup UxPlay secara langsung. Kehilangan koneksi host yang dipilih juga memicu pengembalian input ke laptop, tetapi hotkey darurat tetap perlu diketahui. Pemulihan koneksi tidak menjadi izin untuk mengalihkan input otomatis; periksa status dan pilih target dengan sengaja. Jalur fallback yang kehilangan koneksi memerlukan restart kontrol.
 
-Untuk mencoba kestabilan versi 0.5, ikuti [checklist manual](STABILITY-TESTS.md). Checklist adalah target uji, bukan klaim bahwa versi eksperimental ini sudah lulus sesi panjang atau reconnect berulang. Pengaturan video, pacing BLE, sensitivitas, dan orientasi tidak diubah oleh perbaikan startup ini.
+Untuk mencatat kestabilan pada konfigurasi perangkat Anda, ikuti [checklist manual](STABILITY-TESTS.md). Checklist adalah target uji, bukan klaim bahwa semua konfigurasi sudah lulus sesi panjang atau reconnect berulang.
 
 ## Data dan batas penggunaan
 
-Pengaturan pointer tersimpan di `data\blehid\pointer-settings.json` dalam folder aplikasi. Log launcher ada di `logs\idock.log`; log backend ada di `data\blehid\logs\blehid.log`. Tidak ada unggahan log otomatis. Periksa dan samarkan nama perangkat, alamat Bluetooth, path pengguna, dan informasi pribadi sebelum membagikan log.
+Untuk **installer**, pengaturan pointer tersimpan di `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, log launcher di `%LOCALAPPDATA%\iDock\logs\idock.log`, dan log backend di `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. Untuk **portable/build manual default**, path relatif `data\blehid` dan `logs` berada di folder paket. Lihat [tabel lokasi data](INSTALL.md#lokasi-data).
+
+Tidak ada unggahan log otomatis. Periksa dan samarkan nama perangkat, alamat Bluetooth, path pengguna, dan informasi pribadi sebelum membagikan log.
 
 iDock for Windows bukan alat build/signing iOS/iPadOS atau remote debugger. Gunakan untuk melihat dan berinteraksi dengan aplikasi yang sudah terpasang dan dapat dibuka pada perangkat. Autentikasi biometrik, konten yang membatasi screen capture, dan semua gestur iOS/iPadOS tidak dijamin dapat dioperasikan melalui pointer.

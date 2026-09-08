@@ -69,8 +69,9 @@ function Assert-iDockOutputIdle {
 }
 
 function Get-iDockRestoreArguments {
-    param([string]$Project, [string]$RestoreSource, [string]$PackagesDirectory)
+    param([string]$Project, [string]$RestoreSource, [string]$PackagesDirectory, [string]$Runtime)
     $arguments = @('restore', $Project, '-p:PlatformTarget=x64')
+    if ($Runtime) { $arguments += @('--runtime', $Runtime) }
     if ($RestoreSource) { $arguments += @('--source', $RestoreSource) }
     if ($PackagesDirectory) { $arguments += @('--packages', $PackagesDirectory) }
     return $arguments
@@ -91,9 +92,9 @@ function Copy-iDockSourceTree {
     $sourceExtensions = @(
         '.cs', '.csproj', '.sln', '.slnx', '.props', '.targets', '.xaml',
         '.manifest', '.config', '.json', '.example', '.md', '.ps1', '.psm1',
-        '.psd1', '.yml', '.yaml', '.py', '.txt', '.xml', '.resx'
+        '.psd1', '.yml', '.yaml', '.py', '.txt', '.xml', '.resx', '.ico', '.iss'
     )
-    $sourceNames = @('LICENSE', 'NOTICE', 'COPYING', '.gitignore', '.gitattributes', '.editorconfig')
+    $sourceNames = @('LICENSE', 'NOTICE', 'COPYING', '.gitignore', '.gitattributes', '.editorconfig', 'installed.mode')
     $privateNames = @('secrets.json', 'device.json', 'pointer-settings.json', 'pointer-pacing.json', 'hosts.json')
     Assert-NoReparsePoint $SourceDirectory
     $null = New-Item -ItemType Directory -Path $DestinationDirectory -Force

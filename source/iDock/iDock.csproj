@@ -6,9 +6,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>iDock</AssemblyName>
+    <ApplicationIcon>Assets\iDock.ico</ApplicationIcon>
     <Product>iDock for Windows</Product>
     <AssemblyTitle>iDock for Windows</AssemblyTitle>
-    <Description>Experimental iPhone/iPad mirroring and input control for Windows using AirPlay and Bluetooth LE HID.</Description>
+    <Description>iPhone and iPad mirroring and input control for Windows using AirPlay and Bluetooth LE HID.</Description>
     <Version>0.5.0</Version>
   </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\iDock.ico" />
+  </ItemGroup>
 </Project>

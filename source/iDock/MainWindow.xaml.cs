@@ -12,10 +12,10 @@ public partial class MainWindow : Window
 {
     private readonly EngineManager engines = new(AppContext.BaseDirectory);
     private readonly DispatcherTimer poll = new() { Interval = TimeSpan.FromSeconds(1) };
-    private readonly string logs = Path.Combine(AppContext.BaseDirectory, "logs");
+    private readonly string logs = Path.Combine(UserStorage.Root, "logs");
     private readonly ControlStatusTracker controlStatus = new();
     private readonly DispatcherTimer sensitivitySave = new() { Interval = TimeSpan.FromMilliseconds(200) };
-    private readonly string pointerSettingsPath = Path.Combine(AppContext.BaseDirectory, "data", "blehid", "pointer-settings.json");
+    private readonly string pointerSettingsPath = Path.Combine(UserStorage.Root, "data", "blehid", "pointer-settings.json");
     private bool sensitivityReady, sensitivityPending;
     private string blePending = "";
     private long bleOffset;
@@ -50,6 +50,20 @@ public partial class MainWindow : Window
     }
     private void UpdateSensitivityLabel() => SensitivityValue.Text =
         SensitivitySlider.Value.ToString("0.00", CultureInfo.InvariantCulture) + "×";
+
+    private void ProjectLink_Click(object sender, RoutedEventArgs e)
+    {
+        var target = (sender as System.Windows.Controls.Button)?.Tag as string;
+        var url = target switch
+        {
+            "repository" => "https://github.com/samuelraindrwn/iphone-dock-windows",
+            "issues" => "https://github.com/samuelraindrwn/iphone-dock-windows/issues",
+            _ => null
+        };
+        if (url is null) return;
+        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        catch (Exception ex) { MessageBox.Show("Tautan tidak dapat dibuka. " + ex.Message, ProductInfo.DisplayName); }
+    }
 
     private void Sensitivity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {

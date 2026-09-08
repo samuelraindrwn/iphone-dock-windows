@@ -1,0 +1,74 @@
+name: Windows validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  validate:
+    name: Build and checks (${{ matrix.mode }})
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: manual framework-dependent
+            package: dist\manual\iDock
+            self-contained: 'false'
+          - mode: self-contained
+            package: dist\self-contained\iDock
+            self-contained: 'true'
+    steps:
+      - name: Check out source without persistent credentials
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Set up the current .NET 10 SDK
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Check installer safety rules
+        run: .\installer\Test-Installer.ps1
+
+      - name: Build an isolated package
+        env:
+          PACKAGE_DIRECTORY: ${{ matrix.package }}
+          SELF_CONTAINED: ${{ matrix.self-contained }}
+        run: |
+          $selfContained = [bool]::Parse($env:SELF_CONTAINED)
+          .\scripts\build.ps1 -SelfContained:$selfContained -OutputDirectory $env:PACKAGE_DIRECTORY
+
+      - name: Test the generated package without device access
+        env:
+          PACKAGE_DIRECTORY: ${{ matrix.package }}
+        run: .\scripts\test.ps1 -PackageDirectory $env:PACKAGE_DIRECTORY
+
+      - name: Summarize validation scope
+        run: |
+          @'
+          ## Windows validation passed
+
+          The Windows x64 package built successfully and the repository's hardware-free launcher, backend, and installer checks passed. Both the framework-dependent developer flow and self-contained distribution flow are separate jobs in this matrix.
+
+          This job does not install iDock, start Bonjour, change Firewall/Bluetooth settings, or prove compatibility and latency on a physical device. Clean-machine installation and device testing remain separate release checks.
+          '@ | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY

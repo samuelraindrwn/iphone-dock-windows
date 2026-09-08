@@ -1,0 +1,10 @@
+{
+  "innoSetup": {
+    "version": "6.7.3",
+    "url": "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe",
+    "sha256": "9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732",
+    "publisherSubject": "CN=Pyrsys B.V., O=Pyrsys B.V., S=Noord-Holland, C=NL",
+    "source": "https://github.com/jrsoftware/issrc/tree/is-6_7_3",
+    "portableMode": "/PORTABLE=1 /CURRENTUSER /NOICONS /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-"
+  }
+}

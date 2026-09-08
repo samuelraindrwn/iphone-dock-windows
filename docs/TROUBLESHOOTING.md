@@ -19,12 +19,14 @@ Perangkat di panduan ini berarti iPhone/iPad pada iOS/iPadOS; iPad belum diverif
 ## Build atau aplikasi tidak bisa dibuka
 
 - **`dotnet` tidak ditemukan / SDK tidak sesuai:** pasang .NET 10 SDK x64, buka PowerShell baru, lalu cek `dotnet --list-sdks`.
-- **Diminta memasang .NET saat menjalankan EXE:** jalankan `dotnet --list-runtimes` dan pastikan `Microsoft.WindowsDesktop.App 10.0.*` tersedia. Aplikasi memerlukan .NET 10 **Desktop** Runtime x64, bukan hanya runtime console. SDK hanya diperlukan untuk build/tes. Lihat [unduhan resmi Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
+- **Peringatan penerbit/SmartScreen:** installer belum ditandatangani secara digital. Periksa sumber unduhan dan checksum sebagaimana [panduan verifikasi](INSTALL.md#verifikasi-unduhan). Jangan menonaktifkan proteksi sistem; jika tidak yakin, jangan jalankan file.
+- **Diminta memasang .NET saat menjalankan EXE:** installer dan ZIP portable rilis menyertakan runtime. Pastikan yang dijalankan merupakan paket rilis lengkap, bukan EXE dari `bin`, arsip source, atau build manual default. Untuk **build framework-dependent**, cek `dotnet --list-runtimes` dan pastikan `Microsoft.WindowsDesktop.App 10.0.*` tersedia. SDK hanya diperlukan untuk build/tes. Lihat [unduhan resmi Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
 - **Skrip PowerShell diblokir:** baca skrip dan periksa `Get-ExecutionPolicy -List`. Jika hanya file unduhan ditandai diblokir, tinjau asalnya sebelum menggunakan opsi Unblock pada Properties file. Untuk perangkat yang dikelola organisasi, ikuti kebijakan admin; jangan menonaktifkan pengamanan mesin secara global.
-- **Restore atau download gagal:** periksa jaringan/proxy dan akses NuGet/GitHub. ZIP UxPlay lokal bisa diberikan lewat `-UxPlayArchive`; feed/cache NuGet memiliki opsi terpisah di [panduan build](INSTALL.md#menggunakan-arsip-uxplay-lokal).
+- **Restore atau download gagal:** periksa jaringan/proxy dan akses NuGet/GitHub. ZIP UxPlay lokal bisa diberikan lewat `-UxPlayArchive`; feed/cache NuGet memiliki opsi terpisah di [panduan build](DEVELOPMENT.md#arsip-uxplay-dan-restore-lokal).
 - **Hash UxPlay tidak cocok:** jangan lewati verifikasi. Unduh ulang arsip versi yang dipatok dari upstream. Hentikan bila hash tetap berbeda.
 - **Komponen belum lengkap:** jalankan paket hasil `scripts/build.ps1` dengan seluruh folder `vendor` dan DLL pendamping, bukan EXE tunggal dari `bin`.
-- **Gagal menyimpan pengaturan/log:** gunakan folder instalasi yang dapat ditulis akun pengguna. Jangan sekadar menjalankan aplikasi sebagai Administrator untuk penggunaan harian.
+- **Gagal menyimpan pengaturan/log:** installer menulis data ke `%LOCALAPPDATA%\iDock`; periksa akses akun ke folder itu. Untuk portable, folder paket harus dapat ditulis akun pengguna. Jangan mengubah marker `installed.mode`, membuka izin Program Files secara luas, atau menjalankan aplikasi sebagai Administrator sebagai jalan pintas. Lihat [lokasi data](INSTALL.md#lokasi-data).
+- **Folder tersisa setelah uninstall:** binary Bonjour dapat sengaja dipertahankan karena layanannya dapat dipakai aplikasi lain. Data per pengguna dan pairing juga tidak dihapus otomatis. Jangan menghapus layanan atau sisa folder secara paksa; lihat [uninstall](INSTALL.md#uninstall).
 
 ## Receiver tidak muncul atau video tidak tersambung
 
@@ -35,6 +37,8 @@ Perangkat di panduan ini berarti iPhone/iPad pada iOS/iPadOS; iPad belum diverif
 5. Hentikan Screen Mirroring di perangkat lalu sambungkan kembali. Untuk gambar awal membeku, langkah ini juga layak dicoba.
 
 Jika iDock for Windows mengatakan UxPlay sudah berjalan, buka ikon UxPlay di system tray. Pilih **Quit** sebelum membuka sesi receiver baru; jangan menghapus proses lain secara massal.
+
+Aturan receiver yang disiapkan installer dibatasi ke **Private/LocalSubnet**. Jaringan yang berstatus Public atau memakai subnet terpisah tidak otomatis dibuka. Tinjau keamanan jaringan serta kebijakan administrator sebelum mengubah profil atau aturan; installer tidak mengubah profil jaringan komputer. Bonjour yang sudah ada juga tidak dipindahkan diam-diam ke folder iDock.
 
 ## Bluetooth Connected, tetapi kontrol belum terhubung
 
@@ -58,7 +62,7 @@ Untuk kegagalan reconnect, dahulukan restart sesi kontrol sambil mempertahankan 
 
 ### “koneksi lama terverifikasi; iklan Bluetooth belum siap”
 
-Peringatan ini pada 0.5 eksperimental berarti Windows masih melaporkan `Aborted / Success`, tetapi pemeriksaan sempit koneksi lama lolos: perlindungan dikonfigurasi `EncryptionRequired`, keyboard dan mouse perangkat yang sama memiliki sesi aktif, dan dua laporan netral berhasil dikirim melalui API lalu koneksi diperiksa kembali. Pemeriksaan dibatasi 10 detik; laporan netral tidak berisi pengetikan, klik, gerakan, atau scroll.
+Peringatan ini pada versi 0.5 berarti Windows masih melaporkan `Aborted / Success`, tetapi pemeriksaan sempit koneksi lama lolos: perlindungan dikonfigurasi `EncryptionRequired`, keyboard dan mouse perangkat yang sama memiliki sesi aktif, dan dua laporan netral berhasil dikirim melalui API lalu koneksi diperiksa kembali. Pemeriksaan dibatasi 10 detik; laporan netral tidak berisi pengetikan, klik, gerakan, atau scroll.
 
 Ini **bukan** bukti enkripsi di udara, input sudah diterima aplikasi perangkat, atau iklan Bluetooth sudah pulih. Input tetap lokal sampai **Ctrl + D + C** ditekan. Verifikasi dengan interaksi ringan pada aplikasi uji, bukan dokumen penting. Jika koneksi yang diperlukan hilang, input kembali lokal dan kontrol perlu direstart; jangan menunggu pengalihan otomatis setelah reconnect.
 
@@ -110,10 +114,11 @@ Gerakkan pointer beberapa detik, lalu berhenti dan perhatikan apakah gambar masi
 
 ## Mengirim laporan masalah
 
-Klik **Buka log**, kemudian buat laporan melalui [GitHub Issues proyek](https://github.com/samuelraindrwn/iphone-dock-windows/issues). Gunakan format berikut agar masalah dapat ditelusuri:
+Pilih **Diagnostik → Buka log**, kemudian buat laporan melalui [GitHub Issues proyek](https://github.com/samuelraindrwn/iphone-dock-windows/issues). Gunakan format berikut agar masalah dapat ditelusuri:
 
 ```text
 Versi iDock / commit:
+Jenis paket: installer / portable rilis / build manual
 Windows / build:
 Model iPhone atau iPad / versi iOS atau iPadOS:
 Model adapter Bluetooth / versi driver:
@@ -128,4 +133,6 @@ Potongan log yang sudah disamarkan:
 
 Bedakan hasil pengamatan dari perkiraan. Jika belum menguji suatu langkah, tulis “Belum diuji”; jangan menyatakan semua model atau versi terdampak berdasarkan satu perangkat.
 
-Log launcher: `logs\idock.log`; laporan diagnosis: `logs\bluetooth-diagnostics.txt`; log backend: `data\blehid\logs\blehid.log`. **Samarkan nama perangkat, alamat Bluetooth, path pribadi, dan isi sensitif sebelum membuat issue.** Jangan mengunggah seluruh folder `data` atau screenshot layar perangkat tanpa diperiksa. Tidak ada pengiriman log otomatis dari iDock for Windows.
+Path relatif log launcher adalah `logs\idock.log`, laporan diagnosis `logs\bluetooth-diagnostics.txt`, dan log backend `data\blehid\logs\blehid.log`. Basisnya **`%LOCALAPPDATA%\iDock` untuk installer**, atau folder aplikasi untuk portable/build manual default. [Tabel lokasi data](INSTALL.md#lokasi-data) memberikan path lengkap.
+
+**Samarkan nama perangkat, alamat Bluetooth, path pribadi, dan isi sensitif sebelum membuat issue.** Jangan mengunggah seluruh folder `data` atau screenshot layar perangkat tanpa diperiksa. Tidak ada pengiriman log otomatis dari iDock for Windows.

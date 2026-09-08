@@ -1,0 +1,209 @@
+name: Build release draft
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag matching COMPONENTS.json (for example v0.5.0)'
+        required: true
+        type: string
+
+# Build and release creation run on different ephemeral runners. No repository
+# script or generated executable is executed in the contents:write job.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build:
+    name: Build and validate release assets
+    runs-on: windows-2022
+    timeout-minutes: 45
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      version: ${{ steps.metadata.outputs.version }}
+      commit: ${{ steps.metadata.outputs.commit }}
+    steps:
+      - name: Validate the requested tag syntax
+        id: tag
+        env:
+          REQUESTED_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:REQUESTED_TAG -notmatch '^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+            throw 'Select an existing three-part release tag such as v0.5.0. Branches and arbitrary refs are not release inputs.'
+          }
+          "tag=$($env:REQUESTED_TAG)" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+
+      - name: Check out exactly the existing tag
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          persist-credentials: false
+
+      - name: Match tag, component manifest, and application version
+        id: metadata
+        env:
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifest = Get-Content -LiteralPath 'COMPONENTS.json' -Raw | ConvertFrom-Json
+          $version = [string]$manifest.application.version
+          if ("v$version" -cne $env:RELEASE_TAG) { throw 'Tag does not match COMPONENTS.json application.version.' }
+          [xml]$project = Get-Content -LiteralPath 'source\iDock\iDock.csproj' -Raw
+          if ([string]$project.Project.PropertyGroup.Version -cne $version) { throw 'Application project version does not match the release manifest.' }
+          $commit = & git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0 -or $commit -notmatch '^[0-9a-f]{40}$') { throw 'Cannot identify the tagged source commit.' }
+          "version=$version" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+          "commit=$commit" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+
+      - name: Set up the current .NET 10 SDK
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build the offline installer without installing it
+        run: .\scripts\build-installer.ps1
+
+      - name: Test a byte-identical isolated copy of the release payload
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $build = Get-Content -LiteralPath 'dist\releases\installer-build.json' -Raw | ConvertFrom-Json
+          $payload = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE $build.PayloadRelativePath))
+          $allowedRoot = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE 'dist\installer-payload')) + '\'
+          if (-not $payload.StartsWith($allowedRoot, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $payload) -ne 'iDock') {
+            throw 'Installer build report does not identify an isolated generated payload.'
+          }
+          $verificationParent = Join-Path $env:RUNNER_TEMP ('idock-release-check-' + [Guid]::NewGuid().ToString('N'))
+          $null = New-Item -ItemType Directory -Path $verificationParent
+          Copy-Item -LiteralPath $payload -Destination $verificationParent -Recurse
+          $verificationPackage = Join-Path $verificationParent 'iDock'
+          foreach ($sourceFile in @(Get-ChildItem -LiteralPath $payload -File -Force -Recurse)) {
+            $relative = $sourceFile.FullName.Substring($payload.Length + 1)
+            $copy = Join-Path $verificationPackage $relative
+            if ((Get-FileHash -LiteralPath $sourceFile.FullName -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $copy -Algorithm SHA256).Hash) {
+              throw "Verification copy differs from the installer payload: $relative"
+            }
+          }
+          # Self-tests can write launcher logs. They stay in the disposable copy,
+          # never in the pristine installer/portable source payload.
+          .\scripts\test.ps1 -PackageDirectory $verificationPackage
+
+      - name: Create the portable ZIP and public checksums
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $build = Get-Content -LiteralPath 'dist\releases\installer-build.json' -Raw | ConvertFrom-Json
+          $payload = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE $build.PayloadRelativePath))
+          $allowedRoot = [IO.Path]::GetFullPath((Join-Path $env:GITHUB_WORKSPACE 'dist\installer-payload')) + '\'
+          if (-not $payload.StartsWith($allowedRoot, [StringComparison]::OrdinalIgnoreCase) -or (Split-Path -Leaf $payload) -ne 'iDock') {
+            throw 'Refusing a portable source outside the generated installer payload directory.'
+          }
+          .\scripts\package-portable.ps1 -PackageDirectory $payload
+
+      - name: Upload only the reviewed public artifact names
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-${{ steps.tag.outputs.tag }}-${{ github.run_id }}
+          path: |
+            dist/releases/iDock-Setup-${{ steps.metadata.outputs.version }}-win-x64.exe
+            dist/releases/iDock-${{ steps.metadata.outputs.version }}-win-x64-portable.zip
+            dist/releases/installer-build.json
+            dist/releases/SHA256SUMS.txt
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 7
+
+  draft:
+    name: Create a release draft for maintainer review
+    needs: build
+    runs-on: windows-2022
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download this run's validated assets
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-${{ needs.build.outputs.tag }}-${{ github.run_id }}
+          path: release-assets
+
+      - name: Verify downloaded assets and the remote tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
+          RELEASE_COMMIT: ${{ needs.build.outputs.commit }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = $env:RELEASE_VERSION
+          if ($env:RELEASE_TAG -cne "v$version" -or $version -notmatch '^\d+\.\d+\.\d+$') { throw 'Unexpected release metadata.' }
+          $allowedNames = @("iDock-Setup-$version-win-x64.exe", "iDock-$version-win-x64-portable.zip", 'installer-build.json')
+          $assetDirectory = Join-Path $env:GITHUB_WORKSPACE 'release-assets'
+          $actual = @(Get-ChildItem -LiteralPath $assetDirectory -Force -Recurse)
+          if ($actual.Count -ne 4 -or @($actual | Where-Object { $_.PSIsContainer -or $_.Name -notin ($allowedNames + 'SHA256SUMS.txt') }).Count -ne 0) {
+            throw 'Downloaded artifact names do not match the release allowlist.'
+          }
+          $lines = @(Get-Content -LiteralPath (Join-Path $assetDirectory 'SHA256SUMS.txt'))
+          if ($lines.Count -ne $allowedNames.Count) { throw 'Checksum manifest contains an unexpected number of files.' }
+          $verified = @()
+          foreach ($line in $lines) {
+            if ($line -notmatch '^([0-9a-f]{64})  ([A-Za-z0-9._-]+)$') { throw 'Malformed checksum entry.' }
+            $expectedHash = $Matches[1]
+            $name = $Matches[2]
+            if ($name -notin $allowedNames -or $name -in $verified) { throw 'Unexpected or duplicate checksum filename.' }
+            if ((Get-FileHash -LiteralPath (Join-Path $assetDirectory $name) -Algorithm SHA256).Hash.ToLowerInvariant() -cne $expectedHash) {
+              throw "Checksum mismatch: $name"
+            }
+            $verified += $name
+          }
+          $remoteCommit = & gh api "repos/$($env:GH_REPO)/commits/$($env:RELEASE_TAG)" --jq '.sha'
+          if ($LASTEXITCODE -ne 0 -or $remoteCommit -cne $env:RELEASE_COMMIT) { throw 'The remote tag no longer identifies the source commit that was built.' }
+
+      - name: Create a new draft without replacing any release or asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
+          RELEASE_COMMIT: ${{ needs.build.outputs.commit }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = $env:RELEASE_VERSION
+          $assetDirectory = Join-Path $env:GITHUB_WORKSPACE 'release-assets'
+          $assets = @(
+            (Join-Path $assetDirectory "iDock-Setup-$version-win-x64.exe"),
+            (Join-Path $assetDirectory "iDock-$version-win-x64-portable.zip"),
+            (Join-Path $assetDirectory 'installer-build.json'),
+            (Join-Path $assetDirectory 'SHA256SUMS.txt')
+          )
+          $notes = @"
+          iDock for Windows $version includes an offline Windows x64 installer and a portable ZIP. Both include the .NET runtime; a separate SDK/runtime installation is not required to run the app.
+
+          - Use the Setup EXE for guided installation, or extract the complete portable ZIP and follow docs/INSTALL.md.
+          - Verify downloads against SHA256SUMS.txt. This pipeline does not code-sign iDock; Windows may show an unknown-publisher or SmartScreen warning.
+          - Compatibility depends on Windows, the Bluetooth adapter/driver, iOS/iPadOS and the network. This is an independent project, not an Apple product.
+
+          Source commit: $($env:RELEASE_COMMIT)
+
+          Maintainer gate: hardware-free checks passed, but this draft still requires clean-Windows installation, upgrade/uninstall, physical-device review, and verification of corresponding-source/license obligations for the bundled dependencies before publication. Replace this paragraph with the actual validation results when publishing.
+          "@
+          # --verify-tag never creates a tag. gh release create fails if a release
+          # already exists; there is deliberately no --clobber or update fallback.
+          & gh release create $env:RELEASE_TAG @assets --repo $env:GH_REPO --verify-tag --draft --title "iDock for Windows $version" --notes $notes
+          if ($LASTEXITCODE -ne 0) { throw 'Release creation failed. Existing releases/assets were not overwritten; inspect GitHub before rerunning.' }
+          "Draft created for $($env:RELEASE_TAG). Review clean-Windows/device checks and release notes in GitHub Releases, then publish explicitly." | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY

@@ -1,10 +1,12 @@
-# Checklist kestabilan iDock for Windows 0.5 (eksperimental)
+# Checklist kestabilan iDock for Windows 0.5.0
 
 [Kembali ke README](../README.md) · [Cara pakai](USAGE.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
 Dokumen ini berisi **target pengujian manual, bukan laporan tes yang sudah dilakukan**. Lulus tes otomatis tidak membuktikan 20 kali reconnect atau sesi panjang sudah stabil. Centang hanya langkah yang benar-benar dijalankan pada perangkat nyata; tulis **Belum diuji** atau **Tidak dapat direproduksi** bila sesuai.
 
 Checklist dapat digunakan untuk mencatat hasil iPhone/iPad pada iOS/iPadOS. Catatan penggunaan dasar terbatas pada satu konfigurasi iPhone 11; iPad belum diverifikasi. Buat laporan terpisah per versi aplikasi, model perangkat, versi OS, dan adapter/driver.
+
+Pengguna melaporkan penggunaan pada setup iPhone 11/Windows 11 terasa cukup stabil. Laporan pengalaman tersebut penting, tetapi tidak menggantikan catatan siklus, durasi, atau hasil uji model lain. Pengujian fresh install, upgrade, dan uninstall juga memiliki [checklist rilis](RELEASING.md#checklist-sebelum-publikasi) terpisah.
 
 ## Kriteria penerimaan per konfigurasi
 
@@ -104,10 +106,21 @@ Mematikan AssistiveTouch atau menyembunyikan pointer **belum membuktikan** langg
 - [ ] Pada uji dropout yang aman, pastikan mouse/keyboard Windows tidak terus tertahan ketika perangkat tujuan sudah tidak tersedia.
 - [ ] Setelah pulih, uji satu klik dan teks singkat di aplikasi uji. Tidak ada tombol tersangkut, klik berulang, atau teks lama.
 
+## E. Antarmuka dan urutan penggunaan
+
+- [ ] Pada pembukaan awal, **Panduan** dan ringkasan pintasan mudah ditemukan di bagian atas. Tiga langkah koneksi serta nama laptop dapat dibaca.
+- [ ] Gulir dari atas ke bawah: **Panduan → kartu Layar perangkat/Mouse & keyboard → Pengaturan pointer → Diagnostik**. Semua kontrol dapat dicapai tanpa menu samping atau perpindahan halaman.
+- [ ] Pada ukuran jendela minimum dan scaling/DPI yang diuji, isi tidak terpotong secara horizontal; bagian di bawah layar dapat dicapai dengan scroll.
+- [ ] Setelah **Ctrl + Alt + Q**, gunakan Tab, tombol panah, Enter/Space sesuai kontrol. Fokus terlihat, slider/dropdown dapat dioperasikan, dan tidak ada kontrol yang terlewat karena perubahan layout.
+- [ ] Ubah sensitivitas dan orientasi pada **Pengaturan pointer**, lalu periksa penyimpanan serta perilaku pointer seperti biasa. Menggulir atau memindahkan fokus tidak boleh mengalihkan target input dengan sendirinya.
+- [ ] Bagian **Diagnostik** menampilkan status yang relevan dan **Buka log** mengarah ke lokasi data mode instalasi yang digunakan.
+
+Catat hasil sesuai ukuran jendela, scaling/DPI, dan cara input yang benar-benar diuji. Pemeriksaan layout tidak membuktikan koneksi Bluetooth atau kualitas video telah lulus uji perangkat.
+
 ## Kriteria berhenti dan laporan
 
 Hentikan tes jika input tidak bisa dikembalikan, muncul input yang tidak diminta, crash, atau koneksi berulang kali gagal. Gunakan hotkey lokal lalu tutup iDock for Windows bila masih dapat dioperasikan; jika diperlukan, ikuti [pemulihan input Windows](TROUBLESHOOTING.md#input-tidak-kembali-ke-windows). Jangan melanjutkan tes di aplikasi penting. Catat apakah input kembali normal setelah proses iDock for Windows ditutup.
 
 Laporan berisi hasil tiap bagian, jumlah siklus berhasil/gagal, durasi nyata, status fallback, dan langkah reproduksi. Sertakan hanya log relevan yang sudah disamarkan sebagaimana [panduan pelaporan](TROUBLESHOOTING.md#mengirim-laporan-masalah). Jangan unggah data pairing, alamat Bluetooth, path pribadi, atau isi layar perangkat tanpa diperiksa.
 
-Checklist ini tidak memberikan sertifikasi kompatibilitas lintas perangkat. Sampai hasil perangkat nyata tersedia, iDock for Windows 0.5 tetap **eksperimental**.
+Checklist ini tidak memberikan sertifikasi kompatibilitas lintas perangkat. Laporkan kesimpulan berdasarkan konfigurasi dan langkah yang benar-benar diuji; rilis publik tidak otomatis membuktikan dukungan seluruh model atau versi OS.

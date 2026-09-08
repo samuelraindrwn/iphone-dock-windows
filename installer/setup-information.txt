@@ -1,0 +1,13 @@
+iDock for Windows
+
+Mirror your iPhone or iPad to Windows and use a compatible Bluetooth adapter for mouse and keyboard control.
+
+Setup includes the application, its .NET runtime, AirPlay receiver, Bluetooth backend, licenses and developer source. No SDK or manual build is needed to use the installed application.
+
+Connect the computer and Apple device to the same trusted private network. Setup adds only two iDock AirPlay Firewall rules for the Private profile and local subnet. It never disables the Firewall or changes the network profile. Managed or guest networks may require administrator assistance.
+
+When you first open mirroring, UxPlay may ask to install Bonjour Service with a separate Windows administrator prompt. Follow that upstream prompt if you trust this package. An existing Bonjour service is left unchanged by Setup. Bluetooth pairing and enabling AssistiveTouch on the Apple device are still necessary for control.
+
+Compatibility and responsiveness depend on the Apple device, OS, Bluetooth adapter and local network. Support for every iOS/iPadOS version is not guaranteed. iDock is an independent project and is not affiliated with Apple.
+
+Uninstall preserves your Bluetooth pairing and per-user settings/logs. It also retains the Bonjour executable and license because Bonjour may be shared with other applications. Do not delete a Bonjour executable while its service still points to it.

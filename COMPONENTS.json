@@ -10,7 +10,7 @@
     {
       "name": "Windows BLE HID CLI", "version": "v0.4.0-idock.5", "modified": true,
       "modifications": "source/blehid-patched/IDOCK-MODIFICATIONS.md",
-      "runtime": ".NET 10, framework-dependent; compiled locally from included modified source",
+      "runtime": ".NET 10; compiled from included modified source. Manual builds are framework-dependent by default; release installer and portable packages are self-contained.",
       "source": "https://github.com/abhishek-raj/windows-ble-hid/tree/v0.4.0",
       "download": "https://github.com/abhishek-raj/windows-ble-hid/releases/download/v0.4.0/BleHid-Cli-v0.4.0-win-x64.zip",
       "archiveSha256": "8936a1d0e938fe330b9e2d74c9e090dd1d500ba631ef0444f8c7014b9ddfed31"

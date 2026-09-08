@@ -12,7 +12,7 @@ internal sealed class EngineManager : IDisposable
     public EngineManager(string root) => this.root = root;
     public bool MirrorRunning => mirror?.IsRunning == true;
     public bool ControlRunning => control?.IsRunning == true;
-    public string BleLogPath => Path.Combine(root, "data", "blehid", "logs", "blehid.log");
+    public string BleLogPath => Path.Combine(UserStorage.Root, "data", "blehid", "logs", "blehid.log");
 
     public static bool HasExistingControl()
     {
@@ -22,7 +22,7 @@ internal sealed class EngineManager : IDisposable
     private string Exe(string folder, string name)
     {
         var result = Path.Combine(root, "vendor", folder, name);
-        if (!File.Exists(result)) throw new FileNotFoundException($"Komponen belum lengkap. Ekstrak seluruh paket {ProductInfo.DisplayName} dari ZIP.", result);
+        if (!File.Exists(result)) throw new FileNotFoundException($"Komponen belum lengkap. Jalankan ulang installer atau ekstrak seluruh paket portable {ProductInfo.DisplayName}.", result);
         return result;
     }
     internal static ProcessStartInfo StartInfo(string exe, params string[] args)

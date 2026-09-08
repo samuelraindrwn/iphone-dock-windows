@@ -1,0 +1,109 @@
+# Panduan rilis dan installer
+
+[Kembali ke README](../README.md) · [Developer](DEVELOPMENT.md) · [Instalasi](INSTALL.md) · [Uji perangkat](STABILITY-TESTS.md)
+
+Dokumen ini untuk maintainer. Rilis publik berisi aplikasi siap pakai serta petunjuk pengguna; publikasi tidak mengubah status kompatibilitas perangkat yang belum diuji menjadi didukung.
+
+## Artefak rilis 0.5.0
+
+- **`iDock-Setup-0.5.0-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
+- **`iDock-0.5.0-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
+- **`SHA256SUMS.txt`**: SHA-256 artefak unduhan.
+- **`installer-build.json`**: versi, runtime, compiler, dan metadata penyusunan installer.
+- Catatan rilis: fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
+
+Arsip **Source code** yang dibuat GitHub otomatis bukan installer maupun paket aplikasi siap pakai. Source proyek tetap tersedia melalui repository. `installer-build.json` adalah laporan penyusunan paket, bukan sertifikat lolos instalasi pada Windows bersih.
+
+## Menyiapkan build
+
+Gunakan source/commit yang akan dirilis dan **.NET 10 SDK x64** pada Windows. Build manual tetap tersedia dan harus tetap berfungsi:
+
+```powershell
+.\scripts\build.ps1
+.\scripts\test.ps1
+.\scripts\build-installer.ps1
+
+$installerBuild = Get-Content 'dist\releases\installer-build.json' -Raw | ConvertFrom-Json
+.\scripts\package-portable.ps1 -PackageDirectory $installerBuild.PayloadRelativePath
+```
+
+`build-installer.ps1` menghasilkan installer self-contained di `dist\releases`. Compiler Inno Setup dipatok dan diverifikasi; pemasangan iDock bukan bagian dari proses build tersebut. Compiler yang memiliki tanda tangan digital tidak berarti installer hasil build otomatis ditandatangani.
+
+`package-portable.ps1` memakai payload self-contained yang sama, bukan folder aplikasi pribadi. Nama folder payload dapat berbeda antar-build; ambil `PayloadRelativePath` dari laporan installer, bukan menebaknya. Paket portable dan installer harus memiliki versi yang sama. Setelah seluruh artefak final dibuat, `SHA256SUMS.txt` mencakup installer, ZIP portable, dan laporan build.
+
+Periksa seluruh isi paket: binary launcher/backend, dependensi UxPlay, runtime, lisensi/notices, source yang disertakan, dan dokumentasi. Jangan memasukkan data perangkat, log pribadi, cache, binary hasil build lama, atau helper migrasi lokal.
+
+## Kebijakan instalasi yang harus dipertahankan
+
+- Lokasi aplikasi: `%ProgramFiles%\iDock`, biasanya `C:\Program Files\iDock`. Marker `installed.mode` memilih data/log per pengguna di `%LOCALAPPDATA%\iDock`.
+- Installer tidak memindahkan data portable atau mengubah pairing Bluetooth secara otomatis.
+- Aturan receiver milik installer dibatasi ke **profil Private dan LocalSubnet**. Jangan mengubah profil jaringan komputer, mematikan Firewall, atau menimpa aturan lain yang kebetulan memiliki nama serupa.
+- Bonjour yang sudah ada tidak direkonfigurasi diam-diam. Pada setup baru, UxPlay dapat meminta pemasangan Bonjour saat mirroring pertama kali.
+- Uninstall mempertahankan data pengguna serta pairing. Bonjour adalah layanan bersama: layanan dan binary yang diperlukan tidak boleh dihapus hanya karena launcher dilepas.
+- Penggunaan harian berjalan sebagai pengguna biasa; data tidak ditulis ke Program Files.
+
+## Checklist sebelum publikasi
+
+Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefak:
+
+- [ ] Source, versi aplikasi, dokumentasi, nama installer, dan tag rilis konsisten.
+- [ ] Build manual framework-dependent dan paket self-contained berhasil dibuat.
+- [ ] Pemeriksaan launcher/UI, data path, backend, dan penutupan aplikasi lulus.
+- [ ] Installer dikompilasi; hash artefak sesuai `SHA256SUMS.txt`.
+- [ ] **Windows bersih tanpa SDK/runtime:** installer dapat dipasang dan aplikasi terbuka sebagai pengguna biasa.
+- [ ] **Koneksi pertama:** Bonjour, prompt izin, aturan jaringan terbatas, AirPlay, serta pairing HID diuji dengan perangkat nyata.
+- [ ] **Bonjour sudah ada:** konfigurasi, layanan, aplikasi pemakai lain, serta aturan Firewall yang tidak dimiliki iDock tetap utuh.
+- [ ] **Upgrade:** pengaturan/data pengguna tidak hilang; proses aktif ditangani dengan aman.
+- [ ] **Uninstall:** launcher dilepas, pengguna lain/aplikasi pemakai Bonjour tidak rusak, data serta pairing dipertahankan.
+- [ ] ZIP portable diekstrak ke lokasi berbeda yang aman dan dapat berjalan tanpa runtime terpasang; tetap memakai data lokal paket.
+- [ ] Keyboard, scaling/DPI, ukuran jendela minimum, scroll, slider, orientasi, dan tampilan status diperiksa. Urutan bagian tetap **Panduan → kartu mirroring/kontrol → Pengaturan pointer → Diagnostik**, dengan pintasan terlihat di bagian atas.
+- [ ] Lisensi, notices, dan kewajiban distribusi source tiap komponen ditinjau.
+- [ ] Corresponding source dan material yang diwajibkan lisensi sudah diverifikasi untuk versi **UxPlay, Qt, GStreamer, FFmpeg, dan dependensi yang benar-benar dibundel**. Salinan lisensi serta tautan source upstream saja bukan bukti bahwa seluruh kewajiban distribusi binary sudah terpenuhi.
+- [ ] Catatan kompatibilitas, masalah yang diketahui, serta hasil uji perangkat sesuai bukti; yang belum diuji ditulis jelas.
+- [ ] Isi paket dan screenshot diperiksa agar tidak mengungkap data pribadi.
+
+**Uji fresh install/upgrade/uninstall pada Windows bersih belum otomatis terpenuhi oleh kompilasi atau tes WPF.** Sampai ada laporan uji tersebut, tandai sebagai **belum diuji**, bukan lulus. [Checklist perangkat nyata](STABILITY-TESTS.md) memiliki kriteria terpisah untuk reconnect, sesi panjang, dan keselamatan input.
+
+## GitHub Actions
+
+### Windows validation
+
+Workflow [Windows validation](../.github/workflows/ci.yml) berjalan pada push ke `main`, pull request, atau pemicu manual melalui tab **Actions**. Dua pekerjaan terpisah memeriksa:
+
+- Build manual **framework-dependent**, agar alur developer melalui `scripts/build.ps1` tetap tersedia.
+- Build distribusi **self-contained**, yang menyertakan runtime aplikasi.
+
+Keduanya memakai Windows x64 dan .NET 10 SDK, menjalankan pemeriksaan installer tanpa pemasangan, lalu menjalankan tes launcher/backend pada paket hasil build. Tes ini tidak mengaktifkan Bluetooth atau menggantikan pengujian perangkat nyata. Token checkout tidak disimpan dan izin default workflow hanya membaca source.
+
+### Build release draft
+
+Workflow [Build release draft](../.github/workflows/release.yml) menyediakan dua cara pemicu:
+
+1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.5.0`**.
+2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.5.0`.
+
+Tag wajib berbentuk `vMAJOR.MINOR.PATCH`, dan versinya harus sama dengan `COMPONENTS.json` serta project aplikasi. Workflow tidak membuat atau memindahkan tag. Pastikan commit yang ditag sudah menyertakan seluruh source, script, dokumentasi, dan workflow yang diperlukan.
+
+Pada runner Windows sementara, workflow membangun installer, memeriksa salinan byte-identik dari payload dalam direktori uji terpisah, lalu membuat ZIP portable dari payload yang tidak disentuh tes. Log hasil tes tidak masuk ke paket publik. Hanya empat nama artefak pada bagian awal dokumen ini yang diunggah; artefak sementara Actions disimpan selama tujuh hari.
+
+Pekerjaan terpisah memverifikasi checksum dan memastikan tag remote masih menunjuk commit yang dibangun, lalu membuat **draft release** menggunakan token GitHub dengan izin `contents: write`. Pekerjaan ini tidak menjalankan script repository atau executable hasil build. Tidak ada langkah untuk menimpa release/asset yang sudah ada. Jika pembuatan draft gagal atau sudah ada draft sebelumnya, periksa keadaan di GitHub sebelum menjalankan ulang.
+
+**Workflow tidak mempublikasikan release secara otomatis.** Maintainer harus menyelesaikan checklist Windows bersih, perangkat, privasi, dan kewajiban source/lisensi, memperbarui catatan dengan hasil nyata, lalu memilih **Publish release**. Pastikan pengaturan repository mengizinkan Actions dan pembuatan release oleh token workflow.
+
+## Publikasi ke GitHub Releases
+
+Tujuan publikasi adalah [Releases repository iDock](https://github.com/samuelraindrwn/iphone-dock-windows/releases). Gunakan **draft release** untuk meninjau catatan dan artefak sebelum dipublikasikan.
+
+1. Pastikan commit yang diuji sudah berada di repository dan tag menunjuk commit yang benar.
+2. Siapkan installer, ZIP portable, dan checksum dari build yang sama. Checksum harus mencakup file final yang akan diunggah.
+3. Jalankan **Build release draft**, atau unggah ke draft secara manual jika build dilakukan lokal. Jangan menyamakan workflow sukses dengan persetujuan publikasi.
+4. Periksa nama/versi, ukuran file, isi paket, checksum, lisensi/source, dan catatan hasil uji.
+5. Publikasikan setelah review. Setelah terbit, periksa tautan unduhan publik dan coba unduh asset untuk memastikan hash tetap sesuai.
+
+`/releases/latest` menunjuk rilis publik terbaru yang memenuhi aturan GitHub; tautan itu tidak membuktikan draft sudah diterbitkan. Jangan menyatakan asset tersedia sebelum publikasinya terverifikasi.
+
+## Tanda tangan dan verifikasi
+
+Installer saat ini **unsigned**. Catatan rilis harus mengungkapkan hal ini dan mengarahkan pengguna memeriksa asal repository serta checksum. Jangan meminta pengguna mematikan SmartScreen atau antivirus.
+
+Jika code signing ditambahkan, tanda tangani artefak final sebelum membuat manifest hash. Jangan menyimpan sertifikat privat, password, atau token publikasi dalam repository. SHA-256 membantu membandingkan integritas file; ia bukan pengganti tanda tangan penerbit.
