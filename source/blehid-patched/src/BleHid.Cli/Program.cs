@@ -56,6 +56,7 @@ catch (Exception ex)
 Console.WriteLine($"""
 
     Advertisement status: {peripheral.AdvertisementStatus}
+    Startup mode: {peripheral.StartupMode}; input stays local until a host is selected.
     Pair from your phone's Bluetooth settings, then use the commands below.
 
       type <text>          send keystrokes
@@ -222,7 +223,7 @@ while (true)
                 else if (trimmed.Equals("all", StringComparison.OrdinalIgnoreCase))
                 {
                     peripheral.SelectAllHosts();
-                    Console.WriteLine("  -> all hosts");
+                    Console.WriteLine($"  -> {peripheral.SelectedHostDisplay}");
                 }
                 else if (int.TryParse(trimmed, out var index) && !peripheral.SelectHost(index - 1))
                     Console.WriteLine("  no host with that number");

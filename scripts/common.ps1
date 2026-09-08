@@ -2,9 +2,9 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Assert-TestDockPrerequisites {
+function Assert-iDockPrerequisites {
     if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
-        throw 'TestDock builds and tests require Windows.'
+        throw 'iDock for Windows builds and tests require Windows.'
     }
     if (-not [Environment]::Is64BitOperatingSystem) {
         throw 'The bundled UxPlay release requires x64 Windows.'
@@ -27,7 +27,7 @@ function Invoke-CheckedDotnet {
     }
 }
 
-function Get-TestDockFullPath {
+function Get-iDockFullPath {
     param([Parameter(Mandatory = $true)][string]$Path, [string]$RelativeTo)
     if (-not [IO.Path]::IsPathRooted($Path)) {
         $Path = Join-Path $RelativeTo $Path
@@ -51,7 +51,7 @@ function Assert-NoReparsePoint {
     }
 }
 
-function Assert-TestDockOutputIdle {
+function Assert-iDockOutputIdle {
     param([Parameter(Mandatory = $true)][string]$Directory)
     $prefix = $Directory.TrimEnd('\') + '\'
     foreach ($process in @(Get-Process)) {
@@ -60,7 +60,7 @@ function Assert-TestDockOutputIdle {
             if ($processPath -and $processPath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
                 throw "Close the application using this output folder first: $processPath (PID $($process.Id))."
             }
-            if (-not $processPath -and $process.ProcessName -in @('TestDock', 'BleHid.Cli', 'uxplay-windows', 'uxplay-bluetooth-beacon', 'mDNSResponder')) {
+            if (-not $processPath -and $process.ProcessName -in @('iDock', 'BleHid.Cli', 'uxplay-windows', 'uxplay-bluetooth-beacon', 'mDNSResponder')) {
                 throw "Cannot verify the path of $($process.ProcessName) (PID $($process.Id)). Close it before replacing an existing build, or choose a new -OutputDirectory."
             }
         }
@@ -68,7 +68,7 @@ function Assert-TestDockOutputIdle {
     }
 }
 
-function Get-TestDockRestoreArguments {
+function Get-iDockRestoreArguments {
     param([string]$Project, [string]$RestoreSource, [string]$PackagesDirectory)
     $arguments = @('restore', $Project, '-p:PlatformTarget=x64')
     if ($RestoreSource) { $arguments += @('--source', $RestoreSource) }
@@ -76,7 +76,7 @@ function Get-TestDockRestoreArguments {
     return $arguments
 }
 
-function Copy-TestDockSourceTree {
+function Copy-iDockSourceTree {
     param(
         [Parameter(Mandatory = $true)][string]$SourceDirectory,
         [Parameter(Mandatory = $true)][string]$DestinationDirectory
@@ -104,7 +104,7 @@ function Copy-TestDockSourceTree {
         }
         $destination = Join-Path $DestinationDirectory $item.Name
         if ($item.PSIsContainer) {
-            Copy-TestDockSourceTree -SourceDirectory $item.FullName -DestinationDirectory $destination
+            Copy-iDockSourceTree -SourceDirectory $item.FullName -DestinationDirectory $destination
         }
         elseif ($item.Name -notin $privateNames -and $item.Name -notlike '*.local.*' -and ($item.Extension -in $sourceExtensions -or $item.Name -in $sourceNames)) {
             Copy-Item -LiteralPath $item.FullName -Destination $destination

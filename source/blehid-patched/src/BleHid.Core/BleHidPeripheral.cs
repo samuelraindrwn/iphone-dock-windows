@@ -19,7 +19,7 @@ public sealed record HostTarget(string DeviceId, string Address, string? Name)
 /// <summary>
 /// Exposes this PC as a BLE HID keyboard + mouse (HID over GATT) using the in-box Windows stack.
 /// </summary>
-public sealed class BleHidPeripheral : IAsyncDisposable
+public sealed partial class BleHidPeripheral : IAsyncDisposable
 {
     private readonly List<PeripheralDiagnostics> _diagnostics = [];
     private readonly GattProtectionLevel _protection;
@@ -27,17 +27,25 @@ public sealed class BleHidPeripheral : IAsyncDisposable
     private readonly ConcurrentDictionary<string, BluetoothLEDevice> _hostDevices = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, int> _connectionIntervalsMs = new(StringComparer.OrdinalIgnoreCase);
     private readonly SemaphoreSlim _connectionParameterGate = new(1, 1);
+    private readonly object _stateGate = new();
+    private readonly CancellationTokenSource _lifetime = new();
+    private CancellationToken _startupToken;
+    private volatile bool _disposed;
+    private PeripheralStartupMode _startupMode;
+    private BluetoothError? _lastAdvertisementError;
+    private long _subscriptionRevision, _advertisementRevision;
+    private ExistingConnectionLease? _verifiedConnection;
+    private Task? _connectionWatch;
     private readonly PointerPacingOverrides _pointerPacing =
         PointerPacingOverrides.Load(AppPaths.InRoot("pointer-pacing.json"));
     private int _pacingWarningLogged;
     private string? _selectedHostId;
-    private bool _localOnly;
+    private volatile bool _localOnly = true;
     private bool _warnedMissingHost;
     private bool _everAdvertised;
     private bool _startAttempted;
     private bool _advertisingAttempted;
     private GattServiceProviderAdvertisementStatus _lastAdvertisementStatus;
-    private TaskCompletionSource<bool>? _advertisingStarted;
     private GattServiceProvider? _provider;
     private GattServiceProvider? _batteryProvider;
     private GattLocalCharacteristic? _keyboardInput;
@@ -51,7 +59,9 @@ public sealed class BleHidPeripheral : IAsyncDisposable
         OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000);
 
     public IReadOnlyList<PeripheralDiagnostics> Diagnostics => _diagnostics;
-    public bool HasStartedSuccessfully { get; private set; }
+    public PeripheralStartupMode StartupMode { get { lock (_stateGate) return _startupMode; } }
+    public bool CleanupSucceeded { get; private set; } = true;
+    public bool HasStartedSuccessfully { get { lock (_stateGate) return !_disposed && _startupMode != PeripheralStartupMode.None; } }
     public GattServiceProviderAdvertisementStatus AdvertisementStatus =>
         _provider?.AdvertisementStatus ?? _lastAdvertisementStatus;
 
@@ -106,14 +116,27 @@ public sealed class BleHidPeripheral : IAsyncDisposable
         Log?.Invoke($"[{(ok ? " ok " : "FAIL")}] {step}: {detail}");
     }
 
-    public async Task StartAsync()
+    public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        if (_startAttempted)
-            throw new InvalidOperationException("Use a new peripheral instance for each startup attempt.");
-        _startAttempted = true;
+        lock (_stateGate)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_startAttempted)
+                throw new InvalidOperationException("Use a new peripheral instance for each startup attempt.");
+            _startAttempted = true;
+        }
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _lifetime.Token);
+        deadline.CancelAfter(TimeSpan.FromSeconds(10));
+        _startupToken = deadline.Token;
         try
         {
             await StartCoreAsync();
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && !_disposed)
+        {
+            await DisposeAsync();
+            throw new TimeoutException("BLE HID startup was not validated within 10 seconds. Keyboard and mouse capture will not start. Run --diagnose for details.");
         }
         catch
         {
@@ -125,7 +148,7 @@ public sealed class BleHidPeripheral : IAsyncDisposable
 
     private async Task StartCoreAsync()
     {
-        var adapter = await BluetoothAdapter.GetDefaultAsync()
+        var adapter = await AwaitStartupAsync(BluetoothAdapter.GetDefaultAsync())
             ?? throw new InvalidOperationException("No Bluetooth adapter found.");
 
         Record("Adapter", $"LE={adapter.IsLowEnergySupported}, Peripheral={adapter.IsPeripheralRoleSupported}",
@@ -136,13 +159,18 @@ public sealed class BleHidPeripheral : IAsyncDisposable
         if (!adapter.IsPeripheralRoleSupported)
             throw new NotSupportedException("This Bluetooth radio does not support the LE peripheral role.");
 
-        var serviceResult = await GattServiceProvider.CreateAsync(HidDescriptors.HidService);
+        var serviceResult = await AwaitStartupAsync(GattServiceProvider.CreateAsync(HidDescriptors.HidService));
         Record("HID service 0x1812", serviceResult.Error.ToString(), serviceResult.Error == BluetoothError.Success);
         if (serviceResult.Error != BluetoothError.Success)
             throw new InvalidOperationException($"Could not create HID service: {serviceResult.Error}");
 
-        _provider = serviceResult.ServiceProvider;
-        var service = _provider.Service;
+        GattLocalService service;
+        lock (_stateGate)
+        {
+            CheckStartupAlive();
+            _provider = serviceResult.ServiceProvider;
+            service = _provider.Service;
+        }
 
         await CreateReadableCharacteristicAsync("HID Information", HidDescriptors.HidInformation,
             HidDescriptors.HidInformationValue, service);
@@ -153,57 +181,102 @@ public sealed class BleHidPeripheral : IAsyncDisposable
         await CreateControlPointAsync(service);
         await CreateProtocolModeAsync(service);
 
-        _keyboardInput = await CreateInputReportAsync("Keyboard input report", service,
+        var keyboardInput = await CreateInputReportAsync("Keyboard input report", service,
             HidDescriptors.KeyboardReportId, () => _lastKeyboardReport);
 
-        _mouseInput = await CreateInputReportAsync("Mouse input report", service,
+        var mouseInput = await CreateInputReportAsync("Mouse input report", service,
             HidDescriptors.MouseReportId, () => _lastMouseReport);
+
+        lock (_stateGate)
+        {
+            CheckStartupAlive();
+            _keyboardInput = keyboardInput;
+            _mouseInput = mouseInput;
+        }
 
         await CreateBatteryServiceAsync();
 
-        _advertisingStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _provider.AdvertisementStatusChanged += OnAdvertisementStatusChanged;
-
-        _advertisingAttempted = true;
-        _provider.StartAdvertising(new GattServiceProviderAdvertisingParameters
+        lock (_stateGate)
         {
-            IsConnectable = true,
-            IsDiscoverable = true
-        });
+            CheckStartupAlive();
+            _provider!.AdvertisementStatusChanged += OnAdvertisementStatusChanged;
+            _advertisingAttempted = true;
+            _provider.StartAdvertising(new GattServiceProviderAdvertisingParameters
+            {
+                IsConnectable = true,
+                IsDiscoverable = true
+            });
+        }
 
-        // The provider reports Aborted until the radio actually begins advertising,
-        // so wait for the Started transition rather than reading the status here.
-        var started = await Task.WhenAny(_advertisingStarted.Task, Task.Delay(TimeSpan.FromSeconds(10)))
-            == _advertisingStarted.Task;
-
-        _lastAdvertisementStatus = _provider.AdvertisementStatus;
-        started = started && _lastAdvertisementStatus == GattServiceProviderAdvertisementStatus.Started;
-        Record("StartAdvertising", _lastAdvertisementStatus.ToString(), started);
-        if (!started)
-            throw new InvalidOperationException(
-                $"BLE HID advertising did not reach Started within 10 seconds (status: {_lastAdvertisementStatus}). " +
-                "Keyboard and mouse capture will not start. Run --diagnose for details.");
-
-        HasStartedSuccessfully = true;
+        // Poll the actual property too: a missed Started callback must not cause a false timeout.
+        while (true)
+        {
+            lock (_stateGate)
+            {
+                CheckStartupAlive();
+                if (PeripheralStartupPolicy.IsAdvertisingReady(ReadAdvertisementStatusLocked()))
+                {
+                    CheckStartupAlive();
+                    _startupMode = PeripheralStartupMode.Advertising;
+                    _everAdvertised = true;
+                    Record("StartAdvertising", _lastAdvertisementStatus.ToString(), true);
+                    LogSubscriberSnapshotLocked();
+                    return;
+                }
+            }
+            if (await TryVerifyExistingConnectionAsync()) return;
+            await Task.Delay(100, _startupToken);
+        }
     }
 
     private void OnAdvertisementStatusChanged(GattServiceProvider sender,
         GattServiceProviderAdvertisementStatusChangedEventArgs args)
     {
-        _lastAdvertisementStatus = args.Status;
-        // Give an initial Aborted transition a bounded chance to recover, but never treat it as ready.
-        var note = args.Status == GattServiceProviderAdvertisementStatus.Aborted
-            ? _everAdvertised ? " -- advertising stopped; hosts can no longer see this PC"
-                              : " (not ready; waiting for Started until startup timeout)"
-            : "";
-
-        Log?.Invoke($"[adv ] status -> {args.Status} (error: {args.Error}){note}");
-
-        if (args.Status == GattServiceProviderAdvertisementStatus.Started)
+        lock (_stateGate)
         {
-            _everAdvertised = true;
-            _advertisingStarted?.TrySetResult(true);
+            if (_disposed) return;
+            _lastAdvertisementStatus = args.Status;
+            _lastAdvertisementError = args.Error;
+            _advertisementRevision++;
+            var note = args.Status == GattServiceProviderAdvertisementStatus.Aborted && !_everAdvertised
+                ? " (not ready; waiting for startup validation)" : "";
+            Log?.Invoke($"[adv ] status -> {args.Status} (error: {args.Error}){note}");
+            if (PeripheralStartupPolicy.IsAdvertisingReady(args.Status)) _everAdvertised = true;
+            ValidateVerifiedConnectionLocked();
         }
+    }
+
+    private void CheckStartupAlive()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _startupToken.ThrowIfCancellationRequested();
+    }
+
+    private async Task<T> AwaitStartupAsync<T>(IAsyncOperation<T> operation)
+    {
+        CheckStartupAlive();
+        var result = await PeripheralStartupPolicy.AwaitOperationAsync(
+            operation.AsTask(_startupToken), _startupToken, () => _disposed);
+        CheckStartupAlive(); // A late WinRT completion may not resurrect a disposed startup.
+        return result;
+    }
+
+    private GattServiceProviderAdvertisementStatus ReadAdvertisementStatusLocked()
+    {
+        var actual = _provider?.AdvertisementStatus ?? _lastAdvertisementStatus;
+        if (actual != _lastAdvertisementStatus)
+        {
+            _lastAdvertisementStatus = actual;
+            _lastAdvertisementError = null; // An earlier Success error is not evidence for a new status.
+            _advertisementRevision++;
+        }
+        return actual;
+    }
+
+    private void LogSubscriberSnapshotLocked()
+    {
+        Log?.Invoke($"[subs] Keyboard input report: {SubscribedKeyboardClients} subscriber(s)");
+        Log?.Invoke($"[subs] Mouse input report: {SubscribedMouseClients} subscriber(s)");
     }
 
     /// <summary>Serves the value from a handler rather than StaticValue so host reads are observable.</summary>
@@ -216,26 +289,24 @@ public sealed class BleHidPeripheral : IAsyncDisposable
             ReadProtectionLevel = _protection
         };
 
-        var result = await service.CreateCharacteristicAsync(uuid, parameters);
+        var result = await AwaitStartupAsync(service.CreateCharacteristicAsync(uuid, parameters));
         Record(name, $"{result.Error} ({value.Length} bytes)", result.Error == BluetoothError.Success);
-        if (result.Error != BluetoothError.Success) return;
+        if (result.Error != BluetoothError.Success) throw new InvalidOperationException($"Could not create {name}: {result.Error}");
 
-        result.Characteristic.ReadRequested += async (_, args) =>
-        {
-            using var deferral = args.GetDeferral();
-            var request = await args.GetRequestAsync();
-            Log?.Invoke($"[read] host read {name}");
-            request.RespondWithValue(CryptographicBuffer.CreateFromByteArray(value));
-        };
+        result.Characteristic.ReadRequested += async (_, args) => await RespondToReadAsync(args, name, () => value);
     }
 
     private async Task CreateBatteryServiceAsync()
     {
-        var result = await GattServiceProvider.CreateAsync(HidDescriptors.BatteryService);
+        var result = await AwaitStartupAsync(GattServiceProvider.CreateAsync(HidDescriptors.BatteryService));
         Record("Battery service 0x180F", result.Error.ToString(), result.Error == BluetoothError.Success);
-        if (result.Error != BluetoothError.Success) return;
+        if (result.Error != BluetoothError.Success) throw new InvalidOperationException($"Could not create battery service: {result.Error}");
 
-        _batteryProvider = result.ServiceProvider;
+        lock (_stateGate)
+        {
+            CheckStartupAlive();
+            _batteryProvider = result.ServiceProvider;
+        }
 
         var parameters = new GattLocalCharacteristicParameters
         {
@@ -243,20 +314,14 @@ public sealed class BleHidPeripheral : IAsyncDisposable
             ReadProtectionLevel = GattProtectionLevel.Plain
         };
 
-        var levelResult = await _batteryProvider.Service.CreateCharacteristicAsync(
-            HidDescriptors.BatteryLevel, parameters);
+        var levelResult = await AwaitStartupAsync(result.ServiceProvider.Service.CreateCharacteristicAsync(
+            HidDescriptors.BatteryLevel, parameters));
 
         Record("Battery Level 0x2A19", levelResult.Error.ToString(),
             levelResult.Error == BluetoothError.Success);
-        if (levelResult.Error != BluetoothError.Success) return;
+        if (levelResult.Error != BluetoothError.Success) throw new InvalidOperationException($"Could not create battery level: {levelResult.Error}");
 
-        levelResult.Characteristic.ReadRequested += async (_, args) =>
-        {
-            using var deferral = args.GetDeferral();
-            var request = await args.GetRequestAsync();
-            Log?.Invoke("[read] host read Battery Level");
-            request.RespondWithValue(CryptographicBuffer.CreateFromByteArray([100]));
-        };
+        levelResult.Characteristic.ReadRequested += async (_, args) => await RespondToReadAsync(args, "Battery Level", () => [100]);
     }
 
     private async Task CreateControlPointAsync(GattLocalService service)
@@ -267,17 +332,14 @@ public sealed class BleHidPeripheral : IAsyncDisposable
             WriteProtectionLevel = _protection
         };
 
-        var result = await service.CreateCharacteristicAsync(HidDescriptors.HidControlPoint, parameters);
+        var result = await AwaitStartupAsync(service.CreateCharacteristicAsync(HidDescriptors.HidControlPoint, parameters));
         Record("HID Control Point", result.Error.ToString(), result.Error == BluetoothError.Success);
-        if (result.Error != BluetoothError.Success) return;
+        if (result.Error != BluetoothError.Success) throw new InvalidOperationException($"Could not create HID control point: {result.Error}");
 
-        result.Characteristic.WriteRequested += async (_, args) =>
+        result.Characteristic.WriteRequested += async (_, args) => await HandleWriteAsync(args, command =>
         {
-            using var deferral = args.GetDeferral();
-            var request = await args.GetRequestAsync();
-            var command = ReadBytes(request.Value);
             Log?.Invoke($"[hid ] control point <- 0x{(command.Length > 0 ? command[0] : 0):X2}");
-        };
+        });
     }
 
     private async Task CreateProtocolModeAsync(GattLocalService service)
@@ -290,25 +352,17 @@ public sealed class BleHidPeripheral : IAsyncDisposable
             WriteProtectionLevel = _protection
         };
 
-        var result = await service.CreateCharacteristicAsync(HidDescriptors.ProtocolMode, parameters);
+        var result = await AwaitStartupAsync(service.CreateCharacteristicAsync(HidDescriptors.ProtocolMode, parameters));
         Record("Protocol Mode", result.Error.ToString(), result.Error == BluetoothError.Success);
-        if (result.Error != BluetoothError.Success) return;
+        if (result.Error != BluetoothError.Success) throw new InvalidOperationException($"Could not create protocol mode: {result.Error}");
 
-        result.Characteristic.ReadRequested += async (_, args) =>
-        {
-            using var deferral = args.GetDeferral();
-            var request = await args.GetRequestAsync();
-            request.RespondWithValue(CryptographicBuffer.CreateFromByteArray([_protocolMode]));
-        };
+        result.Characteristic.ReadRequested += async (_, args) => await RespondToReadAsync(args, "Protocol Mode", () => [_protocolMode]);
 
-        result.Characteristic.WriteRequested += async (_, args) =>
+        result.Characteristic.WriteRequested += async (_, args) => await HandleWriteAsync(args, value =>
         {
-            using var deferral = args.GetDeferral();
-            var request = await args.GetRequestAsync();
-            var value = ReadBytes(request.Value);
             if (value.Length > 0) _protocolMode = value[0];
             Log?.Invoke($"[hid ] protocol mode -> {(_protocolMode == 0 ? "boot" : "report")}");
-        };
+        });
     }
 
     private async Task<GattLocalCharacteristic?> CreateInputReportAsync(string name,
@@ -321,24 +375,24 @@ public sealed class BleHidPeripheral : IAsyncDisposable
             ReadProtectionLevel = _protection
         };
 
-        var result = await service.CreateCharacteristicAsync(HidDescriptors.Report, parameters);
+        var result = await AwaitStartupAsync(service.CreateCharacteristicAsync(HidDescriptors.Report, parameters));
         Record(name, result.Error.ToString(), result.Error == BluetoothError.Success);
-        if (result.Error != BluetoothError.Success) return null;
+        if (result.Error != BluetoothError.Success) throw new InvalidOperationException($"Could not create {name}: {result.Error}");
 
         var characteristic = result.Characteristic;
 
-        characteristic.ReadRequested += async (_, args) =>
-        {
-            using var deferral = args.GetDeferral();
-            var request = await args.GetRequestAsync();
-            Log?.Invoke($"[read] host read {name}");
-            request.RespondWithValue(CryptographicBuffer.CreateFromByteArray(currentValue()));
-        };
+        characteristic.ReadRequested += async (_, args) => await RespondToReadAsync(args, name, currentValue);
 
         characteristic.SubscribedClientsChanged += (sender, _) =>
         {
-            Log?.Invoke($"[subs] {name}: {sender.SubscribedClients.Count} subscriber(s)");
-            ReturnLocalIfTargetMissing(Hosts());
+            lock (_stateGate)
+            {
+                if (_disposed) return;
+                _subscriptionRevision++;
+                Log?.Invoke($"[subs] {name}: {sender.SubscribedClients.Count} subscriber(s)");
+                ValidateVerifiedConnectionLocked();
+                ReturnLocalIfTargetMissing(Hosts());
+            }
             _ = RefreshConnectionParametersAsync();
         };
 
@@ -348,41 +402,48 @@ public sealed class BleHidPeripheral : IAsyncDisposable
             StaticValue = CryptographicBuffer.CreateFromByteArray([reportId, HidDescriptors.ReportTypeInput])
         };
 
-        var descriptorResult = await characteristic.CreateDescriptorAsync(
-            HidDescriptors.ReportReference, descriptorParameters);
+        var descriptorResult = await AwaitStartupAsync(characteristic.CreateDescriptorAsync(
+            HidDescriptors.ReportReference, descriptorParameters));
 
         Record($"{name} / Report Reference 0x2908",
             $"{descriptorResult.Error} (id={reportId}, type=Input)",
             descriptorResult.Error == BluetoothError.Success);
+        if (descriptorResult.Error != BluetoothError.Success)
+            throw new InvalidOperationException($"Could not create {name} report reference: {descriptorResult.Error}");
 
         return characteristic;
     }
 
     private async Task RefreshConnectionParametersAsync()
     {
-        if (!CanReadConnectionParameters) return;
+        if (!CanReadConnectionParameters || _disposed) return;
 
         await _connectionParameterGate.WaitAsync();
         try
         {
+            if (_disposed) return;
             foreach (var host in Hosts())
             {
                 if (!_hostDevices.TryGetValue(host.DeviceId, out var device))
                 {
                     device = await BluetoothLEDevice.FromIdAsync(host.DeviceId);
                     if (device is null) continue;
-                    if (!string.IsNullOrWhiteSpace(device.Name))
-                        _hostNames[host.DeviceId] = device.Name;
-                    device.ConnectionParametersChanged += OnConnectionParametersChanged;
-                    _hostDevices[host.DeviceId] = device;
+                    lock (_stateGate)
+                    {
+                        if (_disposed) { device.Dispose(); return; }
+                        if (!string.IsNullOrWhiteSpace(device.Name))
+                            _hostNames[host.DeviceId] = device.Name;
+                        device.ConnectionParametersChanged += OnConnectionParametersChanged;
+                        _hostDevices[host.DeviceId] = device;
+                    }
                 }
 
-                UpdateConnectionInterval(device);
+                lock (_stateGate) { if (!_disposed) UpdateConnectionInterval(device); }
             }
         }
         catch (Exception ex)
         {
-            Log?.Invoke($"[link] could not read connection interval: {ex.Message}");
+            if (!_disposed) Log?.Invoke($"[link] could not read connection interval: {ex.Message}");
         }
         finally
         {
@@ -391,8 +452,10 @@ public sealed class BleHidPeripheral : IAsyncDisposable
     }
 
     [SupportedOSPlatform("windows10.0.22000.0")]
-    private void OnConnectionParametersChanged(BluetoothLEDevice sender, object args) =>
-        UpdateConnectionInterval(sender);
+    private void OnConnectionParametersChanged(BluetoothLEDevice sender, object args)
+    {
+        lock (_stateGate) { if (!_disposed) UpdateConnectionInterval(sender); }
+    }
 
     [SupportedOSPlatform("windows10.0.22000.0")]
     private void UpdateConnectionInterval(BluetoothLEDevice device)
@@ -429,6 +492,7 @@ public sealed class BleHidPeripheral : IAsyncDisposable
     /// <summary>Subscribed hosts, de-duplicated across the keyboard and mouse reports.</summary>
     public IReadOnlyList<HostTarget> Hosts()
     {
+        if (_disposed) return [];
         var ids = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var client in _keyboardInput?.SubscribedClients ?? []) ids.Add(client.Session.DeviceId.Id);
         foreach (var client in _mouseInput?.SubscribedClients ?? []) ids.Add(client.Session.DeviceId.Id);
@@ -439,7 +503,14 @@ public sealed class BleHidPeripheral : IAsyncDisposable
     /// <summary>Cycles this PC -> host1 -> ... -> hostN -> this PC. Safe to call from any thread.</summary>
     public string SelectNextHost()
     {
+        lock (_stateGate)
+        {
+        ValidateVerifiedConnectionLocked();
+        if (!HasStartedSuccessfully) return SelectLocal();
         var hosts = Hosts();
+        if (_startupMode == PeripheralStartupMode.ExistingConnectionVerified)
+            hosts = hosts.Where(h => string.Equals(h.DeviceId, _verifiedConnection?.Snapshot.Keyboard.HostId,
+                StringComparison.OrdinalIgnoreCase)).ToList();
         _warnedMissingHost = false;
 
         if (hosts.Count == 0) return SelectLocal();
@@ -465,15 +536,19 @@ public sealed class BleHidPeripheral : IAsyncDisposable
         _selectedHostId = hosts[next].DeviceId;
         TargetChanged?.Invoke();
         return hosts[next].Display;
+        }
     }
 
     public string SelectLocal()
     {
+        lock (_stateGate)
+        {
         _localOnly = true;
         _selectedHostId = null;
         _warnedMissingHost = false;
         TargetChanged?.Invoke();
         return LocalDisplay;
+        }
     }
 
     internal static bool ShouldReturnLocal(bool localOnly, string? selectedHostId,
@@ -491,21 +566,34 @@ public sealed class BleHidPeripheral : IAsyncDisposable
 
     public void SelectAllHosts()
     {
+        lock (_stateGate)
+        {
+        ValidateVerifiedConnectionLocked();
+        // A proof for one host never authorizes broadcast to other devices.
+        if (!HasStartedSuccessfully || _startupMode == PeripheralStartupMode.ExistingConnectionVerified) return;
         _localOnly = false;
         _selectedHostId = null;
         _warnedMissingHost = false;
         TargetChanged?.Invoke();
+        }
     }
 
     public bool SelectHost(int index)
     {
+        lock (_stateGate)
+        {
+        ValidateVerifiedConnectionLocked();
+        if (!HasStartedSuccessfully) return false;
         var hosts = Hosts();
         if (index < 0 || index >= hosts.Count) return false;
+        if (_startupMode == PeripheralStartupMode.ExistingConnectionVerified && !string.Equals(
+            hosts[index].DeviceId, _verifiedConnection?.Snapshot.Keyboard.HostId, StringComparison.OrdinalIgnoreCase)) return false;
         _localOnly = false;
         _selectedHostId = hosts[index].DeviceId;
         _warnedMissingHost = false;
         TargetChanged?.Invoke();
         return true;
+        }
     }
 
     /// <summary>Resolves friendly names for subscribed hosts so they can be shown while switching.</summary>
@@ -517,11 +605,15 @@ public sealed class BleHidPeripheral : IAsyncDisposable
             try
             {
                 using var device = await BluetoothLEDevice.FromIdAsync(host.DeviceId);
-                if (!string.IsNullOrWhiteSpace(device?.Name)) _hostNames[host.DeviceId] = device.Name;
+                lock (_stateGate)
+                {
+                    if (_disposed) return;
+                    if (!string.IsNullOrWhiteSpace(device?.Name)) _hostNames[host.DeviceId] = device.Name;
+                }
             }
             catch (Exception ex)
             {
-                Log?.Invoke($"[host] could not resolve name for {host.Address}: {ex.Message}");
+                if (!_disposed) Log?.Invoke($"[host] could not resolve name for {host.Address}: {ex.Message}");
             }
         }
     }
@@ -534,30 +626,47 @@ public sealed class BleHidPeripheral : IAsyncDisposable
 
     private async Task NotifyAsync(GattLocalCharacteristic? characteristic, byte[] payload)
     {
-        if (_localOnly) return;
-        if (characteristic is null || characteristic.SubscribedClients.Count == 0) return;
-
-        var buffer = CryptographicBuffer.CreateFromByteArray(payload);
-        var target = _selectedHostId;
-        if (target is null)
+        Task notification;
+        lock (_stateGate)
         {
-            await characteristic.NotifyValueAsync(buffer);
-            return;
+            ValidateVerifiedConnectionLocked();
+            if (!HasStartedSuccessfully || _localOnly) return;
+            if (characteristic is null || characteristic.SubscribedClients.Count == 0) return;
+            var buffer = CryptographicBuffer.CreateFromByteArray(payload);
+            var target = _selectedHostId;
+            if (_startupMode == PeripheralStartupMode.ExistingConnectionVerified)
+            {
+                var verified = _verifiedConnection;
+                if (verified is null || !string.Equals(target, verified.Snapshot.Keyboard.HostId, StringComparison.OrdinalIgnoreCase)) return;
+                // Retain the exact proven client, never pick a replacement with the same host ID.
+                var client = ReferenceEquals(characteristic, _keyboardInput) ? verified.Keyboard
+                    : ReferenceEquals(characteristic, _mouseInput) ? verified.Mouse : null;
+                if (client is null) return;
+                notification = characteristic.NotifyValueAsync(buffer, client).AsTask(_lifetime.Token);
+            }
+            else if (target is null)
+            {
+                // Only an explicit normal-mode SelectAllHosts permits broadcast. Resolve and
+                // start the operation under the same lock as SelectLocal/revocation.
+                notification = characteristic.NotifyValueAsync(buffer).AsTask(_lifetime.Token);
+            }
+            else
+            {
+                var client = characteristic.SubscribedClients.FirstOrDefault(c =>
+                    string.Equals(c.Session.DeviceId.Id, target, StringComparison.OrdinalIgnoreCase));
+                if (client is null)
+                {
+                    if (!_warnedMissingHost)
+                    {
+                        _warnedMissingHost = true;
+                        Log?.Invoke("[host] selected host is no longer subscribed - reports are being dropped");
+                    }
+                    return;
+                }
+                notification = characteristic.NotifyValueAsync(buffer, client).AsTask(_lifetime.Token);
+            }
         }
-
-        foreach (var client in characteristic.SubscribedClients)
-        {
-            if (!string.Equals(client.Session.DeviceId.Id, target, StringComparison.OrdinalIgnoreCase)) continue;
-            await characteristic.NotifyValueAsync(buffer, client);
-            return;
-        }
-
-        // Dropping is safer than falling back to broadcast: the input was meant for one host.
-        if (!_warnedMissingHost)
-        {
-            _warnedMissingHost = true;
-            Log?.Invoke("[host] selected host is no longer subscribed - reports are being dropped");
-        }
+        await notification;
     }
 
     private static byte[] ReadBytes(IBuffer buffer)
@@ -568,31 +677,89 @@ public sealed class BleHidPeripheral : IAsyncDisposable
         return bytes;
     }
 
-    public ValueTask DisposeAsync()
+    private async Task RespondToReadAsync(GattReadRequestedEventArgs args, string name, Func<byte[]> value)
     {
-        HasStartedSuccessfully = false;
-        if (_provider is not null)
+        try
         {
-            _lastAdvertisementStatus = _provider.AdvertisementStatus;
-            _provider.AdvertisementStatusChanged -= OnAdvertisementStatusChanged;
-            // Stop attempted advertising even when Aborted/Created. Merely creating a provider
-            // does not make StopAdvertising valid (the battery provider is never advertised).
-            try { if (_advertisingAttempted) _provider.StopAdvertising(); }
-            catch (Exception ex) { Log?.Invoke($"[stop] HID advertising cleanup failed: {ex.Message}"); }
-            _advertisingAttempted = false;
-            _provider = null;
-        }
-        _batteryProvider = null;
-        if (CanReadConnectionParameters)
-        {
-            foreach (var device in _hostDevices.Values)
+            using var deferral = args.GetDeferral();
+            if (_disposed) return;
+            var request = await args.GetRequestAsync();
+            lock (_stateGate)
             {
-                device.ConnectionParametersChanged -= OnConnectionParametersChanged;
-                device.Dispose();
+                if (_disposed || request is null) return;
+                Log?.Invoke($"[read] host read {name}");
+                request.RespondWithValue(CryptographicBuffer.CreateFromByteArray(value()));
             }
         }
-        _hostDevices.Clear();
-        _connectionIntervalsMs.Clear();
-        return ValueTask.CompletedTask;
+        catch (Exception ex) { if (!_disposed) Log?.Invoke($"[read] {name} request failed: {ex.Message}"); }
+    }
+
+    private async Task HandleWriteAsync(GattWriteRequestedEventArgs args, Action<byte[]> apply)
+    {
+        try
+        {
+            using var deferral = args.GetDeferral();
+            if (_disposed) return;
+            var request = await args.GetRequestAsync();
+            lock (_stateGate)
+            {
+                if (_disposed || request is null) return;
+                apply(ReadBytes(request.Value));
+            }
+        }
+        catch (Exception ex) { if (!_disposed) Log?.Invoke($"[hid ] write request failed: {ex.Message}"); }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        GattServiceProvider? provider;
+        bool advertisingAttempted;
+        Task? watch;
+        lock (_stateGate)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _startupMode = PeripheralStartupMode.None;
+            SelectLocal();
+            ClearVerifiedConnectionLocked();
+            provider = _provider;
+            _provider = null;
+            advertisingAttempted = _advertisingAttempted;
+            _advertisingAttempted = false;
+            _batteryProvider = null;
+            _keyboardInput = _mouseInput = null;
+            watch = _connectionWatch;
+            if (CanReadConnectionParameters)
+            {
+                foreach (var device in _hostDevices.Values)
+                {
+                    try { device.ConnectionParametersChanged -= OnConnectionParametersChanged; }
+                    catch (Exception ex) { NoteCleanupFailure("connection event", ex); }
+                    try { device.Dispose(); }
+                    catch (Exception ex) { NoteCleanupFailure("connection device", ex); }
+                }
+            }
+            _hostDevices.Clear();
+            _connectionIntervalsMs.Clear();
+        }
+        _lifetime.Cancel();
+        if (provider is not null)
+        {
+            try { _lastAdvertisementStatus = provider.AdvertisementStatus; }
+            catch (Exception ex) { NoteCleanupFailure("advertisement status", ex); }
+            try { provider.AdvertisementStatusChanged -= OnAdvertisementStatusChanged; }
+            catch (Exception ex) { NoteCleanupFailure("advertisement event", ex); }
+            // Stop attempted advertising even when Aborted/Created. Merely creating a provider
+            // does not make StopAdvertising valid (the battery provider is never advertised).
+            try { if (advertisingAttempted) provider.StopAdvertising(); }
+            catch (Exception ex) { NoteCleanupFailure("HID advertising", ex); }
+        }
+        if (watch is not null) await watch;
+    }
+
+    private void NoteCleanupFailure(string resource, Exception error)
+    {
+        CleanupSucceeded = false;
+        Log?.Invoke($"[stop] {resource} cleanup failed: {error.Message}");
     }
 }

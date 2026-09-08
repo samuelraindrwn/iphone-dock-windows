@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Win32.SafeHandles;
 
-namespace TestDock;
+namespace iDock;
 
 // A job owns only processes started by this app and their descendants. Closing it
 // also covers UxPlay's self-restart and beacon without killing unrelated receivers.

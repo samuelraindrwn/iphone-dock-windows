@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text.Json;
 
-namespace TestDock;
+namespace iDock;
 
 internal sealed record PointerConfiguration(double Sensitivity, int RotationDegrees = 0);
 

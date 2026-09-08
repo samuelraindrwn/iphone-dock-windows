@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace TestDock;
+namespace iDock;
 
 public partial class MainWindow : Window
 {
@@ -43,7 +43,7 @@ public partial class MainWindow : Window
         UpdateSensitivityLabel();
         sensitivitySave.Tick += (_, _) => SaveSensitivity();
         sensitivityReady = true;
-        Append("TestDock 0.4 — arah pointer bisa disesuaikan untuk portrait dan landscape.");
+        Append($"{ProductInfo.DisplayName} 0.5 — startup Bluetooth memeriksa iklan dan koneksi HID secara terpisah.");
         poll.Tick += (_, _) => Refresh();
         poll.Start();
         Closing += WindowClosing;
@@ -107,7 +107,7 @@ public partial class MainWindow : Window
         LogBox.AppendText(line + Environment.NewLine);
         if (LogBox.Text.Length > 24000) LogBox.Text = LogBox.Text[^18000..];
         LogBox.ScrollToEnd();
-        try { File.AppendAllText(Path.Combine(logs, "testdock.log"), line + Environment.NewLine); }
+        try { File.AppendAllText(Path.Combine(logs, "idock.log"), line + Environment.NewLine); }
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
     }
@@ -123,7 +123,7 @@ public partial class MainWindow : Window
     {
         engines.StartMirror();
         mirrorWasRunning = true;
-        MirrorStatus.Text = "Receiver dibuka — pilih uxplay-windows di iPhone";
+        MirrorStatus.Text = "Penerima AirPlay dibuka — pilih uxplay-windows di perangkat";
         Append("UxPlay dibuka. Tampilan video muncul setelah Screen Mirroring tersambung. Setup awal mungkin meminta instalasi Bonjour.");
         return Task.CompletedTask;
     });
@@ -135,7 +135,7 @@ public partial class MainWindow : Window
         controlStatus.Begin();
         controlWasRunning = true;
         ControlStatus.Text = controlStatus.DisplayText;
-        Append("Input tetap di laptop. Setelah pairing, Ctrl+D+C memilih iPhone; Ctrl+Alt+Q kembali ke laptop.");
+        Append("Input tetap di laptop. Setelah pairing, Ctrl+D+C memilih perangkat; Ctrl+Alt+Q kembali ke laptop.");
         await Task.Delay(900);
     });
     private async void Diagnose_Click(object sender, RoutedEventArgs e) => await Run(async () =>
@@ -149,9 +149,16 @@ public partial class MainWindow : Window
     });
     internal static string DescribeDiagnostic(int exitCode, string report)
     {
+        if (report.Contains("peripheral cleanup failed:", StringComparison.OrdinalIgnoreCase))
+            return $"Pembersihan sesi Bluetooth belum terkonfirmasi. Tutup {ProductInfo.DisplayName} dan periksa log sebelum mencoba lagi.";
+        if (exitCode == 0 && report.Contains("Existing HID connection verified. This diagnostic has now closed the peripheral.", StringComparison.Ordinal))
+            return "Koneksi HID lama terverifikasi; iklan Bluetooth belum siap. Mulai kontrol dan uji input perangkat.";
+        if (exitCode == 0 && report.Contains("Advertisement status: StartedWithoutAllAdvertisementData", StringComparison.Ordinal)
+            && report.Contains("Advertising startup succeeded. This diagnostic has now stopped advertising.", StringComparison.Ordinal))
+            return "Iklan Bluetooth terbatas. Penemuan perangkat, pairing, dan input masih perlu diuji.";
         if (exitCode == 0 && (report.Contains("Advertising is running", StringComparison.Ordinal)
             || report.Contains("Advertising startup succeeded. This diagnostic has now stopped advertising.", StringComparison.Ordinal)))
-            return "Bluetooth bisa mengiklankan mouse/keyboard. Pairing dan input iPhone masih perlu diuji.";
+            return "Bluetooth bisa mengiklankan mouse/keyboard. Pairing dan input perangkat masih perlu diuji.";
         if (report.Contains("UnauthorizedAccessException", StringComparison.OrdinalIgnoreCase) || report.Contains("Access is denied", StringComparison.OrdinalIgnoreCase))
             return "Pemeriksaan terhalang akses Windows. Lihat log; ini belum berarti adapter tidak mendukung.";
         if (Regex.IsMatch(report, @"Peripheral role\s*:\s*False", RegexOptions.IgnoreCase))
@@ -165,7 +172,7 @@ public partial class MainWindow : Window
         controlStatus.Stop(clearFailure: true);
         ControlStatus.Text = controlStatus.DisplayText;
         mirrorWasRunning = controlWasRunning = false;
-        Append("Sesi TestDock dihentikan. Pairing dan layanan Bonjour yang sudah dipasang tetap tersimpan.");
+        Append($"Sesi {ProductInfo.DisplayName} dihentikan. Pairing dan layanan Bonjour yang sudah dipasang tetap tersimpan.");
     });
     private void OpenLogs_Click(object sender, RoutedEventArgs e)
     {

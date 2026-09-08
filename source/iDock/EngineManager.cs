@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace TestDock;
+namespace iDock;
 
 internal sealed class EngineManager : IDisposable
 {
@@ -22,7 +22,7 @@ internal sealed class EngineManager : IDisposable
     private string Exe(string folder, string name)
     {
         var result = Path.Combine(root, "vendor", folder, name);
-        if (!File.Exists(result)) throw new FileNotFoundException("Komponen belum lengkap. Ekstrak seluruh folder TestDock dari ZIP.", result);
+        if (!File.Exists(result)) throw new FileNotFoundException($"Komponen belum lengkap. Ekstrak seluruh paket {ProductInfo.DisplayName} dari ZIP.", result);
         return result;
     }
     internal static ProcessStartInfo StartInfo(string exe, params string[] args)
@@ -57,14 +57,14 @@ internal sealed class EngineManager : IDisposable
     public void StartControl()
     {
         if (ControlRunning) return;
-        if (HasExistingControl()) throw new InvalidOperationException("BLE HID sudah dipakai sesi lain. Tutup sesi itu dari aplikasinya sebelum mengaktifkan kontrol di sini.");
+        if (HasExistingControl()) throw new InvalidOperationException("BLE HID sedang digunakan sesi lain. Tutup sesi tersebut dari aplikasinya sebelum mengaktifkan kontrol.");
         control?.Dispose();
         control = new ProcessJob(StartInfo(Exe("blehid", "BleHid.Cli.exe"), "--background"));
     }
     public async Task<(int ExitCode, string Report)> DiagnoseAsync()
     {
         if (ControlRunning || HasExistingControl())
-            throw new InvalidOperationException("Hentikan kontrol Bluetooth dulu sebelum menjalankan pemeriksaan.");
+            throw new InvalidOperationException("Hentikan kontrol Bluetooth sebelum menjalankan pemeriksaan.");
         var info = StartInfo(Exe("blehid", "BleHid.Cli.exe"), "--diagnose");
         info.RedirectStandardOutput = true;
         info.RedirectStandardError = true;

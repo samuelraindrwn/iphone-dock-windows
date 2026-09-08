@@ -24,7 +24,7 @@ public static class CaptureSession
         CancellationToken cancellationToken)
     {
         if (!peripheral.HasStartedSuccessfully)
-            throw new InvalidOperationException("Cannot install input hooks: BLE HID advertising startup has not succeeded.");
+            throw new InvalidOperationException("Cannot install input hooks: BLE HID startup has not been validated.");
 
         using var capture = new InputCapture { Verbose = verbose };
         var stopped = new TaskCompletionSource();

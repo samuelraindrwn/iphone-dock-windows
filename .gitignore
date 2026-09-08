@@ -4,11 +4,11 @@
 /artifacts/
 /.artifacts/
 /vendor/
-/TestDock.exe
-/TestDock.dll
-/TestDock.pdb
-/TestDock.deps.json
-/TestDock.runtimeconfig.json
+/iDock.exe
+/iDock.dll
+/iDock.pdb
+/iDock.deps.json
+/iDock.runtimeconfig.json
 /preview.png
 /verification.txt
 /source/upstream/*.zip
@@ -17,7 +17,7 @@
 /data/
 /logs/
 /validation/
-/Complete-TestDockMove.ps1
+/Complete-iDockRename.local.ps1
 *.local.md
 *.local.ps1
 *.log

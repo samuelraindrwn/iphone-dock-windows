@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace TestDock;
+namespace iDock;
 
 public partial class App : Application
 {
@@ -89,7 +89,7 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         DispatcherUnhandledException += (_, args) =>
         {
-            MessageBox.Show(args.Exception.Message, "TestDock", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(args.Exception.Message, ProductInfo.DisplayName, MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
         };
         window.Show();

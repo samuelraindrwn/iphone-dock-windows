@@ -53,6 +53,7 @@ internal static class BackgroundMode
         }
 
         Log($"advertising: {peripheral.AdvertisementStatus}");
+        Log($"startup mode: {peripheral.StartupMode}");
 
         // Start on the local target so input keeps working normally until a host is chosen.
         peripheral.SelectLocal();

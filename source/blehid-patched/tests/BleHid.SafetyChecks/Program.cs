@@ -1,5 +1,7 @@
 using BleHid.Core;
 using System.Collections.Concurrent;
+using Windows.Devices.Bluetooth;
+using Windows.Devices.Bluetooth.GenericAttributeProfile;
 
 // No radios, advertisements, pairing, registry writes, or input hooks are exercised by this check.
 var configuredRoot = Environment.GetEnvironmentVariable("BLEHID_DATA_DIR");
@@ -41,11 +43,41 @@ Check(BleHidPeripheral.ShouldReturnLocal(false, "host-b", hosts), "missing selec
 Check(!BleHidPeripheral.ShouldReturnLocal(false, null, hosts), "broadcast keeps working while a subscribed host remains");
 Check(BleHidPeripheral.ShouldReturnLocal(false, null, []), "broadcast returns local when its last subscriber disconnects");
 var changes = 0;
-peripheral.SelectAllHosts();
 peripheral.TargetChanged += () => changes++;
-Check(peripheral.ReturnLocalIfTargetMissing([]) && peripheral.IsLocalTarget && changes == 1,
-    "disconnect switches target local and raises the pass-through update event");
-Check(!peripheral.ReturnLocalIfTargetMissing([]) && changes == 1, "repeated disconnect events leave local input unchanged");
+peripheral.SelectAllHosts();
+Check(peripheral.IsLocalTarget && changes == 0 && !peripheral.SelectHost(0),
+    "disposed peripheral refuses remote selection without spontaneous target changes");
+peripheral.SelectLocal();
+Check(peripheral.IsLocalTarget && !peripheral.ReturnLocalIfTargetMissing([]),
+    "explicit local selection remains safe after disposal");
+
+await using (var cancelledStartup = new BleHidPeripheral())
+{
+    using var cancellation = new CancellationTokenSource();
+    cancellation.Cancel();
+    try
+    {
+        await cancelledStartup.StartAsync(cancellation.Token);
+        throw new Exception("Pre-cancelled startup unexpectedly succeeded.");
+    }
+    catch (OperationCanceledException)
+    {
+        Check(!cancelledStartup.HasStartedSuccessfully && cancelledStartup.StartupMode == PeripheralStartupMode.None &&
+            cancelledStartup.Diagnostics.Count == 0,
+            "pre-cancelled startup rejects before any Bluetooth API or readiness change");
+    }
+}
+try
+{
+    await peripheral.StartAsync();
+    throw new Exception("Disposed startup unexpectedly succeeded.");
+}
+catch (ObjectDisposedException)
+{
+    Check(!peripheral.HasStartedSuccessfully && peripheral.StartupMode == PeripheralStartupMode.None &&
+        peripheral.Diagnostics.Count == 0,
+        "disposed startup rejects before any Bluetooth API or readiness change");
+}
 
 Check(PointerSettingsMonitor.Normalize(double.NaN) == 1 &&
       PointerSettingsMonitor.Normalize(double.PositiveInfinity) == 1 &&
@@ -220,4 +252,134 @@ await using var invalidStartup = new PointerSettingsMonitor(invalidStartupPath, 
     CancellationToken.None);
 await Eventually(() => startupWarnings.Count == 1, "invalid startup settings are detected off-thread");
 Check(invalidStartup.Current.Sensitivity == 1, "invalid startup settings retain 1x default");
+// Startup policy is exercised using synthetic native identities only: no WinRT calls,
+// input, advertising, or notification transmission is performed by these checks.
+var startupBefore = new StartupConnectionSnapshot(7, 9,
+    new("host-a", 1, 2, true), new("host-a", 3, 4, true));
+bool VerifyStartup(StartupConnectionSnapshot? after, bool keyboard = true, bool mouse = true) =>
+    PeripheralStartupPolicy.IsProbeStillCurrent(startupBefore, after, keyboard, mouse);
+bool CanProbeStartup(StartupConnectionSnapshot? snapshot, bool encrypted = true,
+    GattServiceProviderAdvertisementStatus status = GattServiceProviderAdvertisementStatus.Aborted,
+    BluetoothError? error = BluetoothError.Success) =>
+    PeripheralStartupPolicy.CanProbe(encrypted, status, error, snapshot);
+
+Check(PeripheralStartupPolicy.IsAdvertisingReady(GattServiceProviderAdvertisementStatus.Started),
+    "actual Started is sufficient without requiring a separate status event");
+Check(PeripheralStartupPolicy.IsAdvertisingReady(GattServiceProviderAdvertisementStatus.StartedWithoutAllAdvertisementData),
+    "StartedWithoutAllAdvertisementData is a successful advertising state");
+Check(new[] { GattServiceProviderAdvertisementStatus.Created, GattServiceProviderAdvertisementStatus.Stopped,
+    GattServiceProviderAdvertisementStatus.Aborted }.All(value => !PeripheralStartupPolicy.IsAdvertisingReady(value)),
+    "Created, Stopped and Aborted never count as advertising success");
+Check(!CanProbeStartup(null), "Aborted Success without a current host cannot enable fallback");
+Check(!CanProbeStartup(startupBefore, error: null), "unobserved/default error Success cannot enable fallback");
+Check(!CanProbeStartup(startupBefore, error: BluetoothError.OtherError),
+    "an explicit advertising error cannot enable fallback");
+Check(!CanProbeStartup(startupBefore, encrypted: false),
+    "unencrypted/plain mode cannot enable existing-connection fallback");
+Check(!CanProbeStartup(startupBefore, status: GattServiceProviderAdvertisementStatus.Stopped),
+    "stopped advertising cannot reuse an earlier Success event");
+Check(!CanProbeStartup(startupBefore with { Keyboard = startupBefore.Keyboard with { ClientIdentity = 0 } }),
+    "counts without keyboard client identity are not connection proof");
+Check(!CanProbeStartup(startupBefore with { Mouse = startupBefore.Mouse with { SessionIdentity = 0 } }),
+    "counts without a mouse session identity are not connection proof");
+Check(!CanProbeStartup(startupBefore with { Mouse = startupBefore.Mouse with { HostId = "host-b" } }),
+    "keyboard and mouse on different hosts cannot combine into proof");
+Check(!CanProbeStartup(startupBefore with { Keyboard = startupBefore.Keyboard with { IsActive = false } }),
+    "a closed keyboard session cannot begin a neutral probe");
+Check(!CanProbeStartup(startupBefore with { Mouse = startupBefore.Mouse with { IsActive = false } }),
+    "a closed mouse session cannot begin a neutral probe");
+Check(!VerifyStartup(startupBefore, keyboard: false), "failed keyboard neutral notification rejects fallback");
+Check(!VerifyStartup(startupBefore, mouse: false), "failed mouse neutral notification rejects fallback");
+Check(!VerifyStartup(null), "disappearance or disposal during notifications rejects the old proof");
+Check(!VerifyStartup(startupBefore with { Keyboard = startupBefore.Keyboard with { IsActive = false } }),
+    "a keyboard session closing during notification rejects fallback");
+Check(!VerifyStartup(startupBefore with { Mouse = startupBefore.Mouse with { IsActive = false } }),
+    "a mouse session closing during notification rejects fallback");
+Check(!VerifyStartup(startupBefore with { Keyboard = startupBefore.Keyboard with { ClientIdentity = 11 } }),
+    "replacement keyboard client with the same device ID rejects stale proof");
+Check(!VerifyStartup(startupBefore with { Mouse = startupBefore.Mouse with { ClientIdentity = 13 } }),
+    "replacement mouse client with the same device ID rejects stale proof");
+Check(!VerifyStartup(startupBefore with { Keyboard = startupBefore.Keyboard with { SessionIdentity = 12 } }),
+    "replacement keyboard session with the same host ID rejects stale proof");
+Check(!VerifyStartup(startupBefore with { Mouse = startupBefore.Mouse with { SessionIdentity = 14 } }),
+    "replacement mouse session with the same host ID rejects stale proof");
+Check(!VerifyStartup(startupBefore with { SubscriptionRevision = 8 }),
+    "unsubscribe/resubscribe during notification rejects old successful results");
+Check(!VerifyStartup(startupBefore with { AdvertisementRevision = 10 }),
+    "changed advertising observation rejects old successful results");
+Check(!VerifyStartup(startupBefore with { Keyboard = startupBefore.Keyboard with { HostId = "host-b" },
+    Mouse = startupBefore.Mouse with { HostId = "host-b" } }),
+    "matching input identities cannot be retargeted to a different host");
+Check(!VerifyStartup(startupBefore with { Mouse = startupBefore.Mouse with { HostId = "host-b" } }),
+    "a partial cross-host change during the probe rejects readiness");
+Check(!PeripheralStartupPolicy.IsProbeStillCurrent(startupBefore with {
+    Keyboard = startupBefore.Keyboard with { IsActive = false } }, startupBefore, true, true),
+    "a previously closed original snapshot cannot be laundered by a valid current snapshot");
+Check(CanProbeStartup(startupBefore) && VerifyStartup(startupBefore),
+    "both targeted neutral successes verify one unchanged active encrypted host");
+Check(VerifyStartup(startupBefore with { Keyboard = startupBefore.Keyboard with { HostId = "HOST-A" },
+    Mouse = startupBefore.Mouse with { HostId = "HOST-A" } }),
+    "host matching ignores case while still requiring exact native identities");
+var lateStartupOperation = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+using (var operationDeadline = new CancellationTokenSource(TimeSpan.FromMilliseconds(30)))
+{
+    var expiredWait = PeripheralStartupPolicy.AwaitOperationAsync(lateStartupOperation.Task,
+        operationDeadline.Token, () => false);
+    try
+    {
+        await expiredWait;
+        throw new Exception("Never-completing operation unexpectedly passed its deadline.");
+    }
+    catch (OperationCanceledException ex)
+    {
+        Check(expiredWait.IsCanceled && ex.CancellationToken == operationDeadline.Token,
+            "a never-completing startup operation stops waiting at its cancellation deadline");
+    }
+    lateStartupOperation.SetResult(42);
+    await Task.Yield();
+    Check(expiredWait.IsCanceled && lateStartupOperation.Task.IsCompletedSuccessfully,
+        "a late successful operation cannot resurrect an already timed-out startup wait");
+}
+
+var completingDuringDispose = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+var operationDisposed = false;
+var disposedWait = PeripheralStartupPolicy.AwaitOperationAsync(completingDuringDispose.Task,
+    CancellationToken.None, () => operationDisposed);
+operationDisposed = true;
+completingDuringDispose.SetResult(42);
+try
+{
+    await disposedWait;
+    throw new Exception("Operation completed after disposal without being rejected.");
+}
+catch (ObjectDisposedException)
+{
+    Check(disposedWait.IsFaulted, "completion after disposal rejects readiness instead of returning a result");
+}
+
+var expectedOperationFailure = new InvalidOperationException("synthetic startup operation failure");
+try
+{
+    await PeripheralStartupPolicy.AwaitOperationAsync(Task.FromException<int>(expectedOperationFailure),
+        CancellationToken.None, () => false);
+    throw new Exception("Failed startup operation unexpectedly returned a result.");
+}
+catch (InvalidOperationException ex) when (ReferenceEquals(ex, expectedOperationFailure))
+{
+    Check(true, "startup operation faults propagate without being reclassified as success or timeout");
+}
+
+using (var alreadyCancelled = new CancellationTokenSource())
+{
+    alreadyCancelled.Cancel();
+    try
+    {
+        await PeripheralStartupPolicy.AwaitOperationAsync(Task.FromResult(42), alreadyCancelled.Token, () => false);
+        throw new Exception("Pre-cancelled completed startup operation unexpectedly returned a result.");
+    }
+    catch (OperationCanceledException)
+    {
+        Check(true, "a pre-cancelled operation is rejected even when its result is already available");
+    }
+}
 Console.WriteLine($"All {passed} hardware-free safety checks passed.");

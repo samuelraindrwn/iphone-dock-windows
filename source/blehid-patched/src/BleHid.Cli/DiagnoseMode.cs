@@ -26,6 +26,9 @@ internal static class DiagnoseMode
         }
 
         var advertising = false;
+        var cleanupSucceeded = true;
+        var diagnosticFailed = false;
+        var startupMode = PeripheralStartupMode.None;
         Emit($"BLE HID diagnostics  {DateTime.Now:s}");
         Emit(new string('-', 60));
 
@@ -55,6 +58,7 @@ internal static class DiagnoseMode
                 peripheral.Log += Emit;
                 await peripheral.StartAsync();
                 advertising = peripheral.HasStartedSuccessfully;
+                startupMode = peripheral.StartupMode;
             }
             catch (Exception ex)
             {
@@ -66,14 +70,36 @@ internal static class DiagnoseMode
                 {
                     try { Emit($"Advertisement status: {peripheral.AdvertisementStatus}"); }
                     catch (Exception ex) { Emit($"Advertisement status unavailable: {ex.Message}"); }
-                    try { await peripheral.DisposeAsync(); }
-                    catch (Exception ex) { Emit($"peripheral cleanup failed: {ex.Message}"); }
+                    try
+                    {
+                        await peripheral.DisposeAsync();
+                        if (!peripheral.CleanupSucceeded)
+                        {
+                            cleanupSucceeded = false;
+                            Emit("peripheral cleanup failed: one or more native cleanup operations failed; see details above.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        cleanupSucceeded = false;
+                        Emit($"peripheral cleanup failed: {ex.Message}");
+                    }
                     peripheral.Log -= Emit;
                 }
             }
 
             Emit(new string('-', 60));
-            if (advertising)
+            if (!cleanupSucceeded)
+            {
+                Emit("Peripheral cleanup could not be confirmed. This diagnostic is incomplete; no input hooks were installed.");
+            }
+            else if (advertising && startupMode == PeripheralStartupMode.ExistingConnectionVerified)
+            {
+                Emit("Existing HID connection verified. This diagnostic has now closed the peripheral.");
+                Emit("Advertising is not confirmed. Only targeted neutral reports were checked; no input hooks were installed.");
+                Emit("Restart control and verify actual iPhone input. This does not establish new-device discovery.");
+            }
+            else if (advertising)
             {
                 Emit("Advertising startup succeeded. This diagnostic has now stopped advertising.");
                 Emit("Restart control to pair, and verify keyboard/mouse subscribers before redirecting input.");
@@ -109,6 +135,7 @@ internal static class DiagnoseMode
         }
         catch (Exception ex)
         {
+            diagnosticFailed = true;
             Emit($"diagnostic failed: {ex}");
         }
         finally
@@ -128,6 +155,6 @@ internal static class DiagnoseMode
             }
         }
 
-        return advertising ? 0 : 1;
+        return advertising && cleanupSucceeded && !diagnosticFailed ? 0 : 1;
     }
 }

@@ -1,17 +1,17 @@
 using System.Text.RegularExpressions;
 
-namespace TestDock;
+namespace iDock;
 
 internal enum ControlConnectionState { Stopped, Starting, WaitingForPairing, Connected, Controlling, Failed }
 
 /// <summary>Derives readiness from BLE log evidence, independently of the UI and process lifetime.</summary>
 internal sealed class ControlStatusTracker
 {
-    private bool running, advertising, captureReady;
+    private bool running, advertising, captureReady, verifiedConnection, limitedAdvertisement;
     private int keyboardSubscribers, mouseSubscribers;
     private string? advertisingFailure, fatalFailure, remoteTarget;
     private static readonly Regex Advertisement = new(
-        @"(?:StartAdvertising\s*:|advertising\s*:|\[adv\s*\]\s*status\s*->)\s*(Started|Aborted|Stopped)\b",
+        @"(?:StartAdvertising\s*:|advertising\s*:|\[adv\s*\]\s*status\s*->)\s*(StartedWithoutAllAdvertisementData|Started|Aborted|Stopped)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex Subscribers = new(
         @"\[subs\]\s*(Keyboard|Mouse) input report:\s*(\d+)\s+subscriber\(s\)",
@@ -24,14 +24,17 @@ internal sealed class ControlStatusTracker
     internal ControlConnectionState State => fatalFailure is not null || advertisingFailure is not null
         ? ControlConnectionState.Failed
         : !running ? ControlConnectionState.Stopped
-        : !advertising ? ControlConnectionState.Starting
+        : !advertising && !verifiedConnection ? ControlConnectionState.Starting
         : !HasSubscribers ? ControlConnectionState.WaitingForPairing
         : captureReady && remoteTarget is not null ? ControlConnectionState.Controlling
         : ControlConnectionState.Connected;
 
     private string ConnectedInputs => keyboardSubscribers > 0 && mouseSubscribers > 0
         ? "Mouse/keyboard" : mouseSubscribers > 0 ? "Mouse saja" : "Keyboard saja";
-    internal string DisplayText => State switch
+    private string ConnectionNote => verifiedConnection && !advertising
+        ? " · koneksi lama terverifikasi; iklan Bluetooth belum siap"
+        : limitedAdvertisement ? " · iklan Bluetooth terbatas" : "";
+    internal string DisplayText => (State switch
     {
         ControlConnectionState.Failed => advertisingFailure ?? fatalFailure!,
         ControlConnectionState.Stopped => "Kontrol berhenti — input di laptop",
@@ -41,19 +44,20 @@ internal sealed class ControlStatusTracker
         _ => captureReady
             ? $"{ConnectedInputs} tersambung — input di laptop; Ctrl+D+C memilih perangkat"
             : $"{ConnectedInputs} tersambung — kontrol input belum siap"
-    };
+    }) + (State is ControlConnectionState.Connected or ControlConnectionState.Controlling
+        or ControlConnectionState.WaitingForPairing ? ConnectionNote : "");
 
     internal void Begin()
     {
         running = true;
-        advertising = captureReady = false;
+        advertising = captureReady = verifiedConnection = limitedAdvertisement = false;
         keyboardSubscribers = mouseSubscribers = 0;
         advertisingFailure = fatalFailure = remoteTarget = null;
     }
 
     internal void Stop(bool clearFailure = false)
     {
-        running = advertising = captureReady = false;
+        running = advertising = captureReady = verifiedConnection = limitedAdvertisement = false;
         keyboardSubscribers = mouseSubscribers = 0;
         remoteTarget = null;
         if (clearFailure) advertisingFailure = fatalFailure = null;
@@ -66,21 +70,51 @@ internal sealed class ControlStatusTracker
         if (!running) return;
         if (Has("--- background stop")) { Stop(); return; }
 
+        // Only the backend's completed transport probe can admit the existing-link path.
+        // Subscriber counts or an 'Aborted (Success)' line are not proof on their own.
+        if (Has("[ready] existing HID connection verified; input stays local"))
+        {
+            if (fatalFailure is null && keyboardSubscribers > 0 && mouseSubscribers > 0)
+            {
+                verifiedConnection = true;
+                advertisingFailure = null;
+                remoteTarget = null;
+            }
+            return;
+        }
+        if (Has("[ready] existing HID connection lost; input returned to this PC"))
+        {
+            LoseVerifiedConnection();
+            return;
+        }
+
         var advertisement = Advertisement.Match(line);
         if (advertisement.Success)
         {
+            if (Has("[FAIL]")) fatalFailure = "Kontrol gagal dimulai — lihat log / Cek Bluetooth";
             var state = advertisement.Groups[1].Value;
-            if (state.Equals("Started", StringComparison.OrdinalIgnoreCase))
+            if (state.Equals("Started", StringComparison.OrdinalIgnoreCase)
+                || state.Equals("StartedWithoutAllAdvertisementData", StringComparison.OrdinalIgnoreCase))
             {
-                if (!advertising) keyboardSubscribers = mouseSubscribers = 0;
+                if (!advertising && !verifiedConnection) keyboardSubscribers = mouseSubscribers = 0;
                 advertising = true;
+                verifiedConnection = false;
+                limitedAdvertisement = state.Equals("StartedWithoutAllAdvertisementData", StringComparison.OrdinalIgnoreCase);
                 advertisingFailure = null;
+            }
+            else if (state.Equals("Aborted", StringComparison.OrdinalIgnoreCase)
+                && verifiedConnection && keyboardSubscribers > 0 && mouseSubscribers > 0
+                && !Has("[FAIL]")
+                && (Has("error: Success") || Has("advertising:")))
+            {
+                advertising = limitedAdvertisement = false;
             }
             // The Windows provider briefly reports Aborted before its first Started event.
             else if (!((Has("expected while starting")
-                || Has("not ready; waiting for Started until startup timeout")) && !advertising))
+                || Has("not ready; waiting for Started until startup timeout")
+                || Has("not ready; waiting for startup validation")) && !advertising && !verifiedConnection))
             {
-                advertising = false;
+                advertising = verifiedConnection = limitedAdvertisement = false;
                 keyboardSubscribers = mouseSubscribers = 0;
                 advertisingFailure = "Bluetooth gagal menyiarkan mouse/keyboard — cek radio / log";
             }
@@ -118,11 +152,24 @@ internal sealed class ControlStatusTracker
         {
             if (subscribers.Groups[1].Value.Equals("Keyboard", StringComparison.OrdinalIgnoreCase)) keyboardSubscribers = count;
             else mouseSubscribers = count;
+            if (verifiedConnection && (keyboardSubscribers == 0 || mouseSubscribers == 0))
+            {
+                LoseVerifiedConnection();
+            }
             return;
         }
         if (Has("selected host is no longer subscribed"))
         {
+            if (verifiedConnection && !advertising)
+                LoseVerifiedConnection();
             keyboardSubscribers = mouseSubscribers = 0;
+            remoteTarget = null;
+            verifiedConnection = false;
+            return;
+        }
+
+        if (Has("[host] target disconnected - input returned to this PC"))
+        {
             remoteTarget = null;
             return;
         }
@@ -141,5 +188,14 @@ internal sealed class ControlStatusTracker
             remoteTarget = target.Length == 0 || target.StartsWith("this PC", StringComparison.OrdinalIgnoreCase)
                 ? null : target;
         }
+    }
+
+    private void LoseVerifiedConnection()
+    {
+        verifiedConnection = captureReady = false;
+        remoteTarget = advertisingFailure = null;
+        // A revoked transport proof requires a new startup, even if a late provider
+        // callback subsequently claims Started or repeats the old ready marker.
+        fatalFailure = "Koneksi kontrol terputus — input di laptop; mulai ulang kontrol";
     }
 }

@@ -4,7 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace TestDock;
+namespace iDock;
 
 internal static class Verification
 {
@@ -14,11 +14,20 @@ internal static class Verification
         void Check(bool condition, string label)
         { if (!condition) throw new Exception(label); log.AppendLine("PASS " + label); }
 
+        var assembly = typeof(App).Assembly;
+        Check(assembly.GetName().Name == "iDock",
+            "Executable and assembly use the iDock technical identity");
+        Check(assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyProductAttribute), false)
+                .Cast<System.Reflection.AssemblyProductAttribute>().Single().Product == ProductInfo.DisplayName
+            && assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyTitleAttribute), false)
+                .Cast<System.Reflection.AssemblyTitleAttribute>().Single().Title == ProductInfo.DisplayName,
+            "Product metadata uses iDock for Windows");
+
         Check(PointerSettings.Normalize(double.NaN) == 1 && PointerSettings.Normalize(double.PositiveInfinity) == 1,
             "Non-finite sensitivity falls back to normal");
         Check(PointerSettings.Normalize(-5) == 0.25 && PointerSettings.Normalize(50) == 3,
             "Sensitivity is bounded to the slider range");
-        var settingsDirectory = Path.Combine(Path.GetTempPath(), "testdock-sensitivity-" + Guid.NewGuid().ToString("N"));
+        var settingsDirectory = Path.Combine(Path.GetTempPath(), "idock-sensitivity-" + Guid.NewGuid().ToString("N"));
         var settingsPath = Path.Combine(settingsDirectory, "pointer-settings.json");
         try
         {
@@ -59,6 +68,10 @@ internal static class Verification
             try
             {
                 sensitivityWindow.Show();
+                Check(sensitivityWindow.Title == "iDock for Windows",
+                    "Window title uses the selected product name");
+                Check(sensitivityWindow.BrandTitle.Text == sensitivityWindow.Title,
+                    "Visible heading matches the window branding");
                 Check(sensitivityWindow.SensitivitySlider.Value == 0.8 && sensitivityWindow.SensitivityValue.Text == "0.80×",
                     "Real WPF slider and value label restore the saved sensitivity");
                 Check((string)sensitivityWindow.OrientationCombo.SelectedValue == "90",
@@ -172,6 +185,100 @@ internal static class Verification
         status.Stop(clearFailure: true);
         Check(status.State == ControlConnectionState.Stopped, "Explicit stop clears the previous session state");
 
+        const string verifiedMarker = "[ready] existing HID connection verified; input stays local";
+        const string lostMarker = "[ready] existing HID connection lost; input returned to this PC";
+        const string verifiedDiagnostic = "Existing HID connection verified. This diagnostic has now closed the peripheral.";
+        Check(MainWindow.DescribeDiagnostic(0, verifiedDiagnostic).Contains("iklan Bluetooth belum siap"),
+            "Existing-link diagnostic never claims advertising succeeded");
+        Check(!MainWindow.DescribeDiagnostic(1, verifiedDiagnostic).StartsWith("Koneksi HID lama terverifikasi"),
+            "Existing-link diagnostic success cannot override a failed exit code");
+        const string limitedDiagnostic = "Advertisement status: StartedWithoutAllAdvertisementData\nAdvertising startup succeeded. This diagnostic has now stopped advertising.";
+        Check(MainWindow.DescribeDiagnostic(0, limitedDiagnostic).StartsWith("Iklan Bluetooth terbatas"),
+            "Diagnostic preserves the limited-advertisement warning");
+        Check(!MainWindow.DescribeDiagnostic(1, limitedDiagnostic).StartsWith("Iklan Bluetooth terbatas"),
+            "Limited advertising cannot override a failed diagnostic exit");
+        Check(MainWindow.DescribeDiagnostic(0, verifiedDiagnostic + "\nperipheral cleanup failed: test").Contains("belum terkonfirmasi"),
+            "Cleanup failure overrides a stale diagnostic success claim");
+        status.Begin();
+        status.Apply("[adv ] status -> StartedWithoutAllAdvertisementData (error: Success)");
+        Check(status.State == ControlConnectionState.WaitingForPairing && status.DisplayText.Contains("iklan Bluetooth terbatas"),
+            "Limited advertising is usable but does not claim pairing or full discoverability");
+        status.Begin();
+        status.Apply("[adv ] status -> Aborted (error: Success) (not ready; waiting for startup validation)");
+        status.Apply("[subs] Keyboard input report: 1 subscriber(s)");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        Check(status.State == ControlConnectionState.Starting, "Subscription counts alone do not bypass aborted startup");
+        status.Apply(verifiedMarker);
+        Check(status.State == ControlConnectionState.Connected && status.DisplayText.Contains("iklan Bluetooth belum siap")
+            && status.DisplayText.Contains("kontrol input belum siap"),
+            "Verified connection starts locally without claiming hooks or working advertising");
+        status.Apply("advertising: Aborted");
+        Check(status.State == ControlConnectionState.Connected, "Actual Aborted snapshot does not erase verified existing-link evidence");
+        status.Apply("[hook] keyboard=0x123 (err 0), mouse=0x456 (err 0)");
+        status.Apply("[host] -> test iPhone (pointer interval 15 ms)");
+        Check(status.State == ControlConnectionState.Controlling && status.DisplayText.Contains("koneksi lama terverifikasi"),
+            "Verified link can control after hooks and explicit target evidence");
+        status.Apply("[subs] Mouse input report: 0 subscriber(s)");
+        Check(status.State == ControlConnectionState.Failed && status.DisplayText.Contains("input di laptop"),
+            "Losing one verified input channel invalidates fallback readiness");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        status.Apply("[host] -> test iPhone (pointer interval 15 ms)");
+        Check(status.State == ControlConnectionState.Failed, "Returning counts cannot silently rearm an invalidated verified connection");
+        status.Apply("advertising: Started");
+        Check(status.State == ControlConnectionState.Failed, "Late Started cannot clear partial fallback loss");
+        status.Apply(verifiedMarker);
+        Check(status.State == ControlConnectionState.Failed, "Repeated proof cannot clear partial fallback loss");
+        status.Begin();
+        status.Apply(verifiedMarker);
+        Check(status.State == ControlConnectionState.Starting, "Ready marker without current subscribers is not accepted");
+        status.Apply("[subs] Keyboard input report: 1 subscriber(s)");
+        status.Apply(verifiedMarker);
+        Check(status.State == ControlConnectionState.Starting, "Keyboard-only subscriptions cannot enable the fallback UI state");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        status.Apply(verifiedMarker);
+        status.Apply(lostMarker);
+        Check(status.State == ControlConnectionState.Failed && status.DisplayText.Contains("input di laptop"),
+            "Explicit backend session invalidation clears the verified connection");
+        status.Apply("advertising: Started");
+        Check(status.State == ControlConnectionState.Failed, "Late Started cannot clear explicit fallback invalidation");
+        status.Begin();
+        status.Apply("[subs] Keyboard input report: 1 subscriber(s)");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        status.Apply(verifiedMarker);
+        status.Apply("advertising: Started");
+        status.Apply(lostMarker);
+        Check(status.State == ControlConnectionState.Failed, "Explicit fallback invalidation wins over an earlier Started callback");
+        status.Apply("[subs] Keyboard input report: 1 subscriber(s)");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        status.Apply("[hook] keyboard=0x123 (err 0), mouse=0x456 (err 0)");
+        status.Apply("[host] -> test iPhone (pointer interval 15 ms)");
+        Check(status.State == ControlConnectionState.Failed, "Returning target and hook logs cannot rearm a revoked fallback session");
+        status.Begin();
+        status.Apply("[FAIL] StartAdvertising: Aborted");
+        status.Apply("[subs] Keyboard input report: 1 subscriber(s)");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        status.Apply(verifiedMarker);
+        Check(status.State == ControlConnectionState.Failed, "Stale proof cannot clear a terminal startup failure");
+        status.Begin();
+        status.Apply("[subs] Keyboard input report: 1 subscriber(s)");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        status.Apply(verifiedMarker);
+        status.Apply("capture failed: test");
+        status.Apply(verifiedMarker);
+        Check(status.State == ControlConnectionState.Failed, "Verified link never clears an independent input failure");
+        status.Begin();
+        status.Apply("[subs] Keyboard input report: 1 subscriber(s)");
+        status.Apply("[subs] Mouse input report: 1 subscriber(s)");
+        status.Apply(verifiedMarker);
+        status.Apply("advertising: Started");
+        Check(status.State == ControlConnectionState.Connected && !status.DisplayText.Contains("iklan Bluetooth belum siap"),
+            "Advertising recovery preserves current subscribers but retires old fallback proof");
+        status.Apply("[adv ] status -> Aborted (error: OtherError)");
+        Check(status.State == ControlConnectionState.Failed, "Old fallback proof cannot excuse a later advertising failure");
+        status.Stop(clearFailure: true);
+        status.Apply(verifiedMarker);
+        Check(status.State == ControlConnectionState.Stopped, "Proof after stop cannot resurrect a session");
+
         var exe = Environment.ProcessPath!;
         using var unrelated = Process.Start(EngineManager.StartInfo(exe, "--child-wait"))!;
         try
@@ -184,7 +291,7 @@ internal static class Verification
             Check(!unrelated.HasExited, "Unrelated same-name process is preserved");
         }
         finally { if (!unrelated.HasExited) { unrelated.Kill(); unrelated.WaitForExit(3000); } }
-        var childFile = Path.Combine(Path.GetTempPath(), "testdock-child-" + Guid.NewGuid() + ".txt");
+        var childFile = Path.Combine(Path.GetTempPath(), "idock-child-" + Guid.NewGuid() + ".txt");
         try
         {
             using var job = new ProcessJob(EngineManager.StartInfo(exe, "--child-spawn", childFile));
