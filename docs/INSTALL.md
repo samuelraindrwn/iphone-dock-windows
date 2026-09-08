@@ -1,5 +1,7 @@
 # Instalasi iDock for Windows
 
+Bahasa Indonesia · [English](en/INSTALL.md)
+
 [Kembali ke README](../README.md) · [Cara pakai](USAGE.md) · [Developer](DEVELOPMENT.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
 Pilih **installer** untuk penggunaan biasa. Paket portable tidak memerlukan instalasi launcher, sedangkan build dari source ditujukan untuk developer. Ketiganya menggunakan mirroring AirPlay dan kontrol Bluetooth yang sama.
@@ -21,10 +23,10 @@ Mirroring/kontrol tidak memerlukan aplikasi pendamping di perangkat, Mac, jailbr
 
 Unduh hanya dari [GitHub Releases repository proyek](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest). Pilih asset installer atau portable, **bukan** tautan otomatis **Source code** untuk penggunaan biasa. Jika versi yang disebut di panduan belum terbit, gunakan rilis yang tersedia atau tunggu paket berikutnya. [Build manual](DEVELOPMENT.md) tetap tersedia untuk developer; pengguna installer tidak perlu membangun aplikasi.
 
-Untuk versi 0.5.1, installer bernama `iDock-Setup-0.5.1-win-x64.exe`. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
+Untuk versi 0.5.2, installer bernama `iDock-Setup-0.5.2-win-x64.exe`; gunakan contoh ini hanya jika versi tersebut sudah tersedia pada Releases. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
 
 ```powershell
-Get-FileHash -LiteralPath '.\iDock-Setup-0.5.1-win-x64.exe' -Algorithm SHA256
+Get-FileHash -LiteralPath '.\iDock-Setup-0.5.2-win-x64.exe' -Algorithm SHA256
 Get-Content -LiteralPath '.\SHA256SUMS.txt'
 ```
 
@@ -48,11 +50,11 @@ Installer mempertahankan dua aturan receiver pada **profil Private dan LocalSubn
 
 Windows dapat menandai Wi-Fi rumah sebagai **Public**. Nama receiver bisa terlihat melalui Bonjour sementara koneksi video tetap diblokir karena receiver hanya diizinkan pada profil Private. Status Public sendiri tidak membuktikan bahwa jaringan aman atau berbahaya; pastikan Anda mempercayai jaringan dan perangkat lain di dalamnya.
 
-Jika mirroring akan digunakan pada Wi-Fi tepercaya yang berprofil Public, pilih **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** saat menjalankan installer 0.5.1. Opsi ini **tidak dicentang pada instalasi baru**; pilihan terdahulu dapat diingat saat upgrade. Ia hanya menambahkan izin masuk TCP/UDP untuk `vendor\uxplay\uxplay-windows.exe` milik instalasi, pada profil **Public**, tipe antarmuka **Wireless**, dan alamat remote **LocalSubnet**, tanpa edge traversal. Opsi ini tidak membuka Bluetooth, seluruh aplikasi, Ethernet Public, atau profil Domain.
+Jika mirroring akan digunakan pada Wi-Fi tepercaya yang berprofil Public, pilih **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** saat menjalankan installer 0.5.1 atau lebih baru yang menyediakan opsi ini. Opsi ini **tidak dicentang pada instalasi baru**; pilihan terdahulu dapat diingat saat upgrade. Ia hanya menambahkan izin masuk TCP/UDP untuk `vendor\uxplay\uxplay-windows.exe` milik instalasi, pada profil **Public**, tipe antarmuka **Wireless**, dan alamat remote **LocalSubnet**, tanpa edge traversal. Opsi ini tidak membuka Bluetooth, seluruh aplikasi, Ethernet Public, atau profil Domain.
 
 **Izin bersifat menetap pada semua jaringan Wi-Fi berprofil Public**, termasuk jaringan yang tersambung nanti; bukan hanya SSID saat ini dan bukan autentikasi perangkat tepercaya. Gunakan receiver hanya pada jaringan yang Anda percayai. LocalSubnet membatasi asal koneksi, tetapi tidak membuktikan bahwa peer aman. Jangan mengaktifkan opsi ini untuk melewati kebijakan jaringan kantor/sekolah.
 
-Untuk mencabut izin tambahan tersebut, tutup sesi lalu jalankan kembali installer 0.5.1 dan hilangkan centangnya. Installer menghapus hanya aturan `iDock.AirPlay.TCP.PublicWireless.v1` dan `iDock.AirPlay.UDP.PublicWireless.v1` yang masih tepat sesuai kepemilikannya. Jika aturan sudah diubah administrator atau namanya ambigu, installer meminta peninjauan, bukan menghapusnya paksa. Aturan Private tetap dipertahankan.
+Untuk mencabut izin tambahan tersebut, tutup sesi lalu jalankan kembali installer versi yang sedang digunakan dan hilangkan centangnya. Installer menghapus hanya aturan `iDock.AirPlay.TCP.PublicWireless.v1` dan `iDock.AirPlay.UDP.PublicWireless.v1` yang masih tepat sesuai kepemilikannya. Jika aturan sudah diubah administrator atau namanya ambigu, installer meminta peninjauan, bukan menghapusnya paksa. Aturan Private tetap dipertahankan.
 
 Opsi ini tidak memperbaiki client isolation, aturan blok administrator, atau konfigurasi Bonjour yang tidak sesuai. Jangan otomatis mengganti profil Public menjadi Private: aturan Bonjour yang sudah ada dapat memiliki profil berbeda, sehingga penemuan perangkat justru berhenti. Periksa jalur [discovery dan video secara terpisah](TROUBLESHOOTING.md#receiver-tidak-muncul-atau-video-tidak-tersambung).
 
@@ -79,14 +81,17 @@ Pilih lokasi portable sebelum memulai mirroring pertama kali: Bonjour Service da
 
 ## Lokasi data
 
+Mulai source versi 0.5.2, pilih **Pengaturan → Bahasa → Bahasa Indonesia / English** untuk mengganti bahasa launcher langsung tanpa mereset sesi atau pointer. Bahasa Indonesia adalah default dan pilihan disimpan untuk penggunaan berikutnya. Installer 0.5.1 yang sudah diunduh belum memiliki pemilih ini; periksa versi paket yang benar-benar tersedia. Bahasa UxPlay, installer, perangkat, pesan sistem, serta log mentah pihak ketiga tidak ikut diubah; log lama tidak diterjemahkan ulang.
+
 | Isi | Instalasi installer | Portable / build manual default |
 | --- | --- | --- |
 | Aplikasi | `%ProgramFiles%\iDock` | Folder paket yang dipilih |
+| Pilihan bahasa (0.5.2) | `%LOCALAPPDATA%\iDock\data\ui-settings.json` | `data\ui-settings.json` di folder paket |
 | Pengaturan pointer | `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json` | `data\blehid\pointer-settings.json` di folder paket |
 | Log launcher/diagnosis | `%LOCALAPPDATA%\iDock\logs` | `logs` di folder paket |
 | Data dan log backend | `%LOCALAPPDATA%\iDock\data\blehid` | `data\blehid` di folder paket |
 
-Pairing Bluetooth dikelola Windows dan perangkat. Pengaturan video UxPlay berada dalam profil Windows dan terpisah dari pengaturan pointer iDock. Gulir ke bagian **Diagnostik** di bawah **Pengaturan pointer**, lalu pilih **Buka log** untuk membuka lokasi log pada mode yang sedang digunakan.
+Pairing Bluetooth dikelola Windows dan perangkat. Pengaturan video UxPlay berada dalam profil Windows dan terpisah dari pengaturan pointer iDock. Gulir ke bagian **Diagnostik** di bawah **Pengaturan**, lalu pilih **Buka log** untuk membuka lokasi log pada mode yang sedang digunakan.
 
 ## Upgrade, pindah folder, dan uninstall
 

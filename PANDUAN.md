@@ -1,10 +1,14 @@
 # Panduan iDock for Windows
 
+Bahasa Indonesia · [English](docs/en/GUIDE.md)
+
 iDock menampilkan layar iPhone/iPad dan menyediakan kontrol mouse/keyboard dari Windows. Mulai dengan installer jika hanya ingin menggunakan aplikasi; alur build manual tetap tersedia untuk developer.
 
 Pada installer **0.5.1**, izin mirroring pada **Wi-Fi Public** adalah pilihan tambahan yang tidak dicentang pada instalasi baru. Baca [cakupannya](docs/INSTALL.md#izin-wi-fi-public) sebelum mengaktifkan: izin tersebut menetap untuk semua Wi-Fi Public, bukan hanya jaringan saat ini. Lihat [catatan 0.5.1](docs/RELEASE-NOTES-0.5.1.md) untuk membedakan perubahan aplikasi dan pengujian yang sudah dilakukan.
 
 Antarmuka berada dalam satu halaman. Mulai dari **Panduan** di bagian paling atas, lalu gunakan kartu **Layar perangkat** dan **Mouse & keyboard**. Gulir ke bawah untuk **Pengaturan pointer** dan **Diagnostik**. Ringkasan pintasan di bagian atas membantu mengalihkan target input dan kembali ke Windows.
+
+Pada build **0.5.2**, bagian **Pengaturan pointer** menjadi **Pengaturan**, dengan tambahan **Bahasa → Bahasa Indonesia / English**. Pilihan berubah langsung dan tersimpan tanpa menghentikan sesi atau mereset pointer. Installer 0.5.1 belum memiliki fitur ini. Lihat [catatan 0.5.2](docs/RELEASE-NOTES-0.5.2.md).
 
 1. [Instalasi](docs/INSTALL.md): unduhan GitHub Releases, verifikasi file, installer, portable, upgrade, dan uninstall.
 2. [Cara menggunakan aplikasi](docs/USAGE.md): mirroring, pairing Bluetooth, target input, sensitivitas, dan orientasi.

@@ -281,6 +281,7 @@ foreach ($path in @('installed.mode', 'data/hosts.json', 'logs/idock.log', '.git
     Assert-InstallerThrows { Assert-iDockPortableRelativePath $path } "portable private path rejected: $path"
 }
 Assert-InstallerThrows { Assert-iDockPortableRelativePath 'docs/example.md' $true } 'portable reparse path rejected'
+Assert-InstallerThrows { Assert-iDockPortableRelativePath 'ui-settings.json' } 'portable rejects a stray user language preference'
 
 $iss = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'iDock.iss') -Raw
 $helper = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Configure-Firewall.ps1') -Raw

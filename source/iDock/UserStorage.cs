@@ -14,7 +14,7 @@ internal static class UserStorage
     {
         if (!installed) return Path.GetFullPath(applicationDirectory);
         if (string.IsNullOrWhiteSpace(localDataDirectory))
-            throw new InvalidOperationException("Folder data pengguna Windows tidak tersedia.");
+            throw UiText.TagException(new InvalidOperationException(UiText.T("Storage.UserDataUnavailable")), "Storage.UserDataUnavailable");
         return Path.GetFullPath(Path.Combine(localDataDirectory, "iDock"));
     }
 }

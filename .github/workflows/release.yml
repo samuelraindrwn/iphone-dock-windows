@@ -78,6 +78,9 @@ jobs:
       - name: Build the offline installer without installing it
         run: .\scripts\build-installer.ps1
 
+      - name: Check bilingual documentation links
+        run: .\scripts\test-documentation.ps1
+
       - name: Test a byte-identical isolated copy of the release payload
         run: |
           $ErrorActionPreference = 'Stop'
@@ -194,7 +197,8 @@ jobs:
           $notes = @"
           iDock for Windows $version includes an offline Windows x64 installer and a portable ZIP. Both include the .NET runtime; a separate SDK/runtime installation is not required to run the app.
 
-          - Use the Setup EXE for guided installation, or extract the complete portable ZIP and follow docs/INSTALL.md.
+          - Use the Setup EXE for guided installation, or extract the complete portable ZIP. Documentation: [English](https://github.com/$($env:GH_REPO)/blob/$($env:RELEASE_TAG)/README.en.md) / [Bahasa Indonesia](https://github.com/$($env:GH_REPO)/blob/$($env:RELEASE_TAG)/README.md); both are also included in the package.
+          - Choose English or Bahasa Indonesia in Settings → Language / Pengaturan → Bahasa. The choice takes effect immediately and is saved without restarting the session or resetting pointer settings. External tools and existing logs keep their original language.
           - Setup keeps Private-network receiver permissions by default. The optional Public Wi-Fi permission allows local peers on every Public wireless network; enable it only after reviewing the network guidance in docs/INSTALL.md.
           - Once an AirPlay video window has appeared, closing it (or ending the stream so the window disappears) ends this iDock session after a short grace period. Minimizing the window keeps the session running.
           - Verify downloads against SHA256SUMS.txt. This pipeline does not code-sign iDock; Windows may show an unknown-publisher or SmartScreen warning.

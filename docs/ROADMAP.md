@@ -1,5 +1,7 @@
 # Roadmap pengembangan
 
+Bahasa Indonesia · [English](en/ROADMAP.md)
+
 [Kembali ke README](../README.md) · [Arsitektur](ARCHITECTURE.md) · [Checklist kestabilan](STABILITY-TESTS.md)
 
 Dokumen ini mencatat rencana pengembangan publik. Semua item **belum dianggap selesai** sampai memiliki implementasi dan bukti pengujian. Fokus proyek adalah iPhone/iPad di Windows; tidak ada jadwal rilis atau jaminan kompatibilitas semua versi.

@@ -23,7 +23,7 @@ function Assert-iDockPortableRelativePath {
         $normalized -ieq 'installed.mode' -or
         $normalized -match '(^|\\)(\.git|\.cache|\.artifacts|data|logs|validation|obj|bin)(\\|$)' -or
         $name -match '\.local\.(ps1|md)$|\.(log|pfx|p12|pem|key|ble|btsnoop|dmp)$' -or
-        $name -in @('pointer-settings.json', 'hosts.json', 'device.json', 'secrets.json', '.env') -or
+        $name -in @('pointer-settings.json', 'ui-settings.json', 'hosts.json', 'device.json', 'secrets.json', '.env') -or
         ($name -like '.env.*' -and $name -ne '.env.example')) {
         throw "Portable packaging refuses private, installed-mode, or linked content: $RelativePath"
     }
@@ -39,7 +39,7 @@ function Get-iDockPortableInputFiles {
     foreach ($required in @('iDock.exe', 'iDock.dll', 'iDock.runtimeconfig.json', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll',
         'vendor\blehid\BleHid.Cli.exe', 'vendor\blehid\BleHid.Cli.runtimeconfig.json', 'vendor\blehid\coreclr.dll',
         'vendor\blehid\hostfxr.dll', 'vendor\uxplay\uxplay-windows.exe', 'vendor\uxplay\mDNSResponder.exe',
-        'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', 'docs\INSTALL.md',
+        'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', 'README.en.md', 'docs\INSTALL.md', 'docs\en\INSTALL.md', 'docs\en\USAGE.md',
         'licenses\dotnet\Microsoft.NETCore.App\LICENSE.TXT', 'licenses\dotnet\Microsoft.NETCore.App\THIRD-PARTY-NOTICES.TXT',
         'licenses\dotnet\Microsoft.WindowsDesktop.App\LICENSE', 'licenses\Inno-Setup-LICENSE.txt')) {
         if (-not (Test-Path -LiteralPath (Join-Path $Directory $required) -PathType Leaf)) { throw "Portable payload is incomplete: $required" }

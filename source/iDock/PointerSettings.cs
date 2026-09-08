@@ -28,18 +28,19 @@ internal static class PointerSettings
             || !json.RootElement.TryGetProperty("Sensitivity", out var value)
             || value.ValueKind != JsonValueKind.Number
             || !value.TryGetDouble(out var sensitivity) || !double.IsFinite(sensitivity))
-            throw new JsonException("Nilai sensitivitas tidak valid.");
+            throw UiText.TagException(new JsonException(UiText.T("Pointer.InvalidSensitivity")), "Pointer.InvalidSensitivity");
         var rotation = 0;
         if (json.RootElement.TryGetProperty("RotationDegrees", out var rotationValue)
             && (rotationValue.ValueKind != JsonValueKind.Number || !rotationValue.TryGetInt32(out rotation)
                 || !IsValidRotation(rotation)))
-            throw new JsonException("Nilai orientasi tidak valid.");
+            throw UiText.TagException(new JsonException(UiText.T("Pointer.InvalidOrientation")), "Pointer.InvalidOrientation");
         return new(Normalize(sensitivity), rotation);
     }
 
     public static void Save(string path, double sensitivity, int rotationDegrees = 0)
     {
-        if (!IsValidRotation(rotationDegrees)) throw new ArgumentOutOfRangeException(nameof(rotationDegrees));
+        if (!IsValidRotation(rotationDegrees)) throw UiText.TagException(
+            new ArgumentOutOfRangeException(nameof(rotationDegrees), UiText.T("Pointer.InvalidOrientation")), "Pointer.InvalidOrientation");
         var directory = Path.GetDirectoryName(path)!;
         Directory.CreateDirectory(directory);
         var temporary = Path.Combine(directory, ".pointer-settings-" + Guid.NewGuid().ToString("N") + ".tmp");

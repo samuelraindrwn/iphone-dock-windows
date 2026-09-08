@@ -1,16 +1,18 @@
 # Panduan rilis dan installer
 
+Bahasa Indonesia · [English](en/RELEASING.md)
+
 [Kembali ke README](../README.md) · [Developer](DEVELOPMENT.md) · [Instalasi](INSTALL.md) · [Uji perangkat](STABILITY-TESTS.md)
 
 Dokumen ini untuk maintainer. Rilis publik berisi aplikasi siap pakai serta petunjuk pengguna; publikasi tidak mengubah status kompatibilitas perangkat yang belum diuji menjadi didukung.
 
-## Artefak rilis 0.5.1
+## Artefak rilis 0.5.2
 
-- **`iDock-Setup-0.5.1-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
-- **`iDock-0.5.1-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
+- **`iDock-Setup-0.5.2-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
+- **`iDock-0.5.2-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
 - **`SHA256SUMS.txt`**: SHA-256 artefak unduhan.
 - **`installer-build.json`**: versi, runtime, compiler, dan metadata penyusunan installer.
-- [Catatan rilis 0.5.1](RELEASE-NOTES-0.5.1.md): fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
+- [Catatan rilis 0.5.2](RELEASE-NOTES-0.5.2.md): fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
 
 Arsip **Source code** yang dibuat GitHub otomatis bukan installer maupun paket aplikasi siap pakai. Source proyek tetap tersedia melalui repository. `installer-build.json` adalah laporan penyusunan paket, bukan sertifikat lolos instalasi pada Windows bersih.
 
@@ -58,10 +60,12 @@ Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefa
 - [ ] **Bonjour sudah ada:** konfigurasi, layanan, aplikasi pemakai lain, serta aturan Firewall yang tidak dimiliki iDock tetap utuh.
 - [ ] **Public Wi-Fi:** pada instalasi baru opsi tidak dicentang; uji pilihan mati/hidup, jalankan ulang installer untuk mencabutnya, dan verifikasi tepat Public + Wireless + LocalSubnet + executable receiver tanpa edge traversal. Uji bahwa cakupan tidak mencakup Ethernet Public atau Domain. Catat hasil IPv4 dan IPv6 terpisah.
 - [ ] **Aturan dan kebijakan:** collision, aturan administrator yang dimodifikasi, duplikasi, kegagalan parsial, serta rollback tidak mengubah aturan lain, profil jaringan, Bonjour, Bluetooth, atau kebijakan global. Aturan blok/kebijakan organisasi dilaporkan, bukan dilewati.
-- [ ] **Upgrade 0.5.0 → 0.5.1:** pengaturan/data pengguna tidak hilang; proses aktif ditangani dengan aman; Private.v1 tetap utuh dan pilihan Public tidak muncul tanpa persetujuan. Uji juga pemasangan ulang dengan pilihan sebelumnya tersimpan serta pencabutan pilihan.
+- [ ] **Upgrade 0.5.1 → 0.5.2:** pengaturan/data pengguna tidak hilang, proses aktif ditangani dengan aman, dan pilihan bahasa tersimpan tanpa mereset pointer. Pertahankan juga cakupan migrasi Firewall dari 0.5.0: Private.v1 tetap utuh dan pilihan Public tidak muncul tanpa persetujuan. Uji pemasangan ulang dengan pilihan sebelumnya tersimpan serta pencabutan pilihan.
 - [ ] **Uninstall:** launcher dilepas, pengguna lain/aplikasi pemakai Bonjour tidak rusak, data serta pairing dipertahankan.
 - [ ] ZIP portable diekstrak ke lokasi berbeda yang aman dan dapat berjalan tanpa runtime terpasang; tetap memakai data lokal paket.
-- [ ] Keyboard, scaling/DPI, ukuran jendela minimum, scroll, slider, orientasi, dan tampilan status diperiksa. Urutan bagian tetap **Panduan → kartu mirroring/kontrol → Pengaturan pointer → Diagnostik**, dengan pintasan terlihat di bagian atas.
+- [ ] Keyboard, scaling/DPI, ukuran jendela minimum, scroll, slider, orientasi, dan tampilan status diperiksa. Urutan bagian tetap **Panduan → kartu mirroring/kontrol → Pengaturan → Diagnostik**, dengan pintasan terlihat di bagian atas.
+- [ ] **Bahasa launcher:** perubahan Bahasa Indonesia/English langsung memperbarui teks, tooltip, nama aksesibilitas, serta status termasuk kegagalan yang sudah tampil, tanpa memulai ulang sesi atau mereset pointer/pairing. Pilihan bertahan setelah aplikasi dibuka ulang; kegagalan penyimpanan tidak dilaporkan berhasil. Protokol/log mentah pihak ketiga dan budaya proses tidak berubah.
+- [ ] **Dokumentasi dua bahasa:** README Indonesia/English memakai screenshot dengan bahasa UI yang sesuai; seluruh panduan berpasangan, navigasi bahasa/tautan benar, dan perintah serta batas klaim pengujian tetap selaras. Paket menyertakan kedua bahasa dan `README.en.md`.
 - [ ] Lisensi, notices, dan kewajiban distribusi source tiap komponen ditinjau.
 - [ ] Corresponding source dan material yang diwajibkan lisensi sudah diverifikasi untuk versi **UxPlay, Qt, GStreamer, FFmpeg, dan dependensi yang benar-benar dibundel**. Salinan lisensi serta tautan source upstream saja bukan bukti bahwa seluruh kewajiban distribusi binary sudah terpenuhi.
 - [ ] Catatan kompatibilitas, masalah yang diketahui, serta hasil uji perangkat sesuai bukti; yang belum diuji ditulis jelas.
@@ -84,8 +88,8 @@ Keduanya memakai Windows x64 dan .NET 10 SDK, menjalankan pemeriksaan installer 
 
 Workflow [Build release draft](../.github/workflows/release.yml) menyediakan dua cara pemicu:
 
-1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.5.1`**.
-2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.5.1`.
+1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.5.2`**.
+2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.5.2`.
 
 Tag wajib berbentuk `vMAJOR.MINOR.PATCH`, dan versinya harus sama dengan `COMPONENTS.json` serta project aplikasi. Workflow tidak membuat atau memindahkan tag. Pastikan commit yang ditag sudah menyertakan seluruh source, script, dokumentasi, dan workflow yang diperlukan.
 

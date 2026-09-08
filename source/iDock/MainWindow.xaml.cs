@@ -23,10 +23,12 @@ public partial class MainWindow : Window
     private bool busy, closing, closed, endingSession, mirrorReadWarning;
     private bool mirrorWasRunning, controlWasRunning;
 
-    public MainWindow(bool preview = false, string? settingsPath = null)
+    public MainWindow(bool preview = false, string? settingsPath = null, string? languageSettingsPath = null)
     {
         if (settingsPath is not null) pointerSettingsPath = settingsPath;
+        var languageLoadError = InitializeLanguagePreference(preview, languageSettingsPath);
         InitializeComponent();
+        InitializeLanguageControls(languageLoadError);
         DeviceNameLabel.Text = Environment.MachineName;
         if (preview) return;
         Directory.CreateDirectory(logs);
@@ -38,13 +40,14 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidOperationException)
         {
-            SensitivityStatus.Text = "Pengaturan gagal dibaca; ubah kontrol untuk menyimpan ulang.";
-            Append("Pengaturan pointer gagal dibaca: " + ex.Message);
+            SetSensitivityStatus("Sensitivity.LoadFailed");
+            AppendT("Log.PointerLoadFailed", ex);
         }
         UpdateSensitivityLabel();
         sensitivitySave.Tick += (_, _) => SaveSensitivity();
         sensitivityReady = true;
-        Append($"{ProductInfo.DisplayName} {ProductInfo.Version} — startup Bluetooth memeriksa iklan dan koneksi HID secara terpisah.");
+        AppendT("Log.Startup", ProductInfo.DisplayName, ProductInfo.Version);
+        if (languageLoadError is not null) AppendT("Language.LoadFailed", languageLoadError);
         poll.Tick += (_, _) => Refresh();
         poll.Start();
         mirrorPoll.Tick += (_, _) => CheckMirrorLifecycle();
@@ -65,16 +68,16 @@ public partial class MainWindow : Window
         };
         if (url is null) return;
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
-        catch (Exception ex) { MessageBox.Show("Tautan tidak dapat dibuka. " + ex.Message, ProductInfo.DisplayName); }
+        catch (Exception ex) { MessageBox.Show(UiText.T("Error.OpenLink", UiText.ResolveException(ex)), ProductInfo.DisplayName); }
     }
 
     private void Sensitivity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         // XAML initialization fires ValueChanged before all named controls are ready.
-        if (!sensitivityReady || closing) return;
+        if (!sensitivityReady || closing || applyingLanguage) return;
         UpdateSensitivityLabel();
         sensitivityPending = true;
-        SensitivityStatus.Text = "Menyimpan…";
+        SetSensitivityStatus("Sensitivity.Saving");
         sensitivitySave.Stop();
         sensitivitySave.Start();
     }
@@ -89,7 +92,7 @@ public partial class MainWindow : Window
 
     private void Orientation_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        if (!sensitivityReady || closing) return;
+        if (!sensitivityReady || closing || applyingLanguage) return;
         sensitivityPending = true;
         // Orientation selections also flush any pending gain change in one atomic file update.
         SaveSensitivity();
@@ -103,19 +106,19 @@ public partial class MainWindow : Window
             || !int.TryParse(orientation, NumberStyles.Integer, CultureInfo.InvariantCulture, out var rotation)
             || !PointerSettings.IsValidRotation(rotation))
         {
-            SensitivityStatus.Text = "Pilih orientasi kontrol untuk menyimpan pengaturan.";
+            SetSensitivityStatus("Sensitivity.ChooseOrientation");
             return;
         }
         try
         {
             PointerSettings.Save(pointerSettingsPath, SensitivitySlider.Value, rotation);
             sensitivityPending = false;
-            SensitivityStatus.Text = "Tersimpan · dibaca otomatis saat kontrol aktif.";
+            SetSensitivityStatus("Sensitivity.Saved");
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            SensitivityStatus.Text = "Gagal menyimpan; nilai kontrol sebelumnya tetap dipakai.";
-            Append("Pengaturan pointer gagal disimpan: " + ex.Message);
+            SetSensitivityStatus("Sensitivity.SaveFailed");
+            AppendT("Log.PointerSaveFailed", ex);
         }
     }
     private void Append(string text)
@@ -124,6 +127,7 @@ public partial class MainWindow : Window
         LogBox.AppendText(line + Environment.NewLine);
         if (LogBox.Text.Length > 24000) LogBox.Text = LogBox.Text[^18000..];
         LogBox.ScrollToEnd();
+        if (previewMode) return; // Preview/test UI never writes runtime logs.
         try { File.AppendAllText(Path.Combine(logs, "idock.log"), line + Environment.NewLine); }
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
@@ -133,7 +137,7 @@ public partial class MainWindow : Window
         if (busy || closing) return;
         busy = true; SetButtons();
         try { await action(); }
-        catch (Exception ex) { DiagnosticStatus.Text = ex.Message; Append(ex.Message); }
+        catch (Exception ex) { SetDiagnosticStatus("Diagnostic.Error", ex); AppendT("Diagnostic.Error", ex); }
         finally { busy = false; Refresh(); }
     }
     private async void Mirror_Click(object sender, RoutedEventArgs e) => await Run(() =>
@@ -141,8 +145,8 @@ public partial class MainWindow : Window
         engines.StartMirror();
         mirrorReadWarning = false;
         mirrorWasRunning = true;
-        MirrorStatus.Text = "Penerima AirPlay dibuka — pilih uxplay-windows di perangkat";
-        Append("UxPlay dibuka. Tampilan video muncul setelah Screen Mirroring tersambung. Setup awal mungkin meminta instalasi Bonjour.");
+        SetMirrorStatus("Mirror.Opened");
+        AppendT("Log.MirrorOpened");
         return Task.CompletedTask;
     });
     private async void Control_Click(object sender, RoutedEventArgs e) => await Run(async () =>
@@ -152,43 +156,44 @@ public partial class MainWindow : Window
         blePending = "";
         controlStatus.Begin();
         controlWasRunning = true;
-        ControlStatus.Text = controlStatus.DisplayText;
-        Append("Input tetap di laptop. Setelah pairing, Ctrl+D+C memilih perangkat; Ctrl+Alt+Q kembali ke laptop.");
+        UpdateControlStatus();
+        AppendT("Log.ControlStarted");
         await Task.Delay(900);
     });
     private async void Diagnose_Click(object sender, RoutedEventArgs e) => await Run(async () =>
     {
-        DiagnosticStatus.Text = "Memeriksa adapter dan kemampuan Bluetooth…";
+        SetDiagnosticStatus("Diagnostic.Checking");
         var result = await engines.DiagnoseAsync();
         File.WriteAllText(Path.Combine(logs, "bluetooth-diagnostics.txt"), result.Report);
         Append(result.Report.Trim());
-        DiagnosticStatus.Text = DescribeDiagnostic(result.ExitCode, result.Report);
+        diagnosticResult = result;
+        RenderDiagnosticStatus();
         LogBox.BringIntoView();
     });
     internal static string DescribeDiagnostic(int exitCode, string report)
     {
         if (report.Contains("peripheral cleanup failed:", StringComparison.OrdinalIgnoreCase))
-            return $"Pembersihan sesi Bluetooth belum terkonfirmasi. Tutup {ProductInfo.DisplayName} dan periksa log sebelum mencoba lagi.";
+            return UiText.T("Diagnostic.CleanupFailed", ProductInfo.DisplayName);
         if (exitCode == 0 && report.Contains("Existing HID connection verified. This diagnostic has now closed the peripheral.", StringComparison.Ordinal))
-            return "Koneksi HID lama terverifikasi; iklan Bluetooth belum siap. Mulai kontrol dan uji input perangkat.";
+            return UiText.T("Diagnostic.ExistingLink");
         if (exitCode == 0 && report.Contains("Advertisement status: StartedWithoutAllAdvertisementData", StringComparison.Ordinal)
             && report.Contains("Advertising startup succeeded. This diagnostic has now stopped advertising.", StringComparison.Ordinal))
-            return "Iklan Bluetooth terbatas. Penemuan perangkat, pairing, dan input masih perlu diuji.";
+            return UiText.T("Diagnostic.Limited");
         if (exitCode == 0 && (report.Contains("Advertising is running", StringComparison.Ordinal)
             || report.Contains("Advertising startup succeeded. This diagnostic has now stopped advertising.", StringComparison.Ordinal)))
-            return "Bluetooth bisa mengiklankan mouse/keyboard. Pairing dan input perangkat masih perlu diuji.";
+            return UiText.T("Diagnostic.Advertising");
         if (report.Contains("UnauthorizedAccessException", StringComparison.OrdinalIgnoreCase) || report.Contains("Access is denied", StringComparison.OrdinalIgnoreCase))
-            return "Pemeriksaan terhalang akses Windows. Lihat log; ini belum berarti adapter tidak mendukung.";
+            return UiText.T("Diagnostic.Access");
         if (Regex.IsMatch(report, @"Peripheral role\s*:\s*False", RegexOptions.IgnoreCase))
-            return "Adapter tidak mendukung mode kontrol. Mirroring tetap dapat digunakan.";
-        return "Bluetooth belum siap. Lihat log untuk kondisi adapter, izin, dan status radio.";
+            return UiText.T("Diagnostic.Unsupported");
+        return UiText.T("Diagnostic.NotReady");
     }
     private async void Stop_Click(object sender, RoutedEventArgs e) => await Run(() =>
     {
-        EndSession("Sesi dihentikan", $"Sesi {ProductInfo.DisplayName} dihentikan.");
+        EndSession("Mirror.Stopped", "Log.SessionStopped");
         return Task.CompletedTask;
     });
-    private void EndSession(string status, string reason)
+    private void EndSession(string statusKey, string reasonKey)
     {
         if (closing || closed || endingSession) return;
         endingSession = true;
@@ -200,9 +205,9 @@ public partial class MainWindow : Window
             engines.Dispose();
             blePending = "";
             controlStatus.Stop(clearFailure: true);
-            ControlStatus.Text = controlStatus.DisplayText;
-            MirrorStatus.Text = status;
-            Append(reason + " Input kembali ke laptop. Pairing, pengaturan, dan layanan Bonjour tetap tersimpan.");
+            UpdateControlStatus();
+            SetMirrorStatus(statusKey);
+            AppendT("Log.SessionCleanup", UiText.T(reasonKey, ProductInfo.DisplayName));
         }
         finally { endingSession = false; SetButtons(); }
     }
@@ -215,24 +220,22 @@ public partial class MainWindow : Window
             if (state == MirrorLifecycleEvent.ReadFailed)
             {
                 if (!mirrorReadWarning)
-                    Append("Status jendela video belum dapat dibaca. Sesi tetap berjalan; gunakan Hentikan sesi jika diperlukan.");
+                    AppendT("Log.VideoReadFailed");
                 mirrorReadWarning = true;
                 return;
             }
             mirrorReadWarning = false;
             if (state == MirrorLifecycleEvent.VideoWindowClosed)
-                EndSession("Sesi dihentikan — jendela video telah berakhir",
-                    "Jendela video tidak ada selama 2 detik; sesi mirroring dan kontrol dihentikan.");
+                EndSession("Mirror.VideoEnded", "Log.VideoEnded");
             else if (state == MirrorLifecycleEvent.ReceiverExited)
-                EndSession("Receiver berhenti — sesi dihentikan",
-                    "Proses receiver berakhir. Jika setup Bonjour baru selesai, buka mirroring lagi.");
+                EndSession("Mirror.ReceiverEnded", "Log.ReceiverEnded");
         }
-        catch (Exception ex) { DiagnosticStatus.Text = ex.Message; Append("Pemantauan mirroring: " + ex.Message); }
+        catch (Exception ex) { SetDiagnosticStatus("Diagnostic.Error", ex); AppendT("Log.MirrorWatchFailed", ex); }
     }
     private void OpenLogs_Click(object sender, RoutedEventArgs e)
     {
         try { Process.Start(new ProcessStartInfo(logs) { UseShellExecute = true }); }
-        catch (Exception ex) { Append(ex.Message); }
+        catch (Exception ex) { AppendT("Diagnostic.Error", ex); }
     }
     private void SetButtons()
     {
@@ -254,12 +257,12 @@ public partial class MainWindow : Window
                 if (blePending.Length > 0) ApplyBleLine(blePending);
                 blePending = "";
                 controlStatus.Stop();
-                ControlStatus.Text = controlStatus.DisplayText;
-                Append("Proses Bluetooth berhenti. Lihat log atau jalankan Cek Bluetooth.");
+                UpdateControlStatus();
+                AppendT("Log.ControlEnded");
             }
             SetButtons();
         }
-        catch (Exception ex) { DiagnosticStatus.Text = ex.Message; }
+        catch (Exception ex) { SetDiagnosticStatus("Diagnostic.Error", ex); }
     }
     private void ReadBleLog()
     {
@@ -282,7 +285,7 @@ public partial class MainWindow : Window
         if (line.Length == 0) return;
         Append("BLE · " + line);
         controlStatus.Apply(line);
-        ControlStatus.Text = controlStatus.DisplayText;
+        UpdateControlStatus();
     }
     private void WindowClosing(object? sender, CancelEventArgs e)
     {
@@ -291,7 +294,7 @@ public partial class MainWindow : Window
         // Job disposal is synchronous. Calling Close again inside Closing re-enters WPF
         // when StopAsync completes inline and causes an InvalidOperationException.
         try { engines.Dispose(); }
-        catch (Exception ex) { Append("Sesi gagal dibersihkan saat menutup: " + ex.Message); }
+        catch (Exception ex) { AppendT("Log.CloseCleanupFailed", ex); }
         finally { closed = true; }
     }
 }

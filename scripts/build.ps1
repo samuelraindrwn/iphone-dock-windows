@@ -119,7 +119,7 @@ try {
     foreach ($name in @('LICENSE', 'README.md', 'IDOCK-MODIFICATIONS.md')) {
         Copy-Item -LiteralPath (Join-Path $repositoryRoot ('source\blehid-patched\' + $name)) -Destination $backendOutput
     }
-    foreach ($name in @('LICENSE', 'THIRD_PARTY_NOTICES.md', 'COMPONENTS.json', 'global.json', 'README.md', 'PANDUAN.md')) {
+    foreach ($name in @('LICENSE', 'THIRD_PARTY_NOTICES.md', 'COMPONENTS.json', 'global.json', 'README.md', 'README.en.md', 'PANDUAN.md')) {
         $document = Join-Path $repositoryRoot $name
         if (Test-Path -LiteralPath $document -PathType Leaf) { Copy-Item -LiteralPath $document -Destination $stagePath }
     }

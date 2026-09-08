@@ -1,4 +1,14 @@
-# Checklist kestabilan iDock for Windows 0.5.1
+# Checklist kestabilan iDock for Windows
+
+Bahasa Indonesia · [English](en/STABILITY-TESTS.md)
+
+## Tambahan pemeriksaan bahasa 0.5.2
+
+- [ ] Setelah upgrade, pilih **Pengaturan → Bahasa → English**, tutup dan buka ulang aplikasi, lalu pastikan pilihan tetap English. Ulangi untuk Bahasa Indonesia.
+- [ ] Dalam sesi mirroring/kontrol, kembalikan input ke Windows dengan **Ctrl + Alt + Q**, lalu ganti bahasa. Pastikan sesi tetap berjalan, sensitivitas/orientasi tidak berubah, dan kontrol masih bekerja setelah target dipilih kembali.
+- [ ] Periksa kedua bahasa pada ukuran minimum: label/tooltip/status panjang, navigasi keyboard, serta peringatan bila penyimpanan bahasa gagal. Pastikan screenshot dan petunjuk sesuai bahasa yang dipilih.
+
+Pemeriksaan UI terisolasi otomatis sudah dijalankan untuk 0.5.2; tiga langkah perangkat/upgrade di atas tetap target manual, bukan hasil yang sudah dicapai. Lihat [catatan 0.5.2](RELEASE-NOTES-0.5.2.md).
 
 [Kembali ke README](../README.md) · [Cara pakai](USAGE.md) · [Troubleshooting](TROUBLESHOOTING.md)
 

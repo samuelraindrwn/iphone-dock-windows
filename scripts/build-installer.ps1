@@ -70,7 +70,7 @@ try {
     foreach ($required in @('iDock.exe', 'iDock.dll', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll',
         'vendor\blehid\BleHid.Cli.exe', 'vendor\blehid\coreclr.dll', 'vendor\blehid\hostfxr.dll',
         'vendor\uxplay\uxplay-windows.exe', 'vendor\uxplay\mDNSResponder.exe', 'vendor\uxplay\LICENSE.rtf',
-        'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', 'docs\INSTALL.md', 'source\iDock\iDock.csproj',
+        'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', 'README.en.md', 'docs\INSTALL.md', 'docs\en\INSTALL.md', 'docs\en\USAGE.md', 'source\iDock\iDock.csproj',
         'licenses\dotnet\Microsoft.NETCore.App\LICENSE.TXT', 'licenses\dotnet\Microsoft.NETCore.App\THIRD-PARTY-NOTICES.TXT',
         'licenses\dotnet\Microsoft.WindowsDesktop.App\LICENSE')) {
         if (-not (Test-Path -LiteralPath (Join-Path $payloadPath $required) -PathType Leaf)) { throw "Missing installer payload file: $required" }
@@ -80,7 +80,7 @@ try {
         if (($file.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
             $relative -match '(^|\\)(\.git|\.cache|\.artifacts|data|logs|validation|obj|bin)(\\|$)' -or
             $file.Name -match '\.local\.(ps1|md)$|\.(log|pfx|p12|pem|key|ble|btsnoop)$' -or
-            $file.Name -in @('pointer-settings.json', 'hosts.json', 'device.json', 'secrets.json', '.env')) {
+            $file.Name -in @('pointer-settings.json', 'ui-settings.json', 'hosts.json', 'device.json', 'secrets.json', '.env')) {
             throw "Private, generated, or linked content is forbidden in the installer: $relative"
         }
     }

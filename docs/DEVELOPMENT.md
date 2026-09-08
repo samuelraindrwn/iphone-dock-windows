@@ -1,5 +1,7 @@
 # Panduan developer
 
+Bahasa Indonesia · [English](en/DEVELOPMENT.md)
+
 [Kembali ke README](../README.md) · [Instalasi pengguna](INSTALL.md) · [Arsitektur](ARCHITECTURE.md) · [Rilis](RELEASING.md)
 
 Alur source tetap dapat digunakan tanpa installer. Gunakan paket terpisah dari instalasi harian agar build atau tes tidak mengganti binary yang sedang dipakai.
@@ -102,6 +104,27 @@ dist/                  Hasil build/paket; tidak masuk Git
 5. Perbarui dokumentasi dan kirim perubahan melalui workflow Git yang digunakan repository. Jangan menyatakan semua model/versi didukung hanya dari satu konfigurasi.
 
 Jika PowerShell diblokir kebijakan, baca skrip dan ikuti kebijakan Windows/organisasi; jangan menonaktifkan keamanan sistem secara global.
+
+## Memelihara dua bahasa
+
+`UiText.Window.cs` dan `UiText.Engine.cs` memasangkan teks Indonesia/English dalam satu katalog. Tambahkan kedua bahasa untuk setiap key; pertahankan placeholder format, nama receiver, hotkey, tag orientasi, dan penanda protokol backend. Jangan menerjemahkan string yang dipakai untuk mengenali log BLE. Bahasa UI tidak mengganti culture proses.
+
+Pengujian UI menggunakan file bahasa terisolasi; jangan menjalankannya pada data instalasi aktif. Pastikan label panjang, tooltip, nama aksesibilitas, status sukses/gagal, dan pemilihan bahasa tetap terbaca pada ukuran minimum dalam kedua bahasa. Perubahan bahasa tidak boleh memulai ulang engine, mengubah target input, atau menimpa file pointer.
+
+Dokumentasi Indonesia tetap pada `README.md` dan `docs/`; versi English pada `README.en.md` dan `docs/en/`. Perbarui kedua versi dan tautan pemilih bahasa saat fitur berubah. Jalankan pemeriksaan tautan lokal:
+
+```powershell
+.\scripts\test-documentation.ps1
+```
+
+Pratinjau menggunakan UI aplikasi asli dengan nama laptop generik, tanpa memulai sesi atau membaca/menyimpan preferensi pengguna. Setelah build, hasilkan screenshot masing-masing bahasa:
+
+```powershell
+.\dist\iDock\iDock.exe --preview .\docs\images\idock.png 1650 1100 id
+.\dist\iDock\iDock.exe --preview .\docs\images\idock-en.png 1650 1100 en
+```
+
+Periksa hasil gambar sebelum memperbarui README. Screenshot English harus berasal dari UI English, bukan hanya caption terjemahan. Installer dan portable berikutnya menyalin kedua bahasa beserta gambar.
 
 ## Menyusun installer
 

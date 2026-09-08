@@ -9,7 +9,9 @@ internal sealed class ControlStatusTracker
 {
     private bool running, advertising, captureReady, verifiedConnection, limitedAdvertisement;
     private int keyboardSubscribers, mouseSubscribers;
-    private string? advertisingFailure, fatalFailure, remoteTarget;
+    // Store failure identifiers, not rendered text, so changing the language
+    // updates an existing failure without clearing its evidence or state.
+    private string? advertisingFailureKey, fatalFailureKey, remoteTarget;
     private static readonly Regex Advertisement = new(
         @"(?:StartAdvertising\s*:|advertising\s*:|\[adv\s*\]\s*status\s*->)\s*(StartedWithoutAllAdvertisementData|Started|Aborted|Stopped)\b",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -21,7 +23,7 @@ internal sealed class ControlStatusTracker
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private bool HasSubscribers => keyboardSubscribers > 0 || mouseSubscribers > 0;
-    internal ControlConnectionState State => fatalFailure is not null || advertisingFailure is not null
+    internal ControlConnectionState State => fatalFailureKey is not null || advertisingFailureKey is not null
         ? ControlConnectionState.Failed
         : !running ? ControlConnectionState.Stopped
         : !advertising && !verifiedConnection ? ControlConnectionState.Starting
@@ -30,20 +32,20 @@ internal sealed class ControlStatusTracker
         : ControlConnectionState.Connected;
 
     private string ConnectedInputs => keyboardSubscribers > 0 && mouseSubscribers > 0
-        ? "Mouse/keyboard" : mouseSubscribers > 0 ? "Mouse saja" : "Keyboard saja";
+        ? UiText.T("Control.InputsBoth") : mouseSubscribers > 0 ? UiText.T("Control.InputsMouseOnly") : UiText.T("Control.InputsKeyboardOnly");
     private string ConnectionNote => verifiedConnection && !advertising
-        ? " · koneksi lama terverifikasi; iklan Bluetooth belum siap"
-        : limitedAdvertisement ? " · iklan Bluetooth terbatas" : "";
+        ? UiText.T("Control.NoteVerifiedConnection")
+        : limitedAdvertisement ? UiText.T("Control.NoteLimitedAdvertisement") : "";
     internal string DisplayText => (State switch
     {
-        ControlConnectionState.Failed => advertisingFailure ?? fatalFailure!,
-        ControlConnectionState.Stopped => "Kontrol berhenti — input di laptop",
-        ControlConnectionState.Starting => "Memulai Bluetooth — menunggu status",
-        ControlConnectionState.WaitingForPairing => "Menunggu pairing mouse/keyboard dari AssistiveTouch",
-        ControlConnectionState.Controlling => $"Mengontrol {remoteTarget} — {ConnectedInputs.ToLowerInvariant()}",
+        ControlConnectionState.Failed => UiText.T(advertisingFailureKey ?? fatalFailureKey!),
+        ControlConnectionState.Stopped => UiText.T("Control.Stopped"),
+        ControlConnectionState.Starting => UiText.T("Control.Starting"),
+        ControlConnectionState.WaitingForPairing => UiText.T("Control.WaitingForPairing"),
+        ControlConnectionState.Controlling => UiText.T("Control.Controlling", remoteTarget!, ConnectedInputs.ToLowerInvariant()),
         _ => captureReady
-            ? $"{ConnectedInputs} tersambung — input di laptop; Ctrl+D+C memilih perangkat"
-            : $"{ConnectedInputs} tersambung — kontrol input belum siap"
+            ? UiText.T("Control.ConnectedReady", ConnectedInputs)
+            : UiText.T("Control.ConnectedNotReady", ConnectedInputs)
     }) + (State is ControlConnectionState.Connected or ControlConnectionState.Controlling
         or ControlConnectionState.WaitingForPairing ? ConnectionNote : "");
 
@@ -52,7 +54,7 @@ internal sealed class ControlStatusTracker
         running = true;
         advertising = captureReady = verifiedConnection = limitedAdvertisement = false;
         keyboardSubscribers = mouseSubscribers = 0;
-        advertisingFailure = fatalFailure = remoteTarget = null;
+        advertisingFailureKey = fatalFailureKey = remoteTarget = null;
     }
 
     internal void Stop(bool clearFailure = false)
@@ -60,7 +62,7 @@ internal sealed class ControlStatusTracker
         running = advertising = captureReady = verifiedConnection = limitedAdvertisement = false;
         keyboardSubscribers = mouseSubscribers = 0;
         remoteTarget = null;
-        if (clearFailure) advertisingFailure = fatalFailure = null;
+        if (clearFailure) advertisingFailureKey = fatalFailureKey = null;
     }
 
     internal void Apply(string line)
@@ -74,10 +76,10 @@ internal sealed class ControlStatusTracker
         // Subscriber counts or an 'Aborted (Success)' line are not proof on their own.
         if (Has("[ready] existing HID connection verified; input stays local"))
         {
-            if (fatalFailure is null && keyboardSubscribers > 0 && mouseSubscribers > 0)
+            if (fatalFailureKey is null && keyboardSubscribers > 0 && mouseSubscribers > 0)
             {
                 verifiedConnection = true;
-                advertisingFailure = null;
+                advertisingFailureKey = null;
                 remoteTarget = null;
             }
             return;
@@ -91,7 +93,7 @@ internal sealed class ControlStatusTracker
         var advertisement = Advertisement.Match(line);
         if (advertisement.Success)
         {
-            if (Has("[FAIL]")) fatalFailure = "Kontrol gagal dimulai — lihat log / Cek Bluetooth";
+            if (Has("[FAIL]")) fatalFailureKey = "Control.FailureStart";
             var state = advertisement.Groups[1].Value;
             if (state.Equals("Started", StringComparison.OrdinalIgnoreCase)
                 || state.Equals("StartedWithoutAllAdvertisementData", StringComparison.OrdinalIgnoreCase))
@@ -100,7 +102,7 @@ internal sealed class ControlStatusTracker
                 advertising = true;
                 verifiedConnection = false;
                 limitedAdvertisement = state.Equals("StartedWithoutAllAdvertisementData", StringComparison.OrdinalIgnoreCase);
-                advertisingFailure = null;
+                advertisingFailureKey = null;
             }
             else if (state.Equals("Aborted", StringComparison.OrdinalIgnoreCase)
                 && verifiedConnection && keyboardSubscribers > 0 && mouseSubscribers > 0
@@ -116,20 +118,20 @@ internal sealed class ControlStatusTracker
             {
                 advertising = verifiedConnection = limitedAdvertisement = false;
                 keyboardSubscribers = mouseSubscribers = 0;
-                advertisingFailure = "Bluetooth gagal menyiarkan mouse/keyboard — cek radio / log";
+                advertisingFailureKey = "Control.FailureAdvertising";
             }
             return;
         }
 
         if (Has("startup failed") || Has("[FAIL]"))
         {
-            fatalFailure = "Kontrol gagal dimulai — lihat log / Cek Bluetooth";
+            fatalFailureKey = "Control.FailureStart";
             return;
         }
         if (Has("capture failed") || Has("capture error:") || Has("[pump] send error:"))
         {
             captureReady = false;
-            fatalFailure = "Kontrol input gagal — input belum bisa dikirim; lihat log";
+            fatalFailureKey = "Control.FailureInput";
             return;
         }
         if (Has("capture stopped") || Has("[hook] message loop exited"))
@@ -143,7 +145,7 @@ internal sealed class ControlStatusTracker
         if (hooks.Success)
         {
             captureReady = hooks.Groups[1].Value.Any(c => c != '0') && hooks.Groups[2].Value.Any(c => c != '0');
-            if (!captureReady) fatalFailure = "Kontrol input gagal dipasang — lihat log";
+            if (!captureReady) fatalFailureKey = "Control.FailureHooks";
             return;
         }
 
@@ -193,9 +195,9 @@ internal sealed class ControlStatusTracker
     private void LoseVerifiedConnection()
     {
         verifiedConnection = captureReady = false;
-        remoteTarget = advertisingFailure = null;
+        remoteTarget = advertisingFailureKey = null;
         // A revoked transport proof requires a new startup, even if a late provider
         // callback subsequently claims Started or repeats the old ready marker.
-        fatalFailure = "Koneksi kontrol terputus — input di laptop; mulai ulang kontrol";
+        fatalFailureKey = "Control.FailureDisconnected";
     }
 }

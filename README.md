@@ -1,18 +1,20 @@
 # iDock for Windows
 
+Bahasa Indonesia · [English](README.en.md)
+
 Tampilkan layar iPhone/iPad di Windows, lalu gunakan mouse dan keyboard laptop untuk berinteraksi dengan perangkat. iDock memisahkan **mirroring melalui AirPlay** dan **kontrol melalui Bluetooth LE HID**, sehingga keduanya dapat digunakan bersama atau secara terpisah.
 
 [Unduh melalui GitHub Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest) · [Instalasi](docs/INSTALL.md) · [Cara pakai](docs/USAGE.md) · [Panduan developer](docs/DEVELOPMENT.md)
 
 ![Antarmuka iDock for Windows](docs/images/idock.png)
 
-*Pratinjau antarmuka; bukan indikator bahwa perangkat sedang tersambung.*
+*Pratinjau antarmuka Bahasa Indonesia; bukan indikator bahwa perangkat sedang tersambung. Pilih bahasa di Pengaturan → Bahasa.*
 
 ## Mulai menggunakan
 
 ### 1. Instal aplikasi
 
-Buka [GitHub Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest), pilih rilis yang tersedia, lalu unduh **`iDock-Setup-0.5.1-win-x64.exe`** dari bagian **Assets** untuk versi 0.5.1. Jika versi tersebut belum terbit, gunakan rilis yang tersedia atau tunggu paket berikutnya; [build dari source](docs/DEVELOPMENT.md) adalah pilihan developer, bukan syarat penggunaan installer. Tautan unduhan bukan konfirmasi bahwa suatu rilis sudah diterbitkan.
+Buka [GitHub Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest), pilih rilis yang tersedia, lalu unduh **`iDock-Setup-<versi>-win-x64.exe`** dari bagian **Assets**. Jika versi yang diperlukan belum terbit, gunakan rilis yang tersedia atau tunggu paket berikutnya; [build dari source](docs/DEVELOPMENT.md) adalah pilihan developer, bukan syarat penggunaan installer. Tautan unduhan bukan konfirmasi bahwa suatu rilis sudah diterbitkan.
 
 Jalankan installer, tinjau permintaan izin Windows, lalu buka **iDock for Windows** melalui Start Menu. Installer Windows x64 menyertakan runtime aplikasi: **pengguna tidak perlu memasang Git, SDK, atau .NET terpisah**. Paket portable juga tersedia sebagai alternatif; jangan mengunduh arsip **Source code** jika hanya ingin menggunakan aplikasi.
 
@@ -49,6 +51,12 @@ Halaman pairing berada di **Settings**, bukan menu AssistiveTouch yang mengamban
 - Koreksi arah **portrait/landscape manual**, tanpa pairing ulang.
 - Pemeriksaan Bluetooth dan log lokal untuk membantu diagnosis.
 
+### Bahasa aplikasi
+
+Pada build **0.5.2**, buka **Pengaturan → Bahasa**, lalu pilih **Bahasa Indonesia** atau **English**. Teks berubah langsung dan pilihan tersimpan untuk pembukaan berikutnya, tanpa memulai ulang sesi atau mengubah sensitivitas/orientasi. Installer 0.5.1 yang sudah ada belum memiliki pilihan ini; lihat [catatan pengembangan 0.5.2](docs/RELEASE-NOTES-0.5.2.md) untuk status ketersediaan dan verifikasi.
+
+Dokumentasi dua bahasa dapat dibaca terlepas dari versi aplikasi yang dipasang. Pesan Windows, log backend, dan antarmuka UxPlay terpisah tetap menggunakan bahasa asalnya; pengaturan ini tidak mengubah bahasa perangkat iOS/iPadOS.
+
 Mirroring dan kontrol tidak membutuhkan aplikasi pendamping di perangkat, Mac, jailbreak, atau Developer Mode. Build, penandatanganan, pemasangan aplikasi iOS/iPadOS, dan debugging tetap memakai toolchain pengembangan masing-masing. iDock bukan pengganti Xcode, simulator, atau debugger.
 
 ## Kompatibilitas dan batas penggunaan
@@ -84,6 +92,7 @@ Gunakan **.NET 10 SDK x64** untuk membangun. Build default bersifat *framework-d
 - [Build, pengujian, dan kontribusi developer](docs/DEVELOPMENT.md)
 - [Checklist rilis dan installer](docs/RELEASING.md)
 - [Perubahan dan status pengujian 0.5.1](docs/RELEASE-NOTES-0.5.1.md)
+- [Pilihan bahasa dan status pengembangan 0.5.2](docs/RELEASE-NOTES-0.5.2.md)
 - [Arsitektur serta penyimpanan data](docs/ARCHITECTURE.md)
 - [Kriteria dan checklist kestabilan](docs/STABILITY-TESTS.md)
 - [Roadmap iOS/iPadOS, latensi, dan perbaikan bug](docs/ROADMAP.md)

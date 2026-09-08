@@ -57,6 +57,11 @@ public partial class App : Application
             return;
         }
         Environment.SetEnvironmentVariable("BLEHID_DATA_DIR", Path.Combine(UserStorage.Root, "data", "blehid"));
+        if (e.Args.FirstOrDefault() == "--preview")
+        {
+            // A preview chooses its own language, never reading or saving user preferences.
+            UiText.SelectLanguage(e.Args.Length > 4 ? e.Args[4] : "id");
+        }
         var window = new MainWindow(preview: e.Args.FirstOrDefault() == "--preview");
         MainWindow = window;
         if (e.Args.FirstOrDefault() == "--preview")
@@ -92,7 +97,7 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         DispatcherUnhandledException += (_, args) =>
         {
-            MessageBox.Show(args.Exception.Message, ProductInfo.DisplayName, MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(UiText.ResolveException(args.Exception), ProductInfo.DisplayName, MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
         };
         window.Show();

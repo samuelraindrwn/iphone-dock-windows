@@ -1,5 +1,7 @@
 # Teks lisensi pihak ketiga
 
+Bahasa Indonesia · [English](../docs/en/LICENSES.md)
+
 Teks lisensi berikut disalin tanpa mengubah isi ketentuannya dari repository resmi proyek yang menggunakannya:
 
 | File | Sumber salinan |

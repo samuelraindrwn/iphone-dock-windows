@@ -1,5 +1,15 @@
 # Cara memakai iDock for Windows
 
+Bahasa Indonesia · [English](en/USAGE.md)
+
+## Bahasa aplikasi — mulai build 0.5.2
+
+Gulir ke **Pengaturan → Bahasa**, lalu pilih **Bahasa Indonesia** atau **English**. Pilihan langsung berlaku pada label, tombol, petunjuk, tooltip, dan status aplikasi serta disimpan untuk pembukaan berikutnya. Bahasa Indonesia tetap menjadi default jika belum ada pilihan tersimpan. Pada UI English, jalurnya **Settings → Language**.
+
+Mengubah bahasa tidak menghentikan sesi, mengganti target input, atau mereset sensitivitas/orientasi. Log yang sudah tercatat tidak ditulis ulang; pesan baru buatan iDock mengikuti pilihan bahasa. Pesan Windows, log backend, dan jendela UxPlay tetap memakai bahasa asalnya. Pilihan ini tidak mengubah bahasa iPhone/iPad atau installer.
+
+Jika setelan gagal dibaca, aplikasi menggunakan Bahasa Indonesia dan menampilkan peringatan. Jika penyimpanan gagal, pilihan berlaku untuk sesi aplikasi saat ini saja; periksa peringatan sebelum menganggapnya tersimpan. Fitur ini tidak ada pada installer 0.5.1. Lihat [status build 0.5.2](RELEASE-NOTES-0.5.2.md).
+
 [Kembali ke README](../README.md) · [Instalasi](INSTALL.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
 Istilah **perangkat** merujuk ke iPhone/iPad dengan iOS/iPadOS. Penggunaan dasar sudah dilakukan pada konfigurasi iPhone 11/Windows 11. iPad serta kompatibilitas lintas model dan versi belum memiliki hasil pengujian yang terverifikasi.

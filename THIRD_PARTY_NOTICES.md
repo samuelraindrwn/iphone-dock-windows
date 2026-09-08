@@ -1,10 +1,12 @@
 # Komponen pihak ketiga
 
+Bahasa Indonesia · [English](docs/en/THIRD-PARTY-NOTICES.md)
+
 Lisensi MIT di direktori utama repository berlaku untuk sumber kode milik proyek iDock for Windows. Lisensi ini tidak menggantikan lisensi komponen pihak ketiga. Pertahankan lisensi dan atribusi di bawah saat menggunakan atau mendistribusikan komponennya.
 
 | Komponen | Versi / source | Lisensi dan catatan |
 | --- | --- | --- |
-| Launcher iDock for Windows | `source/iDock`, versi 0.5.0 | [MIT](LICENSE), Samuel Rayy. |
+| Launcher iDock for Windows | `source/iDock`, versi aplikasi tercatat dalam [COMPONENTS.json](COMPONENTS.json) | [MIT](LICENSE), Samuel Rayy. |
 | Windows BLE HID | [v0.4.0](https://github.com/abhishek-raj/windows-ble-hid/tree/v0.4.0), commit `07f3b8884eaa604437fd2d29fc942455b689021e`, dimodifikasi untuk iDock | [MIT milik upstream](source/blehid-patched/LICENSE), Abhishek Raj. Source modifikasi lengkap di `source/blehid-patched`; lihat [daftar modifikasi](source/blehid-patched/IDOCK-MODIFICATIONS.md). |
 | UxPlay Windows | [2.0.0.1736](https://github.com/leapbtw/uxplay-windows/releases/tag/2.0.0.1736), wrapper snapshot `43cf903` | GPLv3; pemberitahuan lisensi distribusi ada di [licenses/UxPlay-LICENSE.rtf](licenses/UxPlay-LICENSE.rtf). Komponen pendukung mengikuti lisensi masing-masing sebagaimana dicantumkan upstream. |
 | libuxplay yang digunakan wrapper | [commit 437f37514257d9cb513ac7fbdee743b4da85852e](https://github.com/leapbtw/libuxplay/tree/437f37514257d9cb513ac7fbdee743b4da85852e) | Source upstream dan submodule mengikuti lisensinya sendiri; bukan kode iDock for Windows. |

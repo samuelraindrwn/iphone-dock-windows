@@ -1,5 +1,7 @@
 # Arsitektur dan batas implementasi
 
+Bahasa Indonesia · [English](en/ARCHITECTURE.md)
+
 [Kembali ke README](../README.md) · [Instalasi](INSTALL.md) · [Developer](DEVELOPMENT.md)
 
 iDock for Windows adalah launcher WPF .NET 10 untuk dua jalur yang terpisah:
@@ -60,6 +62,10 @@ Launcher menerbitkan JSON pengaturan secara atomik ke `data/blehid/pointer-setti
 Sensitivitas dibatasi 0.25–3.0; rotasi menerima 0, 90, 180, atau 270. File lama tanpa rotasi dibaca sebagai portrait. UI memiliki debounce slider 200 ms dan backend memeriksa perubahan setiap 250 ms di worker terpisah, bukan melakukan I/O pada input hook. File tidak valid mempertahankan nilai backend terakhir yang valid; file yang tidak ada berarti default 1×/0°.
 
 ## Penyimpanan dan privasi
+
+Mulai 0.5.2, `UiText` menyimpan pasangan teks Indonesia/English dengan key yang sama; perubahan bahasa mengganti resource WPF serta merender ulang status dari state/key yang sudah ada. Ini tidak mengubah culture proses atau mem-parsing ulang protokol BLE. Pesan backend mentah dan log historis tetap dipertahankan.
+
+`LanguageSettings` menyimpan `{"Language":"id"}` atau `{"Language":"en"}` secara atomik pada `data\ui-settings.json` di root penyimpanan yang sama. File ini terpisah dari pengaturan pointer dan data pairing. Default tetap `id`; kegagalan membaca/menyimpan ditampilkan pada UI. Preview dokumentasi tidak membaca atau menulis preferensi pengguna.
 
 iDock memilih basis penyimpanan dari marker **`installed.mode`** di folder aplikasi:
 

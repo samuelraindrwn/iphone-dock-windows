@@ -50,6 +50,9 @@ jobs:
       - name: Check installer safety rules
         run: .\installer\Test-Installer.ps1
 
+      - name: Check bilingual documentation links
+        run: .\scripts\test-documentation.ps1
+
       - name: Build an isolated package
         env:
           PACKAGE_DIRECTORY: ${{ matrix.package }}

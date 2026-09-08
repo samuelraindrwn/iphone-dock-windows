@@ -10,6 +10,8 @@ internal static class Verification
 {
     public static string Run()
     {
+        // Tests never inherit or read the current user's language preference.
+        UiText.SelectLanguage("id");
         var log = new StringBuilder();
         void Check(bool condition, string label)
         { if (!condition) throw new Exception(label); log.AppendLine("PASS " + label); }
@@ -26,6 +28,7 @@ internal static class Verification
         Check(missingUserDataRejected, "Installed application never falls back to writing in Program Files");
         UiVerification.Run(Check);
         MirrorLifecycleVerification.Run(Check);
+        LocalizationVerification.Run(Check);
 
         var assembly = typeof(App).Assembly;
         Check(assembly.GetName().Name == "iDock",
@@ -73,7 +76,8 @@ internal static class Verification
                     $"Gain and rotation {angle} degrees round-trip together");
             }
             PointerSettings.Save(settingsPath, 0.8, 90);
-            var sensitivityWindow = new MainWindow(settingsPath: settingsPath)
+            var sensitivityWindow = new MainWindow(settingsPath: settingsPath,
+                languageSettingsPath: Path.Combine(settingsDirectory, "ui-settings.json"))
             {
                 WindowStartupLocation = WindowStartupLocation.Manual,
                 Left = -20000, Top = -20000, ShowActivated = false, ShowInTaskbar = false

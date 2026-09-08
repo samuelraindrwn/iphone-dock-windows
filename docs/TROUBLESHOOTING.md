@@ -1,5 +1,7 @@
 # Pemecahan masalah
 
+Bahasa Indonesia · [English](en/TROUBLESHOOTING.md)
+
 [Kembali ke README](../README.md) · [Instalasi](INSTALL.md) · [Cara pakai](USAGE.md)
 
 Mulai dengan **Ctrl + Alt + Q** untuk mengembalikan target input ke Windows. Pisahkan masalah video, Bluetooth, dan pemetaan pointer; ubah satu pengaturan pada satu waktu.

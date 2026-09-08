@@ -23,7 +23,9 @@ internal sealed class EngineManager : IDisposable
     private string Exe(string folder, string name)
     {
         var result = Path.Combine(root, "vendor", folder, name);
-        if (!File.Exists(result)) throw new FileNotFoundException($"Komponen belum lengkap. Jalankan ulang installer atau ekstrak seluruh paket portable {ProductInfo.DisplayName}.", result);
+        if (!File.Exists(result)) throw UiText.TagException(
+            new FileNotFoundException(UiText.T("Engine.MissingComponent", ProductInfo.DisplayName), result),
+            "Engine.MissingComponent", ProductInfo.DisplayName);
         return result;
     }
     internal static ProcessStartInfo StartInfo(string exe, params string[] args)
@@ -47,7 +49,7 @@ internal sealed class EngineManager : IDisposable
                 string? path = null;
                 try { path = existing.MainModule?.FileName; } catch { }
                 if (string.Equals(path, exe, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidOperationException("UxPlay dari folder ini sudah berjalan. Buka ikon UxPlay di system tray, atau Quit di sana sebelum membuka sesi baru.");
+                    throw UiText.TagException(new InvalidOperationException(UiText.T("Engine.MirrorAlreadyRunning")), "Engine.MirrorAlreadyRunning");
             }
         }
         mirror?.Dispose();
@@ -67,18 +69,18 @@ internal sealed class EngineManager : IDisposable
     public void StartControl()
     {
         if (ControlRunning) return;
-        if (HasExistingControl()) throw new InvalidOperationException("BLE HID sedang digunakan sesi lain. Tutup sesi tersebut dari aplikasinya sebelum mengaktifkan kontrol.");
+        if (HasExistingControl()) throw UiText.TagException(new InvalidOperationException(UiText.T("Engine.ControlInUse")), "Engine.ControlInUse");
         control?.Dispose();
         control = new ProcessJob(StartInfo(Exe("blehid", "BleHid.Cli.exe"), "--background"));
     }
     public async Task<(int ExitCode, string Report)> DiagnoseAsync()
     {
         if (ControlRunning || HasExistingControl())
-            throw new InvalidOperationException("Hentikan kontrol Bluetooth sebelum menjalankan pemeriksaan.");
+            throw UiText.TagException(new InvalidOperationException(UiText.T("Engine.StopControlBeforeDiagnostic")), "Engine.StopControlBeforeDiagnostic");
         var info = StartInfo(Exe("blehid", "BleHid.Cli.exe"), "--diagnose");
         info.RedirectStandardOutput = true;
         info.RedirectStandardError = true;
-        using var process = Process.Start(info) ?? throw new InvalidOperationException("Pemeriksaan gagal dibuka.");
+        using var process = Process.Start(info) ?? throw UiText.TagException(new InvalidOperationException(UiText.T("Engine.DiagnosticStartFailed")), "Engine.DiagnosticStartFailed");
         diagnostic = process;
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();
@@ -90,7 +92,7 @@ internal sealed class EngineManager : IDisposable
             catch (OperationCanceledException)
             { timedOut = true; if (!process.HasExited) process.Kill(); await process.WaitForExitAsync(); }
             var report = await stdout + Environment.NewLine + await stderr;
-            if (timedOut) report += "\nPemeriksaan melewati 50 detik. Hasil parsial tersimpan; coba lagi setelah Bluetooth aktif.";
+            if (timedOut) report += "\n" + UiText.T("Engine.DiagnosticTimeout");
             return (timedOut ? -1 : process.ExitCode, report);
         }
         finally { diagnostic = null; }

@@ -16,32 +16,32 @@
    <Grid Margin="30,24,30,22">
     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
     <Image Source="Assets/iDock.ico" Width="46" Height="46" Margin="0,0,14,0" RenderOptions.BitmapScalingMode="HighQuality" />
-    <StackPanel Grid.Column="1" Margin="0,0,16,0"><TextBlock x:Name="BrandTitle" Text="{x:Static local:ProductInfo.DisplayName}" FontSize="27" FontWeight="SemiBold" /><TextBlock Text="Perangkat Anda. Ruang kerja yang sama." Style="{StaticResource BodyText}" Margin="0,4,0,0" /></StackPanel>
-    <Button x:Name="StopButton" Grid.Column="2" Content="Hentikan sesi" IsEnabled="False" Click="Stop_Click" VerticalAlignment="Center" Padding="14,9" AutomationProperties.Name="Hentikan sesi mirroring dan kontrol" />
+    <StackPanel Grid.Column="1" Margin="0,0,16,0"><TextBlock x:Name="BrandTitle" Text="{x:Static local:ProductInfo.DisplayName}" FontSize="27" FontWeight="SemiBold" /><TextBlock Text="{DynamicResource Text.Header.Tagline}" Style="{StaticResource BodyText}" Margin="0,4,0,0" /></StackPanel>
+    <Button x:Name="StopButton" Grid.Column="2" Content="{DynamicResource Text.Session.Stop}" IsEnabled="False" Click="Stop_Click" VerticalAlignment="Center" Padding="14,9" AutomationProperties.Name="{DynamicResource Text.Session.StopAccessible}" />
    </Grid>
    <ScrollViewer x:Name="WorkspaceScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="30,0,24,22" CanContentScroll="False">
     <StackPanel x:Name="PageSections">
      <Border x:Name="GuideSection" Style="{StaticResource Card}" Margin="0,0,0,20">
       <StackPanel>
-       <TextBlock Text="Panduan" Style="{StaticResource SectionHeading}" /><TextBlock Text="Siapkan koneksi dalam tiga langkah." Style="{StaticResource BodyText}" Margin="0,4,0,18" />
+       <TextBlock Text="{DynamicResource Text.Guide.Title}" Style="{StaticResource SectionHeading}" /><TextBlock Text="{DynamicResource Text.Guide.Intro}" Style="{StaticResource BodyText}" Margin="0,4,0,18" />
        <Grid>
         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="22" /><ColumnDefinition Width="*" /><ColumnDefinition Width="22" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
         <StackPanel>
-         <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Border Style="{StaticResource StepNumber}" Margin="0,0,9,0"><TextBlock Text="1" FontWeight="SemiBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="Jaringan yang sama" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel>
-         <TextBlock Text="Hubungkan perangkat dan Windows ke Wi-Fi yang sama, lalu klik Buka mirroring." Style="{StaticResource BodyText}" FontSize="12" />
+         <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Border Style="{StaticResource StepNumber}" Margin="0,0,9,0"><TextBlock Text="1" FontWeight="SemiBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="{DynamicResource Text.Guide.NetworkTitle}" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel>
+         <TextBlock Text="{DynamicResource Text.Guide.NetworkBody}" Style="{StaticResource BodyText}" FontSize="12" />
         </StackPanel>
         <StackPanel Grid.Column="2">
-         <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Border Style="{StaticResource StepNumber}" Margin="0,0,9,0"><TextBlock Text="2" FontWeight="SemiBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="Bagikan layar" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel>
-         <TextBlock Style="{StaticResource BodyText}" FontSize="12"><Run Text="Di perangkat: Control Center → Screen Mirroring → " /><Run Text="uxplay-windows" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" /><Run Text="." /></TextBlock>
+         <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Border Style="{StaticResource StepNumber}" Margin="0,0,9,0"><TextBlock Text="2" FontWeight="SemiBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="{DynamicResource Text.Guide.ScreenTitle}" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel>
+         <TextBlock Style="{StaticResource BodyText}" FontSize="12"><Run Text="{DynamicResource Text.Guide.ScreenPrefix}" /><Run Text="uxplay-windows" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}" /><Run Text="." /></TextBlock>
         </StackPanel>
         <StackPanel Grid.Column="4">
-         <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Border Style="{StaticResource StepNumber}" Margin="0,0,9,0"><TextBlock Text="3" FontWeight="SemiBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="Hubungkan kontrol" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel>
-         <TextBlock Text="Klik Aktifkan kontrol. Buka Settings → Accessibility → Touch → AssistiveTouch, lalu aktifkan. Pilih Devices → Bluetooth Devices dan pasangkan:" Style="{StaticResource BodyText}" FontSize="12" />
-         <Border Background="#F6F7F9" CornerRadius="7" Padding="10,6" HorizontalAlignment="Left" Margin="0,9,0,0"><TextBlock x:Name="DeviceNameLabel" Text="Memuat nama laptop…" FontWeight="SemiBold" FontSize="12" /></Border>
+         <StackPanel Orientation="Horizontal" Margin="0,0,0,10"><Border Style="{StaticResource StepNumber}" Margin="0,0,9,0"><TextBlock Text="3" FontWeight="SemiBold" Foreground="{StaticResource Accent}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><TextBlock Text="{DynamicResource Text.Guide.ControlTitle}" FontWeight="SemiBold" VerticalAlignment="Center" /></StackPanel>
+         <TextBlock Text="{DynamicResource Text.Guide.ControlBody}" Style="{StaticResource BodyText}" FontSize="12" />
+         <Border Background="#F6F7F9" CornerRadius="7" Padding="10,6" HorizontalAlignment="Left" Margin="0,9,0,0"><TextBlock x:Name="DeviceNameLabel" Text="{DynamicResource Text.Guide.LoadingName}" FontWeight="SemiBold" FontSize="12" /></Border>
         </StackPanel>
        </Grid>
        <Border Background="{StaticResource AccentSoft}" CornerRadius="9" Margin="0,18,0,0" Padding="12,10">
-        <TextBlock x:Name="ShortcutHelp" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedText}"><Run Text="Ctrl + D + C" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="  Alihkan target input     ·     " /><Run Text="Ctrl + Alt + Q" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="  Kembali ke Windows" /></TextBlock>
+        <TextBlock x:Name="ShortcutHelp" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedText}"><Run Text="Ctrl + D + C" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="{DynamicResource Text.Shortcut.Switch}" /><Run Text="Ctrl + Alt + Q" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="{DynamicResource Text.Shortcut.Return}" /></TextBlock>
        </Border>
       </StackPanel>
      </Border>
@@ -52,10 +52,10 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
         <StackPanel>
          <Border Width="40" Height="40" CornerRadius="12" Background="{StaticResource AccentSoft}" HorizontalAlignment="Left" Margin="0,0,0,16"><Path Width="23" Height="22" Stretch="Uniform" Data="M7,17 L3,17 Q1,17 1,15 L1,3 Q1,1 3,1 L23,1 Q25,1 25,3 L25,15 Q25,17 23,17 L19,17 M13,12 L6,22 L20,22 Z" Stroke="{StaticResource Accent}" StrokeThickness="1.6" StrokeLineJoin="Round" /></Border>
-         <TextBlock Text="Layar perangkat" Style="{StaticResource SectionHeading}" /><TextBlock Text="Layar iPhone atau iPad, langsung di laptop melalui AirPlay." Style="{StaticResource BodyText}" Margin="0,7,0,0" />
+         <TextBlock Text="{DynamicResource Text.Mirror.Title}" Style="{StaticResource SectionHeading}" /><TextBlock Text="{DynamicResource Text.Mirror.Description}" Style="{StaticResource BodyText}" Margin="0,7,0,0" />
         </StackPanel>
-        <Border Grid.Row="1" Background="#F6F7F9" CornerRadius="9" Padding="11,9" Margin="0,20,0,16" VerticalAlignment="Bottom"><TextBlock x:Name="MirrorStatus" Text="Belum dimulai" Foreground="{StaticResource MutedText}" FontSize="12" LineHeight="18" AutomationProperties.LiveSetting="Polite" /></Border>
-        <StackPanel Grid.Row="2"><Button x:Name="MirrorButton" Content="Buka mirroring" Style="{StaticResource PrimaryButton}" Click="Mirror_Click" HorizontalAlignment="Stretch" /><Border Height="32" Margin="0,7,0,0"><TextBlock Text="Video terbuka di jendela terpisah." Style="{StaticResource CaptionText}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" /></Border></StackPanel>
+        <Border Grid.Row="1" Background="#F6F7F9" CornerRadius="9" Padding="11,9" Margin="0,20,0,16" VerticalAlignment="Bottom"><TextBlock x:Name="MirrorStatus" Text="{DynamicResource Text.Mirror.NotStarted}" Foreground="{StaticResource MutedText}" FontSize="12" LineHeight="18" AutomationProperties.LiveSetting="Polite" /></Border>
+        <StackPanel Grid.Row="2"><Button x:Name="MirrorButton" Content="{DynamicResource Text.Mirror.Open}" Style="{StaticResource PrimaryButton}" Click="Mirror_Click" HorizontalAlignment="Stretch" /><Border Height="32" Margin="0,7,0,0"><TextBlock Text="{DynamicResource Text.Mirror.SeparateWindow}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" /></Border></StackPanel>
        </Grid>
       </Border>
       <Border Grid.Column="2" Style="{StaticResource Card}">
@@ -63,32 +63,41 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
         <StackPanel>
          <Border Width="40" Height="40" CornerRadius="12" Background="#EEEAFE" HorizontalAlignment="Left" Margin="0,0,0,16"><Path Width="22" Height="25" Stretch="Uniform" Data="M3,1 L3,22 L9,17 L14,26 L18,24 L13,15 L21,14 Z" Stroke="#7955D9" StrokeThickness="1.5" StrokeLineJoin="Round" Fill="#E0D6FA" /></Border>
-         <TextBlock Text="Mouse &amp; keyboard" Style="{StaticResource SectionHeading}" /><TextBlock Text="Klik, scroll, dan ketik dengan Bluetooth HID dan AssistiveTouch." Style="{StaticResource BodyText}" Margin="0,7,0,0" />
+         <TextBlock Text="{DynamicResource Text.Control.Title}" Style="{StaticResource SectionHeading}" /><TextBlock Text="{DynamicResource Text.Control.Description}" Style="{StaticResource BodyText}" Margin="0,7,0,0" />
         </StackPanel>
-        <Border Grid.Row="1" Background="#F6F7F9" CornerRadius="9" Padding="11,9" Margin="0,20,0,16" VerticalAlignment="Bottom"><TextBlock x:Name="ControlStatus" Text="Belum terhubung" Foreground="{StaticResource MutedText}" FontSize="12" LineHeight="18" AutomationProperties.LiveSetting="Polite" /></Border>
-        <StackPanel Grid.Row="2"><Button x:Name="ControlButton" Content="Aktifkan kontrol" Style="{StaticResource PrimaryButton}" Click="Control_Click" HorizontalAlignment="Stretch" /><Button x:Name="DiagnoseButton" Content="Cek Bluetooth" Style="{StaticResource QuietButton}" Click="Diagnose_Click" HorizontalAlignment="Center" Padding="8,4" FontSize="12" Margin="0,7,0,0" /></StackPanel>
+        <Border Grid.Row="1" Background="#F6F7F9" CornerRadius="9" Padding="11,9" Margin="0,20,0,16" VerticalAlignment="Bottom"><TextBlock x:Name="ControlStatus" Text="{DynamicResource Text.Control.NotConnected}" Foreground="{StaticResource MutedText}" FontSize="12" LineHeight="18" AutomationProperties.LiveSetting="Polite" /></Border>
+        <StackPanel Grid.Row="2"><Button x:Name="ControlButton" Content="{DynamicResource Text.Control.Enable}" Style="{StaticResource PrimaryButton}" Click="Control_Click" HorizontalAlignment="Stretch" /><Button x:Name="DiagnoseButton" Content="{DynamicResource Text.Control.Check}" Style="{StaticResource QuietButton}" Click="Diagnose_Click" HorizontalAlignment="Center" Padding="8,4" FontSize="12" Margin="0,7,0,0" /></StackPanel>
        </Grid>
       </Border>
      </Grid>
      <Border x:Name="SettingsSection" Style="{StaticResource Card}" Margin="0,0,0,20">
       <StackPanel>
-       <TextBlock Text="Pengaturan pointer" Style="{StaticResource SectionHeading}" /><TextBlock Text="Sesuaikan gerakan dengan cara Anda bekerja." Style="{StaticResource BodyText}" Margin="0,5,0,20" />
-       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-        <TextBlock Text="Sensitivitas pointer" FontWeight="SemiBold" VerticalAlignment="Center" />
-        <Border Grid.Column="1" Background="{StaticResource AccentSoft}" CornerRadius="7" Padding="9,4" Margin="8,0,9,0"><TextBlock x:Name="SensitivityValue" Text="1.00×" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /></Border>
-        <Button x:Name="ResetSensitivityButton" Grid.Column="2" Content="Reset" Style="{StaticResource QuietButton}" Click="ResetSensitivity_Click" FontSize="12" Padding="6,4" AutomationProperties.Name="Reset sensitivitas ke 1 kali" />
+       <TextBlock Text="{DynamicResource Text.Settings.Title}" Style="{StaticResource SectionHeading}" /><TextBlock Text="{DynamicResource Text.Settings.Description}" Style="{StaticResource BodyText}" Margin="0,5,0,20" />
+       <Grid Margin="0,0,0,20"><Grid.ColumnDefinitions><ColumnDefinition Width="155" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{DynamicResource Text.Language.Title}" FontWeight="SemiBold" /><TextBlock Text="{DynamicResource Text.Language.Description}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" /></StackPanel>
+        <StackPanel Grid.Column="1">
+         <ComboBox x:Name="LanguageCombo" SelectedValuePath="Tag" SelectionChanged="Language_Changed" FontSize="12" HorizontalContentAlignment="Left" AutomationProperties.Name="{DynamicResource Text.Language.Accessible}">
+          <ComboBoxItem Content="Bahasa Indonesia" Tag="id" /><ComboBoxItem Content="English" Tag="en" />
+         </ComboBox>
+         <TextBlock x:Name="LanguageStatus" Text="{DynamicResource Text.Language.AutoSaved}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,7,0,0" AutomationProperties.LiveSetting="Polite" />
+        </StackPanel>
        </Grid>
-       <Slider x:Name="SensitivitySlider" Minimum="0.25" Maximum="3" Value="1" TickFrequency="0.05" IsSnapToTickEnabled="True" SmallChange="0.05" LargeChange="0.25" IsMoveToPointEnabled="True" ValueChanged="Sensitivity_Changed" Margin="0,10,0,0" AutomationProperties.Name="Sensitivitas gerakan pointer perangkat" ToolTip="0.25× lebih pelan · 1.00× normal · 3.00× lebih cepat" />
-       <DockPanel Margin="0,1,0,0"><TextBlock DockPanel.Dock="Right" Text="Cepat · 3.00×" Style="{StaticResource CaptionText}" /><TextBlock Text="Pelan · 0.25×" Style="{StaticResource CaptionText}" /></DockPanel>
-       <TextBlock x:Name="SensitivityStatus" Text="Tersimpan otomatis · klik dan scroll tetap." Style="{StaticResource CaptionText}" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite" />
+       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+        <TextBlock Text="{DynamicResource Text.Sensitivity.Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+        <Border Grid.Column="1" Background="{StaticResource AccentSoft}" CornerRadius="7" Padding="9,4" Margin="8,0,9,0"><TextBlock x:Name="SensitivityValue" Text="1.00×" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /></Border>
+        <Button x:Name="ResetSensitivityButton" Grid.Column="2" Content="{DynamicResource Text.Sensitivity.Reset}" Style="{StaticResource QuietButton}" Click="ResetSensitivity_Click" FontSize="12" Padding="6,4" AutomationProperties.Name="{DynamicResource Text.Sensitivity.ResetAccessible}" />
+       </Grid>
+       <Slider x:Name="SensitivitySlider" Minimum="0.25" Maximum="3" Value="1" TickFrequency="0.05" IsSnapToTickEnabled="True" SmallChange="0.05" LargeChange="0.25" IsMoveToPointEnabled="True" ValueChanged="Sensitivity_Changed" Margin="0,10,0,0" AutomationProperties.Name="{DynamicResource Text.Sensitivity.Accessible}" ToolTip="{DynamicResource Text.Sensitivity.Tooltip}" />
+       <DockPanel Margin="0,1,0,0"><TextBlock DockPanel.Dock="Right" Text="{DynamicResource Text.Sensitivity.Fast}" Style="{StaticResource CaptionText}" /><TextBlock Text="{DynamicResource Text.Sensitivity.Slow}" Style="{StaticResource CaptionText}" /></DockPanel>
+       <TextBlock x:Name="SensitivityStatus" Text="{DynamicResource Text.Sensitivity.AutoSaved}" Style="{StaticResource CaptionText}" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite" />
        <Border BorderBrush="{StaticResource Hairline}" BorderThickness="0,1,0,0" Margin="0,19,0,0" Padding="0,18,0,0">
         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="155" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="Orientasi kontrol" FontWeight="SemiBold" /><TextBlock Text="Sesuaikan posisi perangkat" Style="{StaticResource CaptionText}" Margin="0,4,0,0" /></StackPanel>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{DynamicResource Text.Orientation.Title}" FontWeight="SemiBold" /><TextBlock Text="{DynamicResource Text.Orientation.Description}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" /></StackPanel>
          <StackPanel Grid.Column="1">
-          <ComboBox x:Name="OrientationCombo" SelectedIndex="0" SelectedValuePath="Tag" SelectionChanged="Orientation_Changed" FontSize="12" HorizontalContentAlignment="Left" AutomationProperties.Name="Orientasi arah gerakan pointer perangkat">
-           <ComboBoxItem Content="Portrait · posisi normal" Tag="0" /><ComboBoxItem Content="Landscape · sisi atas di kiri" Tag="90" /><ComboBoxItem Content="Landscape · sisi atas di kanan" Tag="270" /><ComboBoxItem Content="Portrait terbalik · sisi atas di bawah" Tag="180" />
+          <ComboBox x:Name="OrientationCombo" SelectedIndex="0" SelectedValuePath="Tag" SelectionChanged="Orientation_Changed" FontSize="12" HorizontalContentAlignment="Left" AutomationProperties.Name="{DynamicResource Text.Orientation.Accessible}">
+           <ComboBoxItem Content="{DynamicResource Text.Orientation.Portrait}" Tag="0" /><ComboBoxItem Content="{DynamicResource Text.Orientation.Left}" Tag="90" /><ComboBoxItem Content="{DynamicResource Text.Orientation.Right}" Tag="270" /><ComboBoxItem Content="{DynamicResource Text.Orientation.UpsideDown}" Tag="180" />
           </ComboBox>
-          <TextBlock Text="Rotasi manual · acuan sisi atas saat portrait." Style="{StaticResource CaptionText}" FontSize="11" Margin="0,7,0,0" />
+          <TextBlock Text="{DynamicResource Text.Orientation.Note}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,7,0,0" />
          </StackPanel>
         </Grid>
        </Border>
@@ -97,11 +106,11 @@
      <Border x:Name="DiagnosticsSection" Style="{StaticResource Card}">
       <StackPanel>
        <Grid Margin="0,0,0,14"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-        <StackPanel Margin="0,0,16,0"><TextBlock Text="Diagnostik" Style="{StaticResource SectionHeading}" /><TextBlock x:Name="DiagnosticStatus" Text="Siap. Mulai dari mirroring, lalu cek koneksi Bluetooth." Style="{StaticResource BodyText}" FontSize="12" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite" /></StackPanel>
-        <Button x:Name="OpenLogsButton" Grid.Column="1" Content="Buka log" Click="OpenLogs_Click" Padding="12,7" FontSize="12" VerticalAlignment="Top" />
+        <StackPanel Margin="0,0,16,0"><TextBlock Text="{DynamicResource Text.Diagnostic.Title}" Style="{StaticResource SectionHeading}" /><TextBlock x:Name="DiagnosticStatus" Text="{DynamicResource Text.Diagnostic.Ready}" Style="{StaticResource BodyText}" FontSize="12" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite" /></StackPanel>
+        <Button x:Name="OpenLogsButton" Grid.Column="1" Content="{DynamicResource Text.Diagnostic.OpenLogs}" Click="OpenLogs_Click" Padding="12,7" FontSize="12" VerticalAlignment="Top" />
        </Grid>
-       <Border Background="#F7F8FA" CornerRadius="9" BorderBrush="{StaticResource Hairline}" BorderThickness="1" Padding="4"><TextBox x:Name="LogBox" Height="110" IsReadOnly="True" IsReadOnlyCaretVisible="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent" Foreground="#555760" BorderThickness="0" FontFamily="Consolas" FontSize="11" Padding="9" AutomationProperties.Name="Log sesi iDock" /></Border>
-       <TextBlock Text="Log tersimpan di Windows Anda. Tidak diunggah otomatis." Style="{StaticResource CaptionText}" FontSize="11" Margin="0,11,0,0" />
+       <Border Background="#F7F8FA" CornerRadius="9" BorderBrush="{StaticResource Hairline}" BorderThickness="1" Padding="4"><TextBox x:Name="LogBox" Height="110" IsReadOnly="True" IsReadOnlyCaretVisible="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="Transparent" Foreground="#555760" BorderThickness="0" FontFamily="Consolas" FontSize="11" Padding="9" AutomationProperties.Name="{DynamicResource Text.Diagnostic.LogAccessible}" /></Border>
+       <TextBlock Text="{DynamicResource Text.Diagnostic.Privacy}" Style="{StaticResource CaptionText}" FontSize="11" Margin="0,11,0,0" />
       </StackPanel>
      </Border>
     </StackPanel>
@@ -109,10 +118,10 @@
    <Border x:Name="AppFooter" Grid.Row="2" BorderBrush="{StaticResource Hairline}" BorderThickness="0,1,0,0" Padding="30,12">
     <Grid>
      <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-     <StackPanel VerticalAlignment="Center"><TextBlock Text="{x:Static local:ProductInfo.VersionLabel}" FontSize="12" FontWeight="SemiBold" /><TextBlock Text="Koneksi lokal · Tanpa akun · Tidak berafiliasi dengan Apple" FontSize="11" Foreground="{StaticResource MutedText}" Margin="0,4,0,0" /></StackPanel>
+     <StackPanel VerticalAlignment="Center"><TextBlock Text="{x:Static local:ProductInfo.VersionLabel}" FontSize="12" FontWeight="SemiBold" /><TextBlock Text="{DynamicResource Text.Footer.Local}" FontSize="11" Foreground="{StaticResource MutedText}" Margin="0,4,0,0" /></StackPanel>
      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-      <Button x:Name="RepositoryButton" Content="GitHub" Tag="repository" Click="ProjectLink_Click" Style="{StaticResource QuietButton}" FontSize="12" Padding="10,6" AutomationProperties.Name="Buka repository iDock di GitHub" />
-      <Button x:Name="IssuesButton" Content="Laporkan masalah" Tag="issues" Click="ProjectLink_Click" Style="{StaticResource QuietButton}" FontSize="12" Padding="10,6" Margin="4,0,0,0" AutomationProperties.Name="Laporkan masalah di GitHub" />
+      <Button x:Name="RepositoryButton" Content="GitHub" Tag="repository" Click="ProjectLink_Click" Style="{StaticResource QuietButton}" FontSize="12" Padding="10,6" AutomationProperties.Name="{DynamicResource Text.Footer.RepositoryAccessible}" />
+      <Button x:Name="IssuesButton" Content="{DynamicResource Text.Footer.Issues}" Tag="issues" Click="ProjectLink_Click" Style="{StaticResource QuietButton}" FontSize="12" Padding="10,6" Margin="4,0,0,0" AutomationProperties.Name="{DynamicResource Text.Footer.IssuesAccessible}" />
      </StackPanel>
     </Grid>
    </Border>

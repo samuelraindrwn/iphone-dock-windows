@@ -1,5 +1,7 @@
 # iDock for Windows 0.5.1
 
+Bahasa Indonesia · [English](en/RELEASE-NOTES-0.5.1.md)
+
 [Instalasi](INSTALL.md) · [Cara pakai](USAGE.md) · [Checklist rilis](RELEASING.md)
 
 ## Perubahan
