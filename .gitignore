@@ -3,6 +3,7 @@
 /.cache/
 /artifacts/
 /.artifacts/
+**/.artifacts/
 /vendor/
 /iDock.exe
 /iDock.dll
@@ -51,3 +52,6 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Panduan agent lokal; tidak dipublikasikan
+/CLAUDE.md

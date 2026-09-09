@@ -17,21 +17,36 @@ public partial class MainWindow : Window
     private readonly ControlStatusTracker controlStatus = new();
     private readonly DispatcherTimer sensitivitySave = new() { Interval = TimeSpan.FromMilliseconds(200) };
     private readonly string pointerSettingsPath = Path.Combine(UserStorage.Root, "data", "blehid", "pointer-settings.json");
+    private readonly string hotkeySettingsPath = Path.Combine(UserStorage.Root, "data", "blehid", "hotkey-settings.json");
+    private HotkeyConfiguration switchHotkey = HotkeySettings.DefaultSwitch;
+    private HotkeyConfiguration? activeSwitchHotkey;
     private bool sensitivityReady, sensitivityPending;
     private string blePending = "";
     private long bleOffset;
     private bool busy, closing, closed, endingSession, mirrorReadWarning;
     private bool mirrorWasRunning, controlWasRunning;
 
-    public MainWindow(bool preview = false, string? settingsPath = null, string? languageSettingsPath = null)
+    public MainWindow(bool preview = false, string? settingsPath = null, string? languageSettingsPath = null,
+        string? hotkeyPath = null, bool enableGlobalShortcuts = false)
     {
         if (settingsPath is not null) pointerSettingsPath = settingsPath;
+        if (hotkeyPath is not null) hotkeySettingsPath = hotkeyPath;
         var languageLoadError = InitializeLanguagePreference(preview, languageSettingsPath);
         InitializeComponent();
         InitializeLanguageControls(languageLoadError);
         DeviceNameLabel.Text = Environment.MachineName;
-        if (preview) return;
+        // A preview shows the defaults rather than reading the developer's own shortcut.
+        if (preview) { UpdateHotkeyLabels(); return; }
         Directory.CreateDirectory(logs);
+        Exception? hotkeyLoadError = null;
+        try { switchHotkey = HotkeySettings.Load(hotkeySettingsPath); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            // A bad file must not block startup; the default keeps control usable.
+            switchHotkey = HotkeySettings.DefaultSwitch;
+            hotkeyLoadError = ex;
+        }
+        UpdateHotkeyLabels();
         try
         {
             var settings = PointerSettings.LoadAll(pointerSettingsPath);
@@ -48,14 +63,37 @@ public partial class MainWindow : Window
         sensitivityReady = true;
         AppendT("Log.Startup", ProductInfo.DisplayName, ProductInfo.Version);
         if (languageLoadError is not null) AppendT("Language.LoadFailed", languageLoadError);
+        if (hotkeyLoadError is not null) AppendT("Hotkey.LoadFailed");
         poll.Tick += (_, _) => Refresh();
         poll.Start();
         mirrorPoll.Tick += (_, _) => CheckMirrorLifecycle();
         mirrorPoll.Start();
         Closing += WindowClosing;
+        // Only the interactive entry point opts in; previews and hardware-free tests
+        // never reserve a user's real global shortcuts.
+        if (enableGlobalShortcuts) SourceInitialized += (_, _) => InitializeScreenshotShortcut();
     }
     private void UpdateSensitivityLabel() => SensitivityValue.Text =
         SensitivitySlider.Value.ToString("0.00", CultureInfo.InvariantCulture) + "×";
+
+    // Key names are the same in both languages, so this survives a language change untouched.
+    private void UpdateHotkeyLabels()
+    {
+        SwitchHotkeyRun.Text = HotkeySettings.Describe(activeSwitchHotkey ?? switchHotkey);
+        ReleaseHotkeyRun.Text = HotkeySettings.Describe(HotkeySettings.Release);
+    }
+
+    private void Hotkey_Click(object sender, RoutedEventArgs e)
+    {
+        // The running session keeps the binding it started with; say so rather than
+        // implying a live change the backend has not made.
+        if (busy || closing || closed || previewMode) return;
+        var dialog = new HotkeyWindow(hotkeySettingsPath, engines.ControlRunning, activeSwitchHotkey) { Owner = this };
+        dialog.ShowDialog();
+        switchHotkey = dialog.Current;
+        UpdateHotkeyLabels();
+        if (dialog.RestartNeeded) AppendT("Hotkey.SavedRestartNeeded");
+    }
 
     private void ProjectLink_Click(object sender, RoutedEventArgs e)
     {
@@ -151,13 +189,34 @@ public partial class MainWindow : Window
     });
     private async void Control_Click(object sender, RoutedEventArgs e) => await Run(async () =>
     {
+        if (engines.ControlRunning)
+        {
+            StopScreenshotChannel();
+            engines.StopControl();
+            controlWasRunning = false;
+            activeSwitchHotkey = null;
+            blePending = "";
+            controlStatus.Stop(clearFailure: true);
+            UpdateControlStatus();
+            UpdateHotkeyLabels();
+            AppendT("Log.ControlDisabled");
+            return;
+        }
+        // Load the same snapshot as the backend at start, including safe fallback.
+        try { switchHotkey = HotkeySettings.Load(hotkeySettingsPath); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        { switchHotkey = HotkeySettings.DefaultSwitch; AppendT("Hotkey.LoadFailed"); }
         bleOffset = File.Exists(engines.BleLogPath) ? new FileInfo(engines.BleLogPath).Length : 0;
-        engines.StartControl();
+        StartScreenshotChannel();
+        try { engines.StartControl(screenshotChannel?.Name); }
+        catch { StopScreenshotChannel(); throw; }
+        activeSwitchHotkey = switchHotkey;
+        UpdateHotkeyLabels();
         blePending = "";
         controlStatus.Begin();
         controlWasRunning = true;
         UpdateControlStatus();
-        AppendT("Log.ControlStarted");
+        AppendT("Log.ControlStarted", HotkeySettings.Describe(switchHotkey), HotkeySettings.Describe(HotkeySettings.Release));
         await Task.Delay(900);
     });
     private async void Diagnose_Click(object sender, RoutedEventArgs e) => await Run(async () =>
@@ -202,7 +261,11 @@ public partial class MainWindow : Window
         mirrorWasRunning = controlWasRunning = false;
         try
         {
+            screenshotCancellation?.Cancel();
+            StopScreenshotChannel();
             engines.Dispose();
+            activeSwitchHotkey = null;
+            UpdateHotkeyLabels();
             blePending = "";
             controlStatus.Stop(clearFailure: true);
             UpdateControlStatus();
@@ -240,9 +303,23 @@ public partial class MainWindow : Window
     private void SetButtons()
     {
         MirrorButton.IsEnabled = !busy && !closing && !engines.MirrorRunning;
-        ControlButton.IsEnabled = !busy && !closing && !engines.ControlRunning;
+        RenderControlButton(engines.ControlRunning);
+        ControlButton.IsEnabled = !busy && !closing;
         DiagnoseButton.IsEnabled = !busy && !closing && !engines.ControlRunning;
         StopButton.IsEnabled = !busy && !closing && (engines.MirrorRunning || engines.ControlRunning);
+        HotkeyButton.IsEnabled = !busy && !closing;
+        ScreenshotButton.IsEnabled = !closing && !screenshotBusy && engines.MirrorRunning;
+        OpenScreenshotsButton.IsEnabled = !closing;
+    }
+    internal void RenderControlButton(bool running)
+    {
+        ControlButton.SetResourceReference(System.Windows.Controls.ContentControl.ContentProperty,
+            running ? "Text.Control.Disable" : "Text.Control.Enable");
+        ControlButton.SetResourceReference(StyleProperty, running ? "DangerButton" : "PrimaryButton");
+        ControlButton.SetResourceReference(System.Windows.Automation.AutomationProperties.NameProperty,
+            running ? "Text.Control.Disable" : "Text.Control.Enable");
+        if (running) ControlButton.SetResourceReference(ToolTipProperty, "Text.Control.DisableHint");
+        else ControlButton.ClearValue(ToolTipProperty);
     }
     private void Refresh()
     {
@@ -254,6 +331,9 @@ public partial class MainWindow : Window
             if (controlWasRunning && !engines.ControlRunning)
             {
                 controlWasRunning = false;
+                StopScreenshotChannel();
+                activeSwitchHotkey = null;
+                UpdateHotkeyLabels();
                 if (blePending.Length > 0) ApplyBleLine(blePending);
                 blePending = "";
                 controlStatus.Stop();
@@ -291,6 +371,9 @@ public partial class MainWindow : Window
     {
         if (closed || closing) return;
         closing = true; poll.Stop(); mirrorPoll.Stop(); SaveSensitivity(); SetButtons();
+        screenshotCancellation?.Cancel();
+        StopScreenshotChannel();
+        screenshotHotkey?.Dispose();
         // Job disposal is synchronous. Calling Close again inside Closing re-enters WPF
         // when StopAsync completes inline and causes an InvalidOperationException.
         try { engines.Dispose(); }

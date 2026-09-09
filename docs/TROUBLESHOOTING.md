@@ -50,7 +50,7 @@ Pisahkan tiga tahap berikut saat membaca status dan log:
 | Nama receiver tidak muncul di perangkat | Periksa jaringan yang saling dapat mengakses, Bonjour/discovery, isolasi klien, dan profil aturan yang berlaku. |
 | Nama receiver muncul, tetapi koneksi gagal atau tidak ada gambar | Nama dapat ditemukan melalui Bonjour walau port receiver masih diblokir. Periksa profil jaringan aktif, izin untuk path receiver yang benar, dan log receiver pada waktu percobaan. Log launcher yang hanya mencatat proses dibuka tidak menyingkirkan masalah jaringan. |
 
-Installer memakai **Private/LocalSubnet** secara default. Sejak 0.5.1, opsi **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** dapat dipilih saat pemasangan atau dengan menjalankan ulang installer; pengguna tidak perlu membangun aplikasi. Opsi ini tidak dicentang pada instalasi baru. Baca [cakupan dan pencabutannya](INSTALL.md#izin-wi-fi-public): Public + Wireless + LocalSubnet hanya untuk receiver yang dipasang, tetapi menetap pada **semua Wi-Fi Public**, bukan satu SSID atau perangkat yang sudah dipercaya.
+Installer mempertahankan **Private/LocalSubnet**. Opsi **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** dicentang secara default pada instalasi baru **0.5.3**, tetap terlihat, dan dapat dihilangkan centangnya. Upgrade mempertahankan pilihan sebelumnya, termasuk opt-out; jika jaringan Public masih gagal, tinjau pilihan yang benar-benar tersimpan dengan menjalankan ulang installer, bukan menganggap upgrade pasti mengaktifkannya. Pengguna tidak perlu membangun aplikasi. Baca [cakupan dan pencabutannya](INSTALL.md#izin-wi-fi-public): Public + Wireless + LocalSubnet hanya untuk receiver yang dipasang, tetapi menetap pada **semua Wi-Fi Public**, bukan satu SSID atau perangkat yang sudah dipercaya.
 
 Jangan otomatis mengganti Public menjadi Private untuk mencoba memperbaiki mirroring. Aturan Bonjour yang sudah ada dapat hanya berlaku pada salah satu profil; perubahan tersebut dapat menukar masalah koneksi video menjadi masalah discovery. Installer tidak mengubah profil jaringan, layanan/aturan Bonjour, atau kebijakan Firewall global. Aturan blok administrator, kebijakan organisasi, VPN, dan client isolation tetap memerlukan peninjauan yang sesuai; jangan mematikan pengamanan untuk melewatinya.
 
@@ -60,11 +60,17 @@ Pada satu setup iPhone 11/Windows 11, pengguna mengonfirmasi **installer 0.5.0**
 
 `Connected` di **Settings → Bluetooth** umum dapat mewakili koneksi yang bukan laporan HID. Di iDock for Windows, klik **Aktifkan kontrol**, lalu cari laptop melalui **Settings → Accessibility → Touch → AssistiveTouch → Devices → Bluetooth Devices**. Menu **Device** pada tombol AssistiveTouch yang mengambang bukan halaman pairing.
 
-Setelah koneksi laporan input muncul, **Ctrl + D + C** memilih perangkat. Input sengaja tetap di laptop sebelum hotkey ditekan. Pastikan AssistiveTouch aktif dan lihat target yang ditampilkan iDock for Windows.
+Setelah koneksi laporan input muncul, gunakan pintasan alih target yang ditampilkan aplikasi (**Ctrl + Alt + D** secara default) untuk memilih perangkat. Input sengaja tetap di laptop sebelum hotkey ditekan. Pastikan AssistiveTouch aktif dan lihat target yang ditampilkan iDock for Windows.
+
+## Keyboard layar iPhone/iPad tidak muncul
+
+Koneksi keyboard BLE berbeda dari target input. Saat kontrol diaktifkan, iOS/iPadOS dapat mengenali keyboard eksternal dan menyembunyikan keyboard layar, walaupun Anda belum memilih perangkat melalui hotkey. Ini bukan bukti bahwa input sudah dialihkan atau mirroring rusak.
+
+Aktifkan **Show Onscreen Keyboard** dalam pengaturan AssistiveTouch pada perangkat, lalu ketuk lagi kolom teks. [Langkah lengkap dan rujukan Apple](USAGE.md#keyboard-layar-perangkat) tersedia di cara pakai. **Ctrl + Alt + Q** hanya mengembalikan routing input ke Windows; untuk menghentikan kontrol gunakan **Nonaktifkan kontrol** tanpa menghapus pairing. Jika pilihan tidak tersedia atau keyboard tetap hilang, catat versi iOS/iPadOS, aplikasi/kolom teks, dan hasil setelah kontrol dihentikan. Panduan ini bukan klaim bahwa kasus pada perangkat Anda sudah teratasi.
 
 ## Bluetooth belum siap, Aborted, atau akses ditolak
 
-Hentikan sesi kontrol sebelum menjalankan **Cek Bluetooth**; pemeriksaan tidak bisa berjalan bersamaan dengan instance BLE HID lain.
+Klik **Nonaktifkan kontrol** sebelum menjalankan **Cek Bluetooth**; pemeriksaan tidak bisa berjalan bersamaan dengan instance BLE HID lain. Mirroring tetap dapat berjalan.
 
 - **Peripheral role: False:** adapter/driver tidak menyediakan mode yang dibutuhkan. Mirroring masih dapat digunakan.
 - **LE/Peripheral role: True:** ini kemampuan yang dilaporkan, bukan jaminan advertising, pairing, atau input berhasil.
@@ -74,13 +80,13 @@ Hentikan sesi kontrol sebelum menjalankan **Cek Bluetooth**; pemeriksaan tidak b
 
 Tutup iDock for Windows dan instance BLE HID lain dari aplikasinya. Jika aman bagi perangkat Bluetooth lain yang sedang digunakan, matikan Bluetooth Windows sebentar lalu nyalakan lagi; mouse/headset Bluetooth dapat terputus. Buka iDock for Windows dan ulangi diagnosis. Bila tetap gagal, periksa driver yang sesuai model laptop/adapter dari produsennya. Jangan menganggap update driver atau membeli adapter baru pasti menyelesaikan masalah.
 
-Untuk kegagalan reconnect, dahulukan restart sesi kontrol sambil mempertahankan pairing: **Ctrl + Alt + Q → Hentikan sesi → Aktifkan kontrol**. Buka mirroring kembali jika ikut dihentikan. Jika tetap gagal, simpan hasil diagnosis sebelum mempertimbangkan pairing ulang. Melupakan pairing di perangkat mengharuskan pairing ulang; lakukan pada perangkat yang tepat, bukan semua perangkat tersimpan. iDock for Windows tidak mereset radio atau menghapus pairing otomatis.
+Untuk kegagalan reconnect, dahulukan restart sesi kontrol sambil mempertahankan pairing: **Ctrl + Alt + Q → Nonaktifkan kontrol → Aktifkan kontrol**. Mirroring tetap berjalan; **Hentikan sesi** digunakan bila ingin menghentikan keduanya. Jika tetap gagal, simpan hasil diagnosis sebelum mempertimbangkan pairing ulang. Melupakan pairing di perangkat mengharuskan pairing ulang; lakukan pada perangkat yang tepat, bukan semua perangkat tersimpan. iDock for Windows tidak mereset radio atau menghapus pairing otomatis.
 
 ### “koneksi lama terverifikasi; iklan Bluetooth belum siap”
 
 Peringatan ini pada versi 0.5 berarti Windows masih melaporkan `Aborted / Success`, tetapi pemeriksaan sempit koneksi lama lolos: perlindungan dikonfigurasi `EncryptionRequired`, keyboard dan mouse perangkat yang sama memiliki sesi aktif, dan dua laporan netral berhasil dikirim melalui API lalu koneksi diperiksa kembali. Pemeriksaan dibatasi 10 detik; laporan netral tidak berisi pengetikan, klik, gerakan, atau scroll.
 
-Ini **bukan** bukti enkripsi di udara, input sudah diterima aplikasi perangkat, atau iklan Bluetooth sudah pulih. Input tetap lokal sampai **Ctrl + D + C** ditekan. Verifikasi dengan interaksi ringan pada aplikasi uji, bukan dokumen penting. Jika koneksi yang diperlukan hilang, input kembali lokal dan kontrol perlu direstart; jangan menunggu pengalihan otomatis setelah reconnect.
+Ini **bukan** bukti enkripsi di udara, input sudah diterima aplikasi perangkat, atau iklan Bluetooth sudah pulih. Input tetap lokal sampai pintasan alih target yang aktif (**Ctrl + Alt + D** secara default) ditekan. Verifikasi dengan interaksi ringan pada aplikasi uji, bukan dokumen penting. Jika koneksi yang diperlukan hilang, input kembali lokal dan kontrol perlu direstart; jangan menunggu pengalihan otomatis setelah reconnect.
 
 Untuk menguji apakah masalah benar-benar membaik, gunakan [checklist kestabilan 0.5](STABILITY-TESTS.md). Target 20 siklus dan sesi 1–2 jam di sana belum berarti sudah pernah lulus di perangkat pengguna.
 
@@ -89,11 +95,23 @@ Untuk menguji apakah masalah benar-benar membaik, gunakan [checklist kestabilan 
 **Ctrl + Alt + Q** meminta pengalihan target ke Windows. Pengalihan belum memiliki jaminan waktu respons saat operasi Bluetooth macet; berhenti mengirim gerakan atau teks jika target tidak jelas.
 
 1. Lepaskan tombol mouse dan keyboard, lalu coba **Ctrl + Alt + Q** satu kali.
-2. Jika Windows masih dapat dioperasikan, klik **Hentikan sesi** atau tutup iDock. Penutupan aplikasi menghentikan proses kontrol yang dimulai oleh sesi tersebut.
+2. Jika Windows masih dapat dioperasikan, klik **Nonaktifkan kontrol** untuk mempertahankan mirroring, **Hentikan sesi** untuk menghentikan keduanya, atau tutup iDock. Penutupan aplikasi menghentikan proses kontrol yang dimulai oleh sesi tersebut.
 3. Jika diperlukan, buka **Ctrl + Alt + Delete → Task Manager**. Apabila Task Manager dapat dioperasikan, hentikan hanya `iDock.exe` yang digunakan untuk pengujian; jangan menghentikan layanan Windows atau proses Bluetooth lain secara massal.
 4. Jangan melanjutkan pengujian dengan dokumen penting. Catat apakah input pulih setelah aplikasi ditutup, kemudian laporkan langkah reproduksi dan log yang relevan.
 
 Uji pengalihan input dengan data tidak sensitif sebelum mengandalkannya pada alur kerja sehari-hari. Kasus input tertahan merupakan kegagalan kestabilan, bukan perilaku yang perlu diabaikan.
+
+## Pintasan baru belum bekerja
+
+Periksa kombinasi **aktif** yang ditampilkan pada Panduan dan pengaturan pintasan. Pilihan yang baru disimpan baru berlaku setelah **Nonaktifkan kontrol → Aktifkan kontrol**; jika proses sudah berhenti, langsung **Aktifkan kontrol**. Tidak perlu menghentikan mirroring. **Ctrl + Alt + D** adalah default, bukan pengganti semua kombinasi yang sudah diatur.
+
+Gunakan Ctrl atau Alt (Shift boleh ditambahkan), lepaskan tombol Windows, dan hindari shortcut yang sudah dipakai Windows/aplikasi lain. Esc dan berpindah jendela membatalkan rekaman. **Ctrl + Alt + Q**, termasuk dengan Shift, tetap untuk kembali ke Windows; **Ctrl + Alt + S** tetap untuk screenshot. Bila file tidak valid/tidak terbaca, aplikasi melaporkan penggunaan default; perbaiki melalui UI dan restart kontrol. Kegagalan menyimpan tidak dianggap sebagai perubahan berhasil.
+
+## Screenshot gagal atau hasilnya kosong
+
+Pastikan jendela **AirPlay Video Stream** benar-benar menampilkan video dan tidak minimized. Tunggu rotasi/resize selesai, lalu gunakan **Ctrl + Alt + S** atau **Ambil screenshot**. Jika hotkey gagal didaftarkan karena konflik dengan aplikasi lain, gunakan tombol; ini tidak membuktikan mirroring rusak. Klik **Buka folder screenshot** untuk melihat hasil pada [lokasi data](INSTALL.md#lokasi-data).
+
+Capture membutuhkan dukungan Windows Graphics Capture/GPU. Kebijakan Windows, jendela yang berubah/tertutup, lebih dari satu calon jendela, atau tidak ada frame dapat menggagalkannya. Konten terlindungi dapat kosong; iDock tidak menerobos proteksi atau mengambil seluruh desktop sebagai fallback. Jika folder hasil tidak dapat ditulis, periksa izin/ruang disk dan path pada status; jangan menjalankan sebagai Administrator hanya untuk menyembunyikan masalah penyimpanan. Lampirkan log dan jenis renderer/ukuran jendela setelah menyamarkan data pribadi.
 
 ## Gerakan atau gambar terasa delay
 

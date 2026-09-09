@@ -65,8 +65,8 @@ try {
     $null = Invoke-OwnedTestProcess -Executable $launcher -ArgumentLine ('--self-test "' + $launcherReport + '"') -LogPrefix 'launcher'
     if (-not (Test-Path -LiteralPath $launcherReport -PathType Leaf)) { throw 'Launcher did not create a test report.' }
     $launcherChecks = @(Get-Content -LiteralPath $launcherReport | Where-Object { $_ -like 'PASS *' }).Count
-    if ($launcherChecks -ne 230) {
-        throw "Expected 230 launcher checks; found $launcherChecks. Report: $launcherReport"
+    if ($launcherChecks -ne 378) {
+        throw "Expected 378 launcher checks; found $launcherChecks. Report: $launcherReport"
     }
     Write-Host "PASS: $launcherChecks launcher checks."
 
@@ -76,10 +76,10 @@ try {
     Invoke-CheckedDotnet -Arguments @('build', $safetyProject, '--no-restore', '--configuration', 'Release', '-p:PlatformTarget=x64', '--output', $safetyOutput)
     $safetyLog = Invoke-OwnedTestProcess -Executable (Join-Path $safetyOutput 'BleHid.Core.Tests.exe') -LogPrefix 'backend'
     $safetyText = Get-Content -LiteralPath $safetyLog -Raw
-    if ($safetyText -notmatch 'All 115 hardware-free safety checks passed\.') {
-        throw "Backend did not report all 115 passing checks. Report: $safetyLog"
+    if ($safetyText -notmatch 'All 181 hardware-free safety checks passed\.') {
+        throw "Backend did not report all 181 passing checks. Report: $safetyLog"
     }
-    Write-Host 'PASS: 115 hardware-free BLE backend checks.'
+    Write-Host 'PASS: 181 hardware-free BLE backend checks.'
     Write-Host "All checks passed. Reports and isolated test data: $testDirectory"
     Write-Host 'Hardware compatibility, AirPlay latency, and actual iPhone control still require a manual device test.'
 }

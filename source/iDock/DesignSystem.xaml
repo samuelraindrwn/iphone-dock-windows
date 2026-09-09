@@ -100,6 +100,10 @@
         <Setter Property="BorderBrush" Value="#0071E3" />
         <Setter Property="Foreground" Value="White" />
     </Style>
+    <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+        <Setter Property="Background" Value="#C62828" />
+        <Setter Property="BorderBrush" Value="#C62828" />
+    </Style>
     <Style x:Key="QuietButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />

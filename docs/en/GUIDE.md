@@ -4,11 +4,13 @@
 
 iDock mirrors your iPhone/iPad and provides mouse/keyboard control from Windows. Start with the installer if you just want to use the app; manual builds remain available for developers.
 
-Starting with installer **0.5.1**, **Public Wi-Fi** mirroring permission is an optional setting, unchecked on fresh installs. Read its [scope](INSTALL.md) before enabling it: permission persists across all Public Wi-Fi networks, not just the current network. The [0.5.1 notes](RELEASE-NOTES-0.5.1.md) distinguish software changes from completed testing.
+In installer **0.5.3**, **Public Wi-Fi mirroring permission is checked by default on fresh installations**, remains visible, and can be unchecked. Upgrades preserve the previous choice, including an opt-out. Review its [scope](INSTALL.md) before proceeding: the installed receiver only on **Public + Wireless + LocalSubnet**, but across all Public Wi-Fi networks, not just the current network. The [0.5.3 notes](RELEASE-NOTES-0.5.3.md) distinguish changes from completed testing.
 
 The interface uses a single page. Start with **Guide (Panduan)** at the top, then use **Device screen (Layar perangkat)** and **Mouse & keyboard**. Scroll down for **Settings (Pengaturan)** and **Diagnostics (Diagnostik)**. The shortcut summary at the top helps you switch input targets and return to Windows.
 
-In **0.5.2 builds**, choose **Settings → Language → English / Bahasa Indonesia**. The choice takes effect immediately and is saved without restarting mirroring/control or changing pointer settings. The original 0.5.1 interface is Indonesian; the selector requires a newer build. See the [0.5.2 notes](RELEASE-NOTES-0.5.2.md).
+Choose **Settings → Language → English / Bahasa Indonesia**. The choice takes effect immediately and is saved without restarting mirroring/control or changing pointer settings. Language selection has been available since 0.5.2.
+
+In **0.5.3**, **Change shortcuts** sets the switch-target combination (default **Ctrl + Alt + D**). The red **Disable control** button stops input without stopping mirroring. **Ctrl + Alt + S** saves a PNG screenshot on the laptop, not in Photos on the device. Follow [Usage](USAGE.md) and the [0.5.3 notes](RELEASE-NOTES-0.5.3.md); check Releases for available package versions.
 
 1. [Installation](INSTALL.md): GitHub Releases downloads, file verification, installer, portable package, upgrades, and uninstall.
 2. [Using the app](USAGE.md): mirroring, Bluetooth pairing, input target, sensitivity, orientation, and language.

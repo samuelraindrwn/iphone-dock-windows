@@ -33,7 +33,7 @@ The project's launcher uses the [MIT license](../../LICENSE). The backend comes 
 
 ## Lifecycle and input safety
 
-The launcher UI is a single scrollable page: **Guide** at the top, followed by the **Device screen** and **Mouse & keyboard** cards, **Pointer settings**, and **Diagnostics**. The Indonesian labels are **Panduan**, **Layar perangkat**, **Mouse & keyboard**, **Pengaturan pointer**, and **Diagnostik**. A shortcut summary is available at the top. This visual order does not merge the AirPlay and HID paths or change how the input target is selected.
+The launcher UI is a single scrollable page: **Guide** at the top, followed by the **Device screen** and **Mouse & keyboard** cards, **Settings**, and **Diagnostics**. The Indonesian labels are **Panduan**, **Layar perangkat**, **Mouse & keyboard**, **Pengaturan**, and **Diagnostik**. A shortcut summary is available at the top. This visual order does not merge the AirPlay and HID paths or change how the input target is selected.
 
 `EngineManager` starts UxPlay or the BLE HID CLI from the `vendor` folder relative to the EXE. `ProcessJob` creates processes with a Windows Job Object, so ending a session includes processes started by iDock for Windows and their descendants, rather than globally finding and killing every process with the same name.
 
@@ -45,9 +45,23 @@ There is a narrow exception for an existing HID connection: the protection mode 
 
 After readiness is established, the initial target remains local. A hotkey selects the target; losing the selected input host returns the target to the laptop. On the fallback path, losing a required connection invalidates readiness and requires restarting control. The UI distinguishes this as **“koneksi lama terverifikasi; iklan Bluetooth belum siap”** (existing connection verified; Bluetooth advertising is not ready). Successful advertising is not treated as successful pairing. The UI reads logs incrementally; incomplete line fragments are not parsed immediately.
 
+The switch-target shortcut is configurable; the default is **Ctrl + Alt + D**. The backend reads `data\blehid\hotkey-settings.json` **once, when a control session starts**, rather than polling it like pointer settings. Changes apply to the next control session; the launcher distinguishes the active combination from a saved choice awaiting restart. **Disable control** closes only this session's control Job; the receiver and video-window lifecycle keep running. **Stop session** closes both.
+
+Launcher and backend accept UTF-8 JSON (optional BOM), limited to 4096 bytes, shaped as `{"SwitchTarget":{"Modifiers":3,"VirtualKey":68}}`. Known flags are Ctrl=1, Alt=2, Shift=4; Ctrl or Alt is required. Shift alone, Windows/modifier/lock trigger keys, Escape, unknown flags, the release combination, and **Ctrl + Alt + S** are rejected. An invalid file is not rewritten; the backend uses the default and logs a warning. The dialog records only while active, cancels on focus loss, and consumes repeats/key-ups from the recorded combination so they cannot activate dialog buttons.
+
+**Ctrl + Alt + Q** does not come from the settings file and is checked before the configured shortcut. It also accepts an extra Shift so release keeps priority. Switch-target and screenshot shortcuts use exact modifiers; an extra Windows key is not considered the same combination. The release path does not depend on valid settings, but real response times still need testing.
+
 The return-to-Windows hotkey is processed through the input delivery queue. Delayed BLE operations or host-name lookups can delay switching; response time during a stalled connection is not yet guaranteed. This remains a [safety testing target](STABILITY-TESTS.md), not a guaranteed capability.
 
 **Check Bluetooth / Cek Bluetooth** runs a separate diagnostic that attempts service readiness without input hooks, then performs cleanup. The existing-connection path can send the two neutral reports described above. This is a temporary radio operation, not just reading the adapter's name. Automated checks do not run this radio path. iDock for Windows does not automatically reset the radio, delete pairing, or reinstall drivers.
+
+## Local screenshots
+
+**Ctrl + Alt + S** is a fixed launcher shortcut. With local input, the launcher registers a Windows hotkey; when the backend captures input, a per-instance named event forwards the request. The backend neither receives video coordinates nor captures images. Registration failure (for example, another application using the shortcut) is shown; the **Take screenshot** button remains an alternative.
+
+The launcher selects a video window only from processes in its own receiver Job. Windows Graphics Capture captures that window, then the client area is used for the PNG; there is no whole-desktop capture fallback. Another window covering the video is not a capture source. A missing, minimized, ambiguous, changed, or frameless window produces a reported failure rather than selecting another window globally. Protected content may be blank and is not bypassed.
+
+PNGs are saved to `data\screenshots` under the user/package storage root, not to the device's Photos and not uploaded automatically. This is a laptop mirroring frame, not a guarantee of native-device screenshot resolution. Size, rotation, GPU output, and timeouts need testing with the real receiver.
 
 ## Pointer movement and settings
 
@@ -76,7 +90,7 @@ iDock selects its storage root using the **`installed.mode`** marker in the appl
 
 Backend device/configuration data and runtime logs are excluded from public source. Windows and iOS/iPadOS manage Bluetooth pairing. UxPlay configuration is stored in the Windows profile; Bonjour and Firewall rules can contain absolute component paths, so the active application location must remain stable.
 
-The installer preserves the `iDock.AirPlay.{TCP,UDP}.Private.v1` receiver rules with the **Private** profile and **LocalSubnet** remote addresses. In 0.5.1, the `publicwifi` task, unchecked on a new installation, can add separate `iDock.AirPlay.{TCP,UDP}.PublicWireless.v1` rules: **Public** profile, **Wireless** interface type, **LocalSubnet** remote addresses, the exact receiver path, and no edge traversal. This permission persists across all Public Wi-Fi networks; it does not authenticate an SSID/device. The previous selection may be remembered during an upgrade; deselecting it revokes only Public rules that still exactly match the installer's ownership definition.
+The installer preserves the `iDock.AirPlay.{TCP,UDP}.Private.v1` receiver rules with the **Private** profile and **LocalSubnet** remote addresses. Starting with 0.5.3, `publicwifi` is checked by default on fresh installations, stays visible, and can be unchecked. When selected, it adds separate `iDock.AirPlay.{TCP,UDP}.PublicWireless.v1` rules: **Public** profile, **Wireless** interface type, **LocalSubnet** remote addresses, the exact receiver path, and no edge traversal. This permission persists across all Public Wi-Fi networks; it does not authenticate an SSID/device. `UsePreviousTasks=yes` retains the previous selection during upgrades, including opt-out; deselecting it revokes only Public rules that still exactly match the installer's ownership definition.
 
 The installer does not change network profiles, global Firewall policy, or rules belonging to other applications. An existing Bonjour installation is not silently reconfigured. The uninstaller checks both receiver-rule families and preserves modified or ambiguous rules; it does not sweep rules based on similar names. User data, pairing, the Bonjour service, and potentially shared Bonjour binaries are also preserved. Uninstallation therefore does not always empty the entire application folder.
 

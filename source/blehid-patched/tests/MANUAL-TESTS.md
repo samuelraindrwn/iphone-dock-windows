@@ -1,5 +1,21 @@
 # Manual test checklist
 
+## iDock 0.5.3 integration checks
+
+Run the root project's `scripts/test.ps1` first. Its `BleHid.SafetyChecks` harness is hardware-free; the upstream suites below are retained as reference and are not iDock's release test runner. The upstream device observations below are not an iDock compatibility matrix.
+
+- [ ] Start control with the default **Ctrl + Alt + D**, then repeat with a custom supported shortcut. Press and hold the trigger: the target switches once, including if a modifier is released before the trigger.
+- [ ] Switch from Windows to the device, release Ctrl/Alt after the target changes, then type locally after returning. Neither Windows nor the device is left with a stuck modifier.
+- [ ] A held switch modifier does not affect an unrelated letter on the new target until that modifier has been released and pressed again.
+- [ ] Extra Shift/Windows modifiers do not trigger the configured switch or screenshot chord. **Ctrl + Alt + Q** still releases input even with these extra modifiers.
+- [ ] During a slow target switch, press **Ctrl + Alt + Q**. Input immediately stays local; a delayed older switch must not recapture it. A newly pressed deliberate switch can resume capture.
+- [ ] Change the switch shortcut in iDock, select **Disable control**, then **Enable control**. The new shortcut works without restarting mirroring; emergency release remains **Ctrl + Alt + Q**.
+- [ ] **Ctrl + Alt + S** creates one PNG through iDock while input is local, and one while captured. Repeating the held trigger does not create repeated screenshots; no screenshot shortcut is sent to iOS Photos.
+- [ ] Stop control while keeping mirroring open. The red **Disable control** button returns to **Enable control**, keyboard/mouse stay local, and the AirPlay window remains open.
+- [ ] Test custom shortcuts against applications and keyboard layouts used during testing. Windows-reserved/application shortcuts can conflict; avoid a conflicting combination.
+
+## Upstream reference checklist
+
 Scenarios that need a phone, a second machine, or human judgement. Everything automatable lives
 in `BleHid.Core.Tests` (`dotnet test`) and `Invoke-HandoverTests.ps1`.
 
@@ -53,7 +69,7 @@ For each device in the table above:
 - [ ] `capture` refuses to arm when no host is subscribed
 - [ ] Once armed, local keyboard input goes to the host and **not** to Windows
 - [ ] Mouse movement is redirected too, not just the keyboard
-- [ ] `Ctrl+D+C` switches to the next host; the switch is visible in the log
+- [ ] `Ctrl+Alt+D` switches to the next host; the switch is visible in the log
 - [ ] `Ctrl+Alt+Q` ends the session and returns input to the PC
 - [ ] After `Ctrl+Alt+Q`, the local keyboard works normally again
 
@@ -62,7 +78,7 @@ For each device in the table above:
 - [ ] Start/Stop capture buttons follow the actual session state
 - [ ] `Ctrl+Alt+Q` un-ticks the capture toggle (hotkey and UI stay in sync)
 - [ ] Selecting a target in the UI actually changes where input goes
-- [ ] `Ctrl+D+C` updates the UI's selected radio button
+- [ ] `Ctrl+Alt+D` updates the UI's selected radio button
 - [ ] Selecting **This PC** keeps capture armed but returns input locally
 - [ ] A host that drops while selected shows "no longer subscribed" rather than silently failing
 

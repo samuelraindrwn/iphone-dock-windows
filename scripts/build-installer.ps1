@@ -67,7 +67,7 @@ try {
         $marker.Version -ne $version -or -not $marker.SelfContained) {
         throw 'The installer requires a matching generated self-contained iDock payload.'
     }
-    foreach ($required in @('iDock.exe', 'iDock.dll', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll',
+    foreach ($required in @('iDock.exe', 'iDock.dll', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll', 'Microsoft.Windows.SDK.NET.dll', 'WinRT.Runtime.dll',
         'vendor\blehid\BleHid.Cli.exe', 'vendor\blehid\coreclr.dll', 'vendor\blehid\hostfxr.dll',
         'vendor\uxplay\uxplay-windows.exe', 'vendor\uxplay\mDNSResponder.exe', 'vendor\uxplay\LICENSE.rtf',
         'LICENSE', 'THIRD_PARTY_NOTICES.md', 'README.md', 'README.en.md', 'docs\INSTALL.md', 'docs\en\INSTALL.md', 'docs\en\USAGE.md', 'source\iDock\iDock.csproj',
@@ -80,7 +80,7 @@ try {
         if (($file.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -or
             $relative -match '(^|\\)(\.git|\.cache|\.artifacts|data|logs|validation|obj|bin)(\\|$)' -or
             $file.Name -match '\.local\.(ps1|md)$|\.(log|pfx|p12|pem|key|ble|btsnoop)$' -or
-            $file.Name -in @('pointer-settings.json', 'ui-settings.json', 'hosts.json', 'device.json', 'secrets.json', '.env')) {
+            $file.Name -in @('pointer-settings.json', 'ui-settings.json', 'hotkey-settings.json', 'hosts.json', 'device.json', 'secrets.json', '.env')) {
             throw "Private, generated, or linked content is forbidden in the installer: $relative"
         }
     }

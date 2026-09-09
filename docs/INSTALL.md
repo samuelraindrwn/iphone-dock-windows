@@ -23,10 +23,10 @@ Mirroring/kontrol tidak memerlukan aplikasi pendamping di perangkat, Mac, jailbr
 
 Unduh hanya dari [GitHub Releases repository proyek](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest). Pilih asset installer atau portable, **bukan** tautan otomatis **Source code** untuk penggunaan biasa. Jika versi yang disebut di panduan belum terbit, gunakan rilis yang tersedia atau tunggu paket berikutnya. [Build manual](DEVELOPMENT.md) tetap tersedia untuk developer; pengguna installer tidak perlu membangun aplikasi.
 
-Untuk versi 0.5.2, installer bernama `iDock-Setup-0.5.2-win-x64.exe`; gunakan contoh ini hanya jika versi tersebut sudah tersedia pada Releases. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
+Untuk versi 0.5.3, installer bernama `iDock-Setup-0.5.3-win-x64.exe`; gunakan contoh ini hanya jika versi tersebut sudah tersedia pada Releases. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
 
 ```powershell
-Get-FileHash -LiteralPath '.\iDock-Setup-0.5.2-win-x64.exe' -Algorithm SHA256
+Get-FileHash -LiteralPath '.\iDock-Setup-0.5.3-win-x64.exe' -Algorithm SHA256
 Get-Content -LiteralPath '.\SHA256SUMS.txt'
 ```
 
@@ -37,7 +37,7 @@ Installer saat ini **belum ditandatangani secara digital**. Windows dapat menamp
 ## Instal menggunakan installer
 
 1. Tutup sesi iDock yang sedang dipakai: **Ctrl + Alt + Q → Hentikan sesi**, lalu tutup aplikasi dan Quit UxPlay dari system tray bila masih berjalan.
-2. Jalankan installer yang sudah diverifikasi. Tinjau prompt izin Windows dan halaman installer. Pilihan tambahan izin **Wi-Fi Public** tidak dicentang pada instalasi baru; baca [penjelasannya](#izin-wi-fi-public) sebelum memilih.
+2. Jalankan installer yang sudah diverifikasi. Tinjau prompt izin Windows dan halaman installer. Pada 0.5.3, pilihan tambahan izin **Wi-Fi Public dicentang secara default pada instalasi baru** dan tetap dapat dihilangkan centangnya; baca [penjelasannya](#izin-wi-fi-public) sebelum melanjutkan. Upgrade mempertahankan pilihan terdahulu, termasuk pilihan nonaktif.
 3. Aplikasi dipasang pada **`%ProgramFiles%\iDock`**, biasanya `C:\Program Files\iDock`. Data pribadi disimpan terpisah di `%LOCALAPPDATA%\iDock`, bukan pada Program Files.
 4. Setelah selesai, buka **iDock for Windows** melalui Start Menu menggunakan akun biasa.
 5. Ikuti bagian [koneksi pertama](#koneksi-pertama). Pemasangan launcher tidak membuktikan adapter Bluetooth atau koneksi perangkat telah siap.
@@ -50,11 +50,13 @@ Installer mempertahankan dua aturan receiver pada **profil Private dan LocalSubn
 
 Windows dapat menandai Wi-Fi rumah sebagai **Public**. Nama receiver bisa terlihat melalui Bonjour sementara koneksi video tetap diblokir karena receiver hanya diizinkan pada profil Private. Status Public sendiri tidak membuktikan bahwa jaringan aman atau berbahaya; pastikan Anda mempercayai jaringan dan perangkat lain di dalamnya.
 
-Jika mirroring akan digunakan pada Wi-Fi tepercaya yang berprofil Public, pilih **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** saat menjalankan installer 0.5.1 atau lebih baru yang menyediakan opsi ini. Opsi ini **tidak dicentang pada instalasi baru**; pilihan terdahulu dapat diingat saat upgrade. Ia hanya menambahkan izin masuk TCP/UDP untuk `vendor\uxplay\uxplay-windows.exe` milik instalasi, pada profil **Public**, tipe antarmuka **Wireless**, dan alamat remote **LocalSubnet**, tanpa edge traversal. Opsi ini tidak membuka Bluetooth, seluruh aplikasi, Ethernet Public, atau profil Domain.
+Tinjau pilihan **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** saat memasang aplikasi. Pada **0.5.3, pilihan ini dicentang secara default pada instalasi baru**, tetap terlihat, dan dapat dihilangkan centangnya sebelum melanjutkan. **Upgrade mempertahankan pilihan terdahulu, termasuk jika sebelumnya tidak dicentang**; jangan menganggap upgrade otomatis mengaktifkannya. Default ini berbeda dari installer 0.5.1/0.5.2 yang belum mencentangnya pada instalasi baru. Jika dipilih, opsi hanya menambahkan izin masuk TCP/UDP untuk `vendor\uxplay\uxplay-windows.exe` milik instalasi, pada profil **Public**, tipe antarmuka **Wireless**, dan alamat remote **LocalSubnet**, tanpa edge traversal. Opsi ini tidak membuka Bluetooth, seluruh aplikasi, Ethernet Public, atau profil Domain.
 
 **Izin bersifat menetap pada semua jaringan Wi-Fi berprofil Public**, termasuk jaringan yang tersambung nanti; bukan hanya SSID saat ini dan bukan autentikasi perangkat tepercaya. Gunakan receiver hanya pada jaringan yang Anda percayai. LocalSubnet membatasi asal koneksi, tetapi tidak membuktikan bahwa peer aman. Jangan mengaktifkan opsi ini untuk melewati kebijakan jaringan kantor/sekolah.
 
 Untuk mencabut izin tambahan tersebut, tutup sesi lalu jalankan kembali installer versi yang sedang digunakan dan hilangkan centangnya. Installer menghapus hanya aturan `iDock.AirPlay.TCP.PublicWireless.v1` dan `iDock.AirPlay.UDP.PublicWireless.v1` yang masih tepat sesuai kepemilikannya. Jika aturan sudah diubah administrator atau namanya ambigu, installer meminta peninjauan, bukan menghapusnya paksa. Aturan Private tetap dipertahankan.
+
+**Untuk administrator instalasi tanpa wizard:** pada instalasi baru 0.5.3, `/SILENT` atau `/VERYSILENT` juga memakai default Public Wi-Fi yang terpilih. Untuk menolak izin ini secara eksplisit tanpa mengganti pilihan task lain, tambahkan `/MERGETASKS="!publicwifi"` pada argumen installer. Parameter tersebut diterapkan setelah pilihan terdahulu dipulihkan, sehingga berlaku juga untuk opt-out saat upgrade. Ini petunjuk deployment yang perlu ditinjau administrator, bukan instruksi untuk menjalankan installer secara otomatis. [Parameter resmi Inno Setup](https://jrsoftware.org/ishelp/topic_setupcmdline.htm).
 
 Opsi ini tidak memperbaiki client isolation, aturan blok administrator, atau konfigurasi Bonjour yang tidak sesuai. Jangan otomatis mengganti profil Public menjadi Private: aturan Bonjour yang sudah ada dapat memiliki profil berbeda, sehingga penemuan perangkat justru berhenti. Periksa jalur [discovery dan video secara terpisah](TROUBLESHOOTING.md#receiver-tidak-muncul-atau-video-tidak-tersambung).
 
@@ -77,7 +79,8 @@ Pilih lokasi portable sebelum memulai mirroring pertama kali: Bonjour Service da
 3. Jika muncul prompt Windows Firewall, izinkan komponen yang tepat hanya pada jaringan tepercaya yang digunakan. Jangan membuka semua aplikasi atau mematikan Firewall.
 4. Di perangkat pilih **Control Center → Screen Mirroring → uxplay-windows**. Pastikan video tampil pada jendela terpisah.
 5. Untuk input, klik **Aktifkan kontrol**, kemudian pasangkan laptop melalui **Settings → Accessibility → Touch → AssistiveTouch → Devices → Bluetooth Devices** di perangkat.
-6. Setelah koneksi input tersedia, gunakan **Ctrl + D + C** untuk memilih perangkat dan **Ctrl + Alt + Q** untuk kembali ke Windows. Lihat [cara pakai](USAGE.md) untuk urutan tombol dan target input.
+6. Setelah koneksi input tersedia, gunakan pintasan alih target yang ditampilkan (**Ctrl + Alt + D** secara default) untuk memilih perangkat dan **Ctrl + Alt + Q** untuk kembali ke Windows. Lihat [cara pakai](USAGE.md) untuk pengaturan pintasan, tombol **Nonaktifkan kontrol**, dan screenshot **Ctrl + Alt + S**.
+7. Jika keyboard layar perangkat tidak muncul setelah BLE tersambung, aktifkan **Show Onscreen Keyboard** pada pengaturan AssistiveTouch perangkat, lalu ketuk kolom teks. Target input masih Windows tidak berarti keyboard eksternal terputus; ikuti [panduan keyboard layar](USAGE.md#keyboard-layar-perangkat).
 
 ## Lokasi data
 
@@ -88,10 +91,14 @@ Mulai source versi 0.5.2, pilih **Pengaturan → Bahasa → Bahasa Indonesia / E
 | Aplikasi | `%ProgramFiles%\iDock` | Folder paket yang dipilih |
 | Pilihan bahasa (0.5.2) | `%LOCALAPPDATA%\iDock\data\ui-settings.json` | `data\ui-settings.json` di folder paket |
 | Pengaturan pointer | `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json` | `data\blehid\pointer-settings.json` di folder paket |
+| Pintasan alih target (0.5.3) | `%LOCALAPPDATA%\iDock\data\blehid\hotkey-settings.json` | `data\blehid\hotkey-settings.json` di folder paket |
+| Screenshot PNG (0.5.3) | `%LOCALAPPDATA%\iDock\data\screenshots` | `data\screenshots` di folder paket |
 | Log launcher/diagnosis | `%LOCALAPPDATA%\iDock\logs` | `logs` di folder paket |
 | Data dan log backend | `%LOCALAPPDATA%\iDock\data\blehid` | `data\blehid` di folder paket |
 
 Pairing Bluetooth dikelola Windows dan perangkat. Pengaturan video UxPlay berada dalam profil Windows dan terpisah dari pengaturan pointer iDock. Gulir ke bagian **Diagnostik** di bawah **Pengaturan**, lalu pilih **Buka log** untuk membuka lokasi log pada mode yang sedang digunakan.
+
+Screenshot tidak diunggah otomatis dan tetap merupakan data pribadi. Periksa gambar sebelum membagikannya; jangan memasukkan folder `data\screenshots` ke source publik. Memperbarui atau uninstall aplikasi tidak dimaksudkan menghapus pengaturan atau screenshot pengguna.
 
 ## Upgrade, pindah folder, dan uninstall
 
@@ -99,7 +106,7 @@ Pairing Bluetooth dikelola Windows dan perangkat. Pengaturan video UxPlay berada
 
 Kembalikan input ke Windows, tutup iDock/UxPlay, lalu jalankan installer versi berikutnya dari sumber yang telah diverifikasi. Gunakan path instalasi yang sama dan cadangkan `%LOCALAPPDATA%\iDock` bila ingin menyimpan salinan pengaturan/log. Jangan memakai folder instalasi aktif sebagai output build developer.
 
-Tinjau kembali pilihan Public Wi-Fi setiap menjalankan Setup: opsi tidak dicentang pada instalasi baru, tetapi pilihan sebelumnya dapat diingat saat upgrade atau pemasangan ulang. Menghilangkan centang mencabut aturan Public yang masih tepat dimiliki installer; aturan Private tetap ada. Jika mesin memakai repair khusus dari sesi dukungan, jangan menganggap upgrade menghapusnya. Pemilik komputer perlu meninjau dan membersihkan hanya aturan repair tersebut secara manual sebelum hasil tes paket baru dinilai; lihat [persiapan pengujian rilis](RELEASING.md#checklist-sebelum-publikasi).
+Tinjau kembali pilihan Public Wi-Fi setiap menjalankan Setup: pada 0.5.3 opsi dicentang secara default pada instalasi baru, tetapi pilihan sebelumnya tetap diingat saat upgrade atau pemasangan ulang, termasuk pilihan nonaktif. Menghilangkan centang mencabut aturan Public yang masih tepat dimiliki installer; aturan Private tetap ada. Jika mesin memakai repair khusus dari sesi dukungan, jangan menganggap upgrade menghapusnya. Pemilik komputer perlu meninjau dan membersihkan hanya aturan repair tersebut secara manual sebelum hasil tes paket baru dinilai; lihat [persiapan pengujian rilis](RELEASING.md#checklist-sebelum-publikasi).
 
 ### Upgrade portable atau migrasi nama aplikasi
 

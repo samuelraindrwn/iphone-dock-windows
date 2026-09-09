@@ -41,7 +41,10 @@
         </StackPanel>
        </Grid>
        <Border Background="{StaticResource AccentSoft}" CornerRadius="9" Margin="0,18,0,0" Padding="12,10">
-        <TextBlock x:Name="ShortcutHelp" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource MutedText}"><Run Text="Ctrl + D + C" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="{DynamicResource Text.Shortcut.Switch}" /><Run Text="Ctrl + Alt + Q" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="{DynamicResource Text.Shortcut.Return}" /></TextBlock>
+        <DockPanel LastChildFill="True">
+         <Button x:Name="HotkeyButton" DockPanel.Dock="Right" Content="{DynamicResource Text.Hotkey.Open}" Click="Hotkey_Click" Style="{StaticResource QuietButton}" FontSize="12" Padding="9,4" Margin="12,0,0,0" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Text.Hotkey.OpenAccessible}" />
+         <TextBlock x:Name="ShortcutHelp" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{StaticResource MutedText}"><Run x:Name="SwitchHotkeyRun" Text="Ctrl + Alt + D" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="{DynamicResource Text.Shortcut.Switch}" /><Run x:Name="ReleaseHotkeyRun" Text="Ctrl + Alt + Q" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /><Run Text="{DynamicResource Text.Shortcut.Return}" /></TextBlock>
+        </DockPanel>
        </Border>
       </StackPanel>
      </Border>
@@ -55,7 +58,7 @@
          <TextBlock Text="{DynamicResource Text.Mirror.Title}" Style="{StaticResource SectionHeading}" /><TextBlock Text="{DynamicResource Text.Mirror.Description}" Style="{StaticResource BodyText}" Margin="0,7,0,0" />
         </StackPanel>
         <Border Grid.Row="1" Background="#F6F7F9" CornerRadius="9" Padding="11,9" Margin="0,20,0,16" VerticalAlignment="Bottom"><TextBlock x:Name="MirrorStatus" Text="{DynamicResource Text.Mirror.NotStarted}" Foreground="{StaticResource MutedText}" FontSize="12" LineHeight="18" AutomationProperties.LiveSetting="Polite" /></Border>
-        <StackPanel Grid.Row="2"><Button x:Name="MirrorButton" Content="{DynamicResource Text.Mirror.Open}" Style="{StaticResource PrimaryButton}" Click="Mirror_Click" HorizontalAlignment="Stretch" /><Border Height="32" Margin="0,7,0,0"><TextBlock Text="{DynamicResource Text.Mirror.SeparateWindow}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" /></Border></StackPanel>
+        <StackPanel Grid.Row="2"><Button x:Name="MirrorButton" Content="{DynamicResource Text.Mirror.Open}" Style="{StaticResource PrimaryButton}" Click="Mirror_Click" HorizontalAlignment="Stretch" /><Button x:Name="ScreenshotButton" Content="{DynamicResource Text.Screenshot.Take}" Click="Screenshot_Click" IsEnabled="False" HorizontalAlignment="Stretch" Margin="0,8,0,0" ToolTip="Ctrl + Alt + S" /><Button x:Name="OpenScreenshotsButton" Content="{DynamicResource Text.Screenshot.OpenFolder}" Click="OpenScreenshots_Click" Style="{StaticResource QuietButton}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0" /><TextBlock x:Name="ScreenshotStatus" Text="{DynamicResource Text.Screenshot.Ready}" Style="{StaticResource CaptionText}" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite" /></StackPanel>
        </Grid>
       </Border>
       <Border Grid.Column="2" Style="{StaticResource Card}">

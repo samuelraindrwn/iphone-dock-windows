@@ -95,7 +95,7 @@ function Copy-iDockSourceTree {
         '.psd1', '.yml', '.yaml', '.py', '.txt', '.xml', '.resx', '.ico', '.iss'
     )
     $sourceNames = @('LICENSE', 'NOTICE', 'COPYING', '.gitignore', '.gitattributes', '.editorconfig', 'installed.mode')
-    $privateNames = @('secrets.json', 'device.json', 'pointer-settings.json', 'pointer-pacing.json', 'hosts.json')
+    $privateNames = @('secrets.json', 'device.json', 'pointer-settings.json', 'pointer-pacing.json', 'ui-settings.json', 'hotkey-settings.json', 'hosts.json')
     Assert-NoReparsePoint $SourceDirectory
     $null = New-Item -ItemType Directory -Path $DestinationDirectory -Force
     foreach ($item in @(Get-ChildItem -LiteralPath $SourceDirectory -Force)) {

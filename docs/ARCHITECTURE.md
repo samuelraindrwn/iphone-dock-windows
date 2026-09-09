@@ -33,7 +33,7 @@ Launcher milik proyek menggunakan [lisensi MIT](../LICENSE). Backend berasal dar
 
 ## Siklus hidup dan keselamatan input
 
-Antarmuka launcher disusun dalam satu halaman yang dapat digulir: **Panduan** berada paling atas, lalu kartu **Layar perangkat** dan **Mouse & keyboard**, **Pengaturan pointer**, serta **Diagnostik**. Ringkasan pintasan tersedia di bagian atas. Urutan visual ini tidak menggabungkan jalur AirPlay dan HID atau mengubah cara memilih target input.
+Antarmuka launcher disusun dalam satu halaman yang dapat digulir: **Panduan** berada paling atas, lalu kartu **Layar perangkat** dan **Mouse & keyboard**, **Pengaturan**, serta **Diagnostik**. Ringkasan pintasan tersedia di bagian atas. Urutan visual ini tidak menggabungkan jalur AirPlay dan HID atau mengubah cara memilih target input.
 
 `EngineManager` memulai UxPlay atau CLI BLE HID dari folder `vendor` relatif terhadap EXE. `ProcessJob` membuat proses dengan Windows Job Object sehingga penghentian sesi mencakup proses yang dimulai iDock for Windows beserta turunannya, bukan pencarian global untuk mematikan semua proses bernama sama.
 
@@ -45,9 +45,23 @@ Ada pengecualian sempit untuk koneksi HID lama: mode perlindungan dikonfigurasi 
 
 Sesudah siap, target awal tetap lokal. Hotkey memilih target; kehilangan host input terpilih mengembalikan target ke laptop. Pada jalur fallback, hilangnya koneksi yang disyaratkan membatalkan kesiapan dan memerlukan restart kontrol. UI membedakannya sebagai **“koneksi lama terverifikasi; iklan Bluetooth belum siap”**. Status sukses advertising tidak diperlakukan sebagai sukses pairing. Log dibaca bertahap oleh UI; potongan baris yang belum selesai tidak langsung diparse.
 
+Pintasan alih target dapat dikonfigurasi; defaultnya **Ctrl + Alt + D**. Backend membaca `data\blehid\hotkey-settings.json` **satu kali saat sesi kontrol dimulai**, bukan dengan polling seperti pengaturan pointer. Perubahan berlaku pada sesi kontrol berikutnya; launcher membedakan kombinasi yang aktif dari pilihan tersimpan yang menunggu restart. **Nonaktifkan kontrol** hanya menutup Job kontrol milik sesi ini; receiver dan siklus pemantauan video tetap berjalan. **Hentikan sesi** menutup keduanya.
+
+Launcher dan backend menerima JSON UTF-8 (BOM opsional), dengan batas 4096 byte dan bentuk `{"SwitchTarget":{"Modifiers":3,"VirtualKey":68}}`. Flags yang dikenal adalah Ctrl=1, Alt=2, Shift=4; minimal Ctrl atau Alt diperlukan. Shift saja, tombol Windows/modifier/lock sebagai pemicu, Escape, flags tak dikenal, kombinasi pelepasan, serta **Ctrl + Alt + S** ditolak. File invalid tidak ditulis ulang; backend memakai default dan mencatat peringatan. Dialog merekam hanya ketika aktif, membatalkan saat kehilangan fokus, serta menahan repeat/key-up kombinasi yang baru direkam agar tidak memicu tombol dialog.
+
+**Ctrl + Alt + Q** tidak berasal dari berkas setelan dan diperiksa lebih dulu daripada pintasan yang dikonfigurasi. Kombinasi ini tetap menerima Shift tambahan agar pelepasan diprioritaskan. Pintasan alih target dan screenshot memakai modifier persis; tombol Windows tambahan tidak dihitung sebagai kombinasi yang sama. Jalur pelepasan tidak bergantung pada validitas pengaturan, tetapi waktu respons nyata tetap perlu diuji.
+
 Hotkey kembali ke Windows diproses melalui antrean pengiriman input. Operasi BLE atau pembacaan nama host yang tertunda dapat menunda pengalihan; belum ada jaminan waktu respons saat koneksi macet. Hal ini tetap menjadi [target pengujian keselamatan](STABILITY-TESTS.md), bukan kemampuan yang sudah dijamin.
 
 **Cek Bluetooth** menjalankan diagnosis terpisah yang mencoba kesiapan layanan tanpa input hooks, kemudian melakukan cleanup. Jalur koneksi lama dapat mengirim dua laporan netral di atas. Ini operasi radio sementara, bukan hanya membaca nama adapter. Pemeriksaan otomatis tidak menjalankan jalur radio ini. iDock for Windows tidak mereset radio, menghapus pairing, atau memasang ulang driver secara otomatis.
+
+## Screenshot lokal
+
+**Ctrl + Alt + S** adalah pintasan tetap launcher. Saat input lokal, launcher memakai registrasi hotkey Windows; saat input ditangkap backend, permintaan diteruskan melalui event bernama khusus instance. Backend tidak menerima koordinat video atau mengambil gambar. Kegagalan registrasi (misalnya kombinasi digunakan aplikasi lain) ditampilkan; tombol **Ambil screenshot** menjadi alternatif.
+
+Launcher hanya memilih jendela video dari proses dalam Job receiver milik sesinya. Windows Graphics Capture mengambil jendela tersebut, lalu area klien dipakai untuk PNG; tidak ada fallback pengambilan seluruh desktop. Jendela lain yang menutupi video tidak ikut menjadi sumber tangkapan. Jendela yang hilang, minimized, ambigu, berubah selama tangkapan, atau tidak menghasilkan frame menyebabkan kegagalan yang dilaporkan, bukan pemilihan jendela lain secara global. Konten terlindungi dapat kosong dan tidak diterobos.
+
+PNG disimpan ke `data\screenshots` di root penyimpanan pengguna/paket, tidak ke Photos perangkat dan tidak diunggah otomatis. Ini adalah frame mirroring pada laptop, bukan jaminan resolusi screenshot native perangkat. Ukuran/rotasi/hasil GPU dan batas waktu perlu diuji dengan receiver nyata.
 
 ## Gerakan pointer dan pengaturan
 
@@ -76,7 +90,7 @@ iDock memilih basis penyimpanan dari marker **`installed.mode`** di folder aplik
 
 Konfigurasi/perangkat backend dan log runtime tidak termasuk source publik. Pairing Bluetooth dikelola Windows serta iOS/iPadOS. Konfigurasi UxPlay berada pada profil Windows; Bonjour dan Firewall dapat menyimpan path absolut komponen, sehingga lokasi aplikasi aktif harus stabil.
 
-Installer mempertahankan aturan receiver `iDock.AirPlay.{TCP,UDP}.Private.v1` dengan profil **Private** dan alamat remote **LocalSubnet**. Pada 0.5.1, task `publicwifi` yang tidak dicentang pada instalasi baru dapat menambahkan aturan terpisah `iDock.AirPlay.{TCP,UDP}.PublicWireless.v1`: profil **Public**, tipe antarmuka **Wireless**, remote **LocalSubnet**, path receiver yang tepat, tanpa edge traversal. Izin ini menetap pada semua Wi-Fi Public, bukan aturan yang mengautentikasi SSID/perangkat. Pilihan sebelumnya dapat diingat saat upgrade; menghilangkan pilihan mencabut hanya aturan Public yang masih tepat dimiliki installer.
+Installer mempertahankan aturan receiver `iDock.AirPlay.{TCP,UDP}.Private.v1` dengan profil **Private** dan alamat remote **LocalSubnet**. Mulai 0.5.3, task `publicwifi` dicentang secara default pada instalasi baru, tetap terlihat, dan dapat dihilangkan centangnya. Jika dipilih, task menambahkan aturan terpisah `iDock.AirPlay.{TCP,UDP}.PublicWireless.v1`: profil **Public**, tipe antarmuka **Wireless**, remote **LocalSubnet**, path receiver yang tepat, tanpa edge traversal. Izin ini menetap pada semua Wi-Fi Public, bukan aturan yang mengautentikasi SSID/perangkat. `UsePreviousTasks=yes` mempertahankan pilihan sebelumnya pada upgrade, termasuk opt-out; menghilangkan pilihan mencabut hanya aturan Public yang masih tepat dimiliki installer.
 
 Installer tidak mengubah profil jaringan, kebijakan Firewall global, atau aturan milik aplikasi lain. Bonjour yang sudah ada tidak direkonfigurasi diam-diam. Uninstaller memeriksa kedua keluarga aturan receiver dan mempertahankan aturan yang sudah diubah atau ambigu; ia tidak menyapu aturan berdasarkan kemiripan nama. Data pengguna, pairing, layanan Bonjour, serta binary Bonjour yang mungkin dipakai bersama juga dipertahankan. Karena itu uninstall tidak selalu mengosongkan seluruh folder aplikasi.
 

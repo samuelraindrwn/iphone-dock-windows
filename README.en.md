@@ -20,7 +20,7 @@ Run the installer, review the Windows permission prompts, and open **iDock for W
 
 The installer is not digitally signed. Check the download source, version, and checksum before running it; do not disable SmartScreen, antivirus, or Windows Firewall. See [download verification](docs/en/INSTALL.md).
 
-By default, the receiver's firewall permissions cover **Private networks / LocalSubnet** only. Starting with 0.5.1, Setup offers an additional **Public Wi-Fi** option, unchecked on fresh installs. Read the [network permission scope](docs/en/INSTALL.md) before enabling it: the permission applies to all Public Wi-Fi networks, not just the network used during installation. Setup does not change network profiles, Bonjour, or Bluetooth.
+Setup preserves the receiver's **Private networks / LocalSubnet** permissions. In **0.5.3**, the additional **Public Wi-Fi option is checked by default on fresh installations**; it remains visible and can be unchecked. Upgrades preserve the previous choice, including an earlier opt-out. Review the [network permission scope](docs/en/INSTALL.md) before proceeding: the installed receiver only, **Public + Wireless + LocalSubnet**, but across all Public Wi-Fi networks, not just the network used during installation. Uncheck it if you do not want that access. Setup does not change network profiles, Bonjour, or Bluetooth.
 
 ### 2. Mirror your device
 
@@ -36,14 +36,18 @@ Seeing the receiver name does not prove the video connection is working. If the 
 
 1. Turn on Bluetooth on Windows and your device, then click **Enable control (Aktifkan kontrol)** in **Mouse & keyboard**.
 2. In the device's **Settings** app, open **Accessibility → Touch → AssistiveTouch** and enable it. Select **Devices → Bluetooth Devices** and pair with the laptop name shown in iDock's **Guide**.
-3. Once input is connected, hold **Ctrl + D**, press **C**, then release all keys. Check the input target before moving the pointer or typing.
-4. Use **Ctrl + Alt + Q** to return input to Windows. Scroll to **Settings (Pengaturan)** to adjust sensitivity, orientation, and, in 0.5.2 builds, the interface language.
+3. Once input is connected, use the switch shortcut shown in the app (**Ctrl + Alt + D** by default). Check the input target before moving the pointer or typing.
+4. Use **Ctrl + Alt + Q** to return input to Windows. Scroll to **Settings (Pengaturan)** to adjust sensitivity, orientation, and the interface language.
+
+The switch shortcut can be changed with **Change shortcuts** in the Guide section; **Ctrl + Alt + Q** is fixed and cannot be reassigned. Changes apply after disabling and enabling control; mirroring does not need to stop. See [changing the shortcuts](docs/en/USAGE.md#changing-the-shortcuts).
+
+In **0.5.3**, the red **Disable control** button stops mouse/keyboard control without closing mirroring. **Ctrl + Alt + S** or the **Take screenshot** button saves the mirrored display as a local PNG; see [Usage](docs/en/USAGE.md). This documentation describes the 0.5.3 source; check Releases for available installer versions.
 
 The pairing page is in **Settings**, not the floating AssistiveTouch menu. A general Bluetooth `Connected` status is not proof that HID mouse/keyboard control is connected. The [full user guide](docs/en/USAGE.md) explains connection status, shortcuts, and recovery.
 
 ### Interface language
 
-In **0.5.2 builds**, open **Settings → Language** (or **Pengaturan → Bahasa**) and choose **English** or **Bahasa Indonesia**. The interface updates immediately and saves the choice for the next launch; changing language does not restart the session or reset pointer settings. Existing 0.5.1 installers do not have this selector. See the [0.5.2 development notes](docs/en/RELEASE-NOTES-0.5.2.md) for availability and verification status.
+Open **Settings → Language** (or **Pengaturan → Bahasa**) and choose **English** or **Bahasa Indonesia**. The interface updates immediately and saves the choice for the next launch; changing language does not restart the session or reset pointer settings. Introduced in 0.5.2, this selector is not present in 0.5.1 packages.
 
 Both documentation languages are available independently of your installed app version. Native Windows messages and third-party receiver/backend diagnostics retain their original language; the language setting does not translate iOS/iPadOS or the separate UxPlay interface.
 
@@ -53,9 +57,12 @@ Both documentation languages are available independently of your installed app v
 - AirPlay mirroring in a separate window through UxPlay Windows.
 - Closing **AirPlay Video Stream** ends the mirroring/control session after a short grace period; minimizing does not. See [ending a session](docs/en/USAGE.md#ending-a-session).
 - Relative pointer movement, clicking, dragging, scrolling, and keyboard input over Bluetooth HID.
+- A configurable switch shortcut and a fixed return-to-Windows shortcut.
+- A red **Disable control** button that leaves mirroring running.
+- Local PNG screenshots with **Ctrl + Alt + S**, without capturing the whole desktop.
 - Automatically saved pointer sensitivity from **0.25× to 3.00×**.
 - **Manual portrait/landscape** direction correction without pairing again.
-- **Bahasa Indonesia / English** interface selection in 0.5.2 builds.
+- **Bahasa Indonesia / English** interface selection.
 - Bluetooth checks and local logs for troubleshooting.
 
 Mirroring and control do not require a companion app on the device, a Mac, jailbreak, or Developer Mode. Building, signing, installing, and debugging iOS/iPadOS apps still requires the relevant development toolchain. iDock does not replace Xcode, a simulator, or a debugger.
@@ -95,6 +102,7 @@ Build with the **.NET 10 SDK x64**. The default build is *framework-dependent* a
 - [Release and installer checklist](docs/en/RELEASING.md)
 - [0.5.1 changes and test evidence](docs/en/RELEASE-NOTES-0.5.1.md)
 - [0.5.2 language support and development status](docs/en/RELEASE-NOTES-0.5.2.md)
+- [0.5.3 shortcuts, independent control stop, and screenshots](docs/en/RELEASE-NOTES-0.5.3.md)
 - [Architecture and data storage](docs/en/ARCHITECTURE.md)
 - [Stability criteria and checklist](docs/en/STABILITY-TESTS.md)
 - [iOS/iPadOS compatibility, latency, and bug-fix roadmap](docs/en/ROADMAP.md)

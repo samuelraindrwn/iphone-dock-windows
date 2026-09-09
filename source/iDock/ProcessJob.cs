@@ -26,9 +26,18 @@ internal sealed class ProcessJob : IDisposable
         var startup = new StartupInfo { Size = Marshal.SizeOf<StartupInfo>(), Flags = 1,
             ShowWindow = (short)(info.WindowStyle == ProcessWindowStyle.Normal ? 1 : 0) };
         var command = new StringBuilder(string.Join(" ", new[] { info.FileName }.Concat(info.ArgumentList).Select(Quote)));
-        if (!CreateProcess(info.FileName, command, IntPtr.Zero, IntPtr.Zero, false,
-                0x08000004, IntPtr.Zero, info.WorkingDirectory, ref startup, out var native)) // suspended + no console
-        { var error = new Win32Exception(); handle.Dispose(); throw error; }
+        // Native CreateProcess must honor the child's environment overrides too.
+        // In particular, the screenshot endpoint belongs only to this control job;
+        // changing the launcher process environment would leak it to future jobs.
+        var environment = Marshal.StringToHGlobalUni(BuildEnvironmentBlock(info));
+        ProcessInfo native;
+        try
+        {
+            if (!CreateProcess(info.FileName, command, IntPtr.Zero, IntPtr.Zero, false,
+                    0x08000404, environment, info.WorkingDirectory, ref startup, out native)) // suspended + no console + Unicode environment
+            { var error = new Win32Exception(); handle.Dispose(); throw error; }
+        }
+        finally { Marshal.FreeHGlobal(environment); }
         try
         {
             if (!AssignProcessToJobObject(handle, native.Process)) throw new Win32Exception();
@@ -40,6 +49,10 @@ internal sealed class ProcessJob : IDisposable
     }
     private static string Quote(string argument) => "\"" + Regex.Replace(
         Regex.Replace(argument, @"(\\*)""", "$1$1\\\""), @"(\\+)$", "$1$1") + "\"";
+    internal static string BuildEnvironmentBlock(ProcessStartInfo info) => string.Join('\0',
+        info.Environment.Where(pair => pair.Value is not null)
+            .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(pair => pair.Key + "=" + pair.Value)) + "\0\0";
     public bool IsRunning => !handle.IsClosed &&
         QueryInformationJobObject(handle, 1, out var info, (uint)Marshal.SizeOf<Accounting>(), IntPtr.Zero)
         && info.ActiveProcesses > 0;

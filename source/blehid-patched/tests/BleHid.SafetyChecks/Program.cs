@@ -382,4 +382,287 @@ using (var alreadyCancelled = new CancellationTokenSource())
         Check(true, "a pre-cancelled operation is rejected even when its result is already available");
     }
 }
+// Hotkey settings decide which keystroke releases a captured keyboard, so an invalid or
+// hostile file must never widen what the backend accepts. No hooks are installed here.
+{
+    Check(HotkeyBinding.Default == new HotkeyBinding(HotkeyModifiers.Control | HotkeyModifiers.Alt, 0x44),
+        "the default switch hotkey is Ctrl+Alt+D");
+    Check(HotkeyBinding.Release == new HotkeyBinding(HotkeyModifiers.Control | HotkeyModifiers.Alt, 0x51),
+        "the release hotkey is Ctrl+Alt+Q");
+    Check(!HotkeyBinding.IsValid(HotkeyModifiers.None, 0x44),
+        "a modifier-less hotkey is rejected");
+    Check(!HotkeyBinding.IsValid(HotkeyModifiers.Control, 0xA2) && !HotkeyBinding.IsValid(HotkeyModifiers.Control, 0x11),
+        "a modifier key cannot trigger its own combination");
+
+    var hotkeyDirectory = Path.Combine(AppPaths.Root, "hotkey-checks");
+    Directory.CreateDirectory(hotkeyDirectory);
+    var hotkeyPath = Path.Combine(hotkeyDirectory, "hotkey-settings.json");
+    Check(HotkeyBinding.Load(hotkeyPath) == HotkeyBinding.Default,
+        "a missing hotkey file falls back to the default binding");
+
+    File.WriteAllText(hotkeyPath, "{\"SwitchTarget\":{\"Modifiers\":5,\"VirtualKey\":83}}");
+    Check(HotkeyBinding.Load(hotkeyPath) == new HotkeyBinding(HotkeyModifiers.Control | HotkeyModifiers.Shift, 0x53),
+        "a valid hotkey file is honoured");
+    File.WriteAllText(hotkeyPath, "{\"SwitchTarget\":{\"Modifiers\":5,\"VirtualKey\":83}}", new System.Text.UTF8Encoding(true));
+    Check(HotkeyBinding.Load(hotkeyPath) == new HotkeyBinding(HotkeyModifiers.Control | HotkeyModifiers.Shift, 0x53),
+        "UTF-8 BOM settings from Windows PowerShell match the launcher's accepted encoding");
+    File.WriteAllText(hotkeyPath, "{\"SwitchTarget\":{\"Modifiers\":5,\"VirtualKey\":83}}", System.Text.Encoding.Unicode);
+    Check(HotkeyBinding.Load(hotkeyPath) == HotkeyBinding.Default,
+        "UTF-16 settings are rejected consistently with the launcher");
+    File.WriteAllBytes(hotkeyPath, [0xFF, 0x7B, 0x7D]);
+    Check(HotkeyBinding.Load(hotkeyPath) == HotkeyBinding.Default,
+        "invalid UTF-8 cannot be repaired differently by the launcher and backend");
+    File.WriteAllText(hotkeyPath, new string(' ', 4097));
+    Check(HotkeyBinding.Load(hotkeyPath) == HotkeyBinding.Default,
+        "hotkey files larger than 4096 bytes are rejected before parsing");
+
+    foreach (var hostile in new[]
+    {
+        "{unfinished",
+        "{\"SwitchTarget\":{\"Modifiers\":0,\"VirtualKey\":68}}",
+        "{\"SwitchTarget\":{\"Modifiers\":3,\"VirtualKey\":81}}",
+        "{\"SwitchTarget\":{\"Modifiers\":3,\"VirtualKey\":162}}",
+        "{\"SwitchTarget\":{\"Modifiers\":64,\"VirtualKey\":68}}",
+        "{\"SwitchTarget\":{\"Modifiers\":7,\"VirtualKey\":81}}",
+        "{\"SwitchTarget\":{\"Modifiers\":3,\"VirtualKey\":83}}",
+        "{\"SwitchTarget\":{\"Modifiers\":4,\"VirtualKey\":68}}",
+        "{\"SwitchTarget\":{\"Modifiers\":3,\"VirtualKey\":27}}"
+    })
+    {
+        File.WriteAllText(hotkeyPath, hostile);
+        Check(HotkeyBinding.Load(hotkeyPath) == HotkeyBinding.Default,
+            "an invalid or reserved hotkey file falls back to the default instead of being trusted");
+    }
+
+    var capture = new InputCapture { SwitchHotkey = HotkeyBinding.Release };
+    Check(capture.SwitchHotkey == HotkeyBinding.Default,
+        "assigning the release combination as the switch hotkey is refused");
+    capture.SwitchHotkey = new HotkeyBinding(HotkeyModifiers.None, 0x44);
+    Check(capture.SwitchHotkey == HotkeyBinding.Default,
+        "assigning an invalid switch hotkey falls back to the default");
+    capture.SwitchHotkey = new HotkeyBinding(HotkeyModifiers.Alt, 0x70);
+    Check(capture.SwitchHotkey == new HotkeyBinding(HotkeyModifiers.Alt, 0x70),
+        "a valid switch hotkey is accepted without installing hooks");
+    capture.Dispose();
+
+    Directory.Delete(hotkeyDirectory, recursive: true);
+}
+
+// Synthetic key sequences exercise the real hook decision path, never install a hook and
+// never inject keys into Windows. Named-event fixtures are uniquely owned and immediately closed.
+{
+    Check(!HotkeyBinding.IsValid((HotkeyModifiers)9, 0x44) &&
+        !HotkeyBinding.IsValid((HotkeyModifiers)(-1), 0x44),
+        "direct validation rejects unknown and negative modifier bits, not just JSON parsing");
+    Check(!HotkeyBinding.IsValid(HotkeyModifiers.Shift, 0x44) &&
+        !HotkeyBinding.IsValid(HotkeyModifiers.Control, 0x1B),
+        "Shift-only typing combinations and the dialog's Escape cancel key cannot be bound");
+    Check(new HotkeyBinding(HotkeyModifiers.Control | HotkeyModifiers.Alt | HotkeyModifiers.Shift, 0x51).IsReserved &&
+        HotkeyBinding.Screenshot.IsReserved && !new HotkeyBinding(HotkeyModifiers.Control | HotkeyModifiers.Shift, 0x53).IsReserved,
+        "release supersets and exact screenshot chord are reserved without claiming unrelated chords");
+    Check(HotkeyText.Describe(HotkeyBinding.Screenshot) == "Ctrl + Alt + S",
+        "screenshot shortcut has a stable key-cap description");
+    Check(!InputCapture.AreInputHooksReady(IntPtr.Zero, IntPtr.Zero) &&
+        !InputCapture.AreInputHooksReady((IntPtr)1, IntPtr.Zero) &&
+        !InputCapture.AreInputHooksReady(IntPtr.Zero, (IntPtr)2),
+        "a missing or partial pair of input hooks must fail closed");
+    Check(InputCapture.AreInputHooksReady((IntPtr)1, (IntPtr)2),
+        "both input hooks must exist before capture is considered ready");
+
+    using var keys = new InputCapture();
+    var switches = 0;
+    var reports = new List<(KeyModifiers Modifiers, byte[] Usages)>();
+    keys.KeyboardReport += (modifiers, usages) => reports.Add((modifiers, usages));
+    keys.SwitchHostRequested += () => switches++;
+    keys.SwitchHotkey = null!;
+    Check(keys.SwitchHotkey == HotkeyBinding.Default, "a null direct binding safely restores the default");
+    keys.SwitchHotkey = new HotkeyBinding((HotkeyModifiers)9, 0x44);
+    Check(keys.SwitchHotkey == HotkeyBinding.Default, "the capture setter rejects unknown modifier bits");
+    keys.SwitchHotkey = HotkeyBinding.Screenshot;
+    Check(keys.SwitchHotkey == HotkeyBinding.Default, "the capture setter refuses the reserved screenshot chord");
+    keys.SwitchHotkey = new HotkeyBinding(HotkeyModifiers.Control | HotkeyModifiers.Alt | HotkeyModifiers.Shift, 0x51);
+    Check(keys.SwitchHotkey == HotkeyBinding.Default, "the capture setter refuses a chord shadowed by emergency release");
+
+    keys.ProcessKeyboardEvent(0xA2, true);
+    keys.ProcessKeyboardEvent(0xA4, true);
+    Check(keys.ProcessKeyboardEvent(0x44, true) && switches == 1 &&
+        reports[^1].Modifiers == KeyModifiers.None && reports[^1].Usages.Length == 0,
+        "default switch consumes its trigger and queues neutral keys before the target change");
+    Check(keys.ProcessKeyboardEvent(0x44, true) && switches == 1,
+        "trigger autorepeat never cycles multiple targets");
+    keys.ProcessKeyboardEvent(0xA4, false);
+    Check(keys.ProcessKeyboardEvent(0x44, true) && switches == 1 && reports[^1].Usages.Length == 0,
+        "trigger repeat stays consumed after a required modifier is released");
+    Check(keys.ProcessKeyboardEvent(0x44, false), "consumed trigger key-up cannot leak to Windows");
+    keys.ProcessKeyboardEvent(0x41, true);
+    Check(reports[^1].Modifiers == KeyModifiers.None && reports[^1].Usages.SequenceEqual(new byte[] { 4 }),
+        "still-held switch modifiers do not modify the next remote letter");
+    keys.ProcessKeyboardEvent(0x41, false);
+    keys.ProcessKeyboardEvent(0xA2, false);
+    keys.ProcessKeyboardEvent(0xA2, true);
+    keys.ProcessKeyboardEvent(0xA4, true);
+    keys.ProcessKeyboardEvent(0x44, true);
+    Check(switches == 2, "releasing and pressing the shortcut again fires once again");
+
+    using var local = new InputCapture();
+    local.SetPassThrough(true);
+    local.SwitchHostRequested += () => local.SetPassThrough(false);
+    Check(!local.ProcessKeyboardEvent(0xA2, true) && !local.ProcessKeyboardEvent(0xA4, true),
+        "local modifier key-downs pass through before a switch");
+    Check(local.ProcessKeyboardEvent(0x44, true) && !local.PassThrough,
+        "a local shortcut switches the target while consuming only its trigger");
+    Check(local.ProcessKeyboardEvent(0x44, false) &&
+        !local.ProcessKeyboardEvent(0xA2, false) && !local.ProcessKeyboardEvent(0xA4, false),
+        "modifier key-ups delivered before capture still reach Windows so no local key remains stuck");
+
+    using var extra = new InputCapture();
+    var extraSwitches = 0;
+    extra.SwitchHostRequested += () => extraSwitches++;
+    extra.ProcessKeyboardEvent(0xA2, true);
+    extra.ProcessKeyboardEvent(0xA4, true);
+    extra.ProcessKeyboardEvent(0x5B, true);
+    extra.ProcessKeyboardEvent(0x44, true);
+    Check(extraSwitches == 0, "an additional Windows key prevents the exact switch shortcut");
+    extra.ProcessKeyboardEvent(0x5B, false);
+    extra.ProcessKeyboardEvent(0x44, true);
+    Check(extraSwitches == 0, "removing a modifier while the trigger is held does not turn its repeat into a shortcut");
+    extra.ProcessKeyboardEvent(0x44, false);
+    extra.ProcessKeyboardEvent(0xA0, true);
+    extra.ProcessKeyboardEvent(0x44, true);
+    Check(extraSwitches == 0, "an additional Shift key prevents the exact switch shortcut");
+
+    using var emergency = new InputCapture();
+    var stops = 0;
+    emergency.StopRequested += () => stops++;
+    emergency.ProcessKeyboardEvent(0xA2, true);
+    emergency.ProcessKeyboardEvent(0xA4, true);
+    emergency.ProcessKeyboardEvent(0xA0, true);
+    emergency.ProcessKeyboardEvent(0x5B, true);
+    Check(emergency.ProcessKeyboardEvent(0x51, true) && emergency.PassThrough && stops == 1,
+        "emergency release returns input locally immediately, even with extra Shift and Windows modifiers");
+    Check(emergency.ProcessKeyboardEvent(0x51, true) && emergency.ProcessKeyboardEvent(0x51, false) && stops == 1,
+        "emergency repeat and key-up stay consumed without repeated stop requests");
+    Check(!emergency.ProcessKeyboardEvent(0x58, true),
+        "local typing resumes without waiting for the Bluetooth worker after emergency release");
+    Check(!emergency.TrySetPassThrough(false, emergency.TargetGeneration - 1) && emergency.PassThrough,
+        "a stale in-flight target switch cannot recapture input after emergency release");
+    Check(emergency.TrySetPassThrough(false, emergency.TargetGeneration) && !emergency.PassThrough,
+        "a deliberate new target switch in the current generation can resume capture");
+    var beforeNextEmergency = emergency.TargetGeneration;
+    emergency.ProcessKeyboardEvent(0x51, true);
+    Check(emergency.TargetGeneration > beforeNextEmergency &&
+        !emergency.TrySetPassThrough(false, beforeNextEmergency) && emergency.PassThrough,
+        "a second emergency release also invalidates a previously current target request");
+    Check(!CaptureSession.ShouldDispatchKeyboardReport(1, 2, KeyModifiers.LeftControl, [4]) &&
+        !CaptureSession.ShouldDispatchKeyboardReport(1, 2, KeyModifiers.None, [4]) &&
+        !CaptureSession.ShouldDispatchKeyboardReport(1, 2, KeyModifiers.LeftAlt, []),
+        "emergency generation changes discard queued old typing and modifier reports");
+    Check(CaptureSession.ShouldDispatchKeyboardReport(1, 2, KeyModifiers.None, []) &&
+        CaptureSession.ShouldDispatchKeyboardReport(2, 2, KeyModifiers.LeftControl, [4]),
+        "neutral key releases remain deliverable and deliberate current-generation input is retained");
+
+    using var screenshot = new InputCapture { ScreenshotEnabled = true };
+    var screenshots = 0;
+    screenshot.ScreenshotRequested += () => screenshots++;
+    screenshot.ProcessKeyboardEvent(0xA2, true);
+    screenshot.ProcessKeyboardEvent(0xA4, true);
+    Check(screenshot.ProcessKeyboardEvent(0x53, true) && screenshots == 1 && !screenshot.PassThrough,
+        "captured screenshot requests the launcher without changing the input target");
+    screenshot.ProcessKeyboardEvent(0xA4, false);
+    Check(screenshot.ProcessKeyboardEvent(0x53, true) && screenshot.ProcessKeyboardEvent(0x53, false) && screenshots == 1,
+        "screenshot repeat and key-up remain consumed after a modifier release");
+    screenshot.ProcessKeyboardEvent(0xA2, false);
+    screenshot.SetPassThrough(true);
+    screenshot.ProcessKeyboardEvent(0xA2, true);
+    screenshot.ProcessKeyboardEvent(0xA4, true);
+    Check(!screenshot.ProcessKeyboardEvent(0x53, true) && screenshots == 1,
+        "local screenshot chord is left to the launcher registration, with no duplicate backend signal");
+
+    using var screenshotModifiers = new InputCapture { ScreenshotEnabled = true };
+    var extraScreenshots = 0;
+    screenshotModifiers.ScreenshotRequested += () => extraScreenshots++;
+    screenshotModifiers.ProcessKeyboardEvent(0xA2, true);
+    screenshotModifiers.ProcessKeyboardEvent(0xA4, true);
+    screenshotModifiers.ProcessKeyboardEvent(0xA0, true);
+    screenshotModifiers.ProcessKeyboardEvent(0x53, true);
+    screenshotModifiers.ProcessKeyboardEvent(0x53, false);
+    screenshotModifiers.ProcessKeyboardEvent(0xA0, false);
+    screenshotModifiers.ProcessKeyboardEvent(0x5C, true);
+    screenshotModifiers.ProcessKeyboardEvent(0x53, true);
+    Check(extraScreenshots == 0, "extra Shift or Windows modifiers prevent screenshot requests");
+    using var noChannel = new InputCapture();
+    var unexpectedScreenshots = 0;
+    noChannel.ScreenshotRequested += () => unexpectedScreenshots++;
+    noChannel.ProcessKeyboardEvent(0xA2, true);
+    noChannel.ProcessKeyboardEvent(0xA4, true);
+    noChannel.ProcessKeyboardEvent(0x53, true);
+    Check(unexpectedScreenshots == 0, "standalone capture without a launcher channel cannot request screenshots");
+
+    var eventName = @"Local\iDock.Screenshot." + Guid.NewGuid().ToString("N");
+    Check(CaptureSession.IsScreenshotEventName(eventName) && new string?[] {
+        null, "", @"Global\iDock.Screenshot." + Guid.NewGuid().ToString("N"),
+        @"Local\OtherApp", @"Local\iDock.Screenshot.not-a-guid", eventName + "suffix"
+    }.All(name => !CaptureSession.IsScreenshotEventName(name)),
+        "screenshot channel accepts only a local exact iDock GUID name");
+    var eventWarnings = new List<string>();
+    Check(CaptureSession.OpenScreenshotEvent(eventName, eventWarnings.Add) is null && eventWarnings.Count == 1,
+        "backend refuses a missing launcher event instead of creating one");
+    using var eventOwner = new EventWaitHandle(false, EventResetMode.AutoReset, eventName, out var createdNew);
+    Check(createdNew, "missing-channel probe did not create a named event");
+    using var eventClient = CaptureSession.OpenScreenshotEvent(eventName, eventWarnings.Add);
+    Check(eventClient is not null && eventClient.Set() && eventOwner.WaitOne(0) && !eventOwner.WaitOne(0),
+        "a launcher-owned screenshot event signals once and is auto-reset");
+    Check(CaptureSession.OpenScreenshotEvent(@"Global\iDock.Screenshot.invalid", eventWarnings.Add) is null && eventWarnings.Count == 2,
+        "invalid event names are rejected without opening an arbitrary channel");
+
+    var notified = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    var notificationCount = 0;
+    var requestPump = new CaptureSession.ScreenshotRequestPump(() => {
+        Interlocked.Increment(ref notificationCount);
+        notified.TrySetResult();
+    }, _ => throw new Exception("Unexpected screenshot notification failure"), CancellationToken.None);
+    requestPump.Request();
+    await notified.Task.WaitAsync(TimeSpan.FromSeconds(2));
+    Check(notificationCount == 1, "screenshot signaling runs on its own worker without a Bluetooth report pump");
+    await requestPump.DisposeAsync();
+    requestPump.Request();
+    Check(requestPump.Completion.IsCompletedSuccessfully && notificationCount == 1,
+        "closing the screenshot worker cancels waiting work and ignores requests after disposal");
+    using var screenshotCancellation = new CancellationTokenSource();
+    screenshotCancellation.Cancel();
+    await using var cancelledScreenshot = new CaptureSession.ScreenshotRequestPump(
+        () => throw new Exception("Cancelled screenshot worker must not signal"), _ => { }, screenshotCancellation.Token);
+    cancelledScreenshot.Request();
+    await cancelledScreenshot.Completion.WaitAsync(TimeSpan.FromSeconds(2));
+    Check(cancelledScreenshot.Completion.IsCompletedSuccessfully,
+        "an already-cancelled screenshot worker does not signal a stale launcher channel");
+
+    using var notificationGate = new ManualResetEventSlim();
+    var firstNotification = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    var secondNotification = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    var coalescedCount = 0;
+    var coalescingPump = new CaptureSession.ScreenshotRequestPump(() => {
+        if (Interlocked.Increment(ref coalescedCount) == 1)
+        {
+            firstNotification.TrySetResult();
+            if (!notificationGate.Wait(TimeSpan.FromSeconds(3))) throw new Exception("Screenshot test gate timed out");
+        }
+        else secondNotification.TrySetResult();
+    }, _ => { }, CancellationToken.None);
+    try
+    {
+        coalescingPump.Request();
+        await firstNotification.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        for (var i = 0; i < 1000; i++) coalescingPump.Request();
+        notificationGate.Set();
+        await secondNotification.Task.WaitAsync(TimeSpan.FromSeconds(2));
+    }
+    finally
+    {
+        notificationGate.Set();
+        await coalescingPump.DisposeAsync();
+    }
+    Check(coalescedCount == 2, "a busy screenshot worker coalesces bursts into at most one waiting request");
+}
+
 Console.WriteLine($"All {passed} hardware-free safety checks passed.");

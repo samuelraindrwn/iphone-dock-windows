@@ -4,7 +4,7 @@
 
 [Back to README](../../README.en.md) · [Installation](INSTALL.md) · [Usage](USAGE.md)
 
-Start with **Ctrl + Alt + Q** to return the input target to Windows. Separate video, Bluetooth, and pointer-mapping issues; change one setting at a time. Indonesian UI labels and their English meanings are included below. In 0.5.2, choose **Pengaturan → Bahasa / Settings → Language** to change the iDock interface language; released 0.5.1 is Indonesian-only.
+Start with **Ctrl + Alt + Q** to return the input target to Windows. Separate video, Bluetooth, and pointer-mapping issues; change one setting at a time. Indonesian UI labels and their English meanings are included below. Starting with 0.5.2, choose **Pengaturan → Bahasa / Settings → Language** to change the iDock interface language; 0.5.1 packages are Indonesian-only.
 
 Choose the matching symptom:
 
@@ -50,7 +50,7 @@ Distinguish these three stages when reading status and logs:
 | The receiver name does not appear on the device | Check mutual network reachability, Bonjour/discovery, client isolation, and the applicable rule profiles. |
 | The receiver name appears, but connection fails or there is no picture | Bonjour may discover the name even while receiver ports are blocked. Check the active network profile, permissions for the correct receiver path, and receiver logs at the time of the attempt. A launcher log that only records the process opening does not rule out a network issue. |
 
-The installer uses **Private/LocalSubnet** by default. Since 0.5.1, **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** can be selected during installation or by rerunning the installer; users do not need to build the app. This option is unchecked on a new installation. Read [its scope and how to revoke it](INSTALL.md): Public + Wireless + LocalSubnet applies only to the installed receiver, but persists across **all Public Wi-Fi networks**, not one SSID or an already trusted device.
+The installer preserves **Private/LocalSubnet**. **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** is checked by default on fresh **0.5.3** installations, remains visible, and can be unchecked. Upgrades retain the previous choice, including opt-out; if Public-network mirroring still fails, rerun Setup to review the actual saved choice rather than assuming upgrading enabled it. Users do not need to build the app. Read [its scope and how to revoke it](INSTALL.md): Public + Wireless + LocalSubnet applies only to the installed receiver, but persists across **all Public Wi-Fi networks**, not one SSID or an already trusted device.
 
 Do not automatically change Public to Private to try to fix mirroring. Existing Bonjour rules may apply to only one profile; changing profiles can exchange a video-connection issue for a discovery issue. The installer does not change the network profile, Bonjour services/rules, or global Firewall policy. Administrator block rules, organization policy, VPNs, and client isolation still require appropriate review; do not disable protections to bypass them.
 
@@ -60,11 +60,17 @@ On one iPhone 11/Windows 11 setup, the user confirmed successful mirroring with 
 
 `Connected` in general **Settings → Bluetooth** may represent a connection that does not carry HID reports. In iDock for Windows, click **Aktifkan kontrol** (Enable control), then find the laptop under **Settings → Accessibility → Touch → AssistiveTouch → Devices → Bluetooth Devices**. The **Device** menu in the floating AssistiveTouch button is not the pairing page.
 
-Once the input-report connection appears, **Ctrl + D + C** selects the device. Input intentionally stays on the laptop until the hotkey is pressed. Make sure AssistiveTouch is enabled and check the target shown by iDock for Windows.
+Once the input-report connection appears, use the displayed switch shortcut (**Ctrl + Alt + D** by default) to select the device. Input intentionally stays on the laptop until the hotkey is pressed. Make sure AssistiveTouch is enabled and check the target shown by iDock for Windows.
+
+## The iPhone/iPad onscreen keyboard does not appear
+
+The BLE keyboard connection is separate from the input target. Enabling control can make iOS/iPadOS recognize an external keyboard and hide the onscreen keyboard even before you select the device with a shortcut. This does not prove input has switched or mirroring has failed.
+
+Enable **Show Onscreen Keyboard** in the device's AssistiveTouch settings, then tap the text field again. See the [full steps and Apple reference](USAGE.md#the-device-onscreen-keyboard). **Ctrl + Alt + Q** only returns input routing to Windows; to stop control, use **Disable control** without deleting pairing. If the option is missing or the keyboard remains hidden, record the iOS/iPadOS version, app/text field, and behavior after stopping control. This guidance does not claim the issue on your device has been resolved.
 
 ## Bluetooth is not ready, Aborted, or access is denied
 
-Stop the control session before running **Cek Bluetooth** (Check Bluetooth); the diagnostic cannot run alongside another BLE HID instance.
+Click **Disable control** before running **Check Bluetooth**; the diagnostic cannot run alongside another BLE HID instance. Mirroring can stay running.
 
 - **Peripheral role: False:** the adapter/driver does not provide the required mode. Mirroring can still be used.
 - **LE/Peripheral role: True:** this is a reported capability, not a guarantee that advertising, pairing, or input will succeed.
@@ -74,13 +80,13 @@ Stop the control session before running **Cek Bluetooth** (Check Bluetooth); the
 
 Close iDock for Windows and any other BLE HID instances from their own apps. If it is safe for other Bluetooth devices currently in use, briefly turn Windows Bluetooth off and on; Bluetooth mice/headsets may disconnect. Open iDock for Windows and repeat the diagnostic. If it still fails, check the manufacturer's driver for your laptop/adapter model. Do not assume a driver update or a new adapter will definitely solve the problem.
 
-For reconnect failures, first restart the control session while retaining pairing: **Ctrl + Alt + Q → Hentikan sesi → Aktifkan kontrol** (Stop session → Enable control). Reopen mirroring if it was also stopped. If the problem persists, save the diagnostic results before considering re-pairing. Forgetting a pairing on the device requires pairing again; do this for the correct device, not every saved device. iDock for Windows does not automatically reset the radio or delete pairing.
+For reconnect failures, first restart the control session while retaining pairing: **Ctrl + Alt + Q → Disable control → Enable control**. Mirroring stays running; use **Stop session** when you want to stop both. If the problem persists, save the diagnostic results before considering re-pairing. Forgetting a pairing on the device requires pairing again; do this for the correct device, not every saved device. iDock for Windows does not automatically reset the radio or delete pairing.
 
 ### Existing connection verified; Bluetooth advertising not ready
 
 The Indonesian warning **“koneksi lama terverifikasi; iklan Bluetooth belum siap”** in version 0.5 means Windows still reports `Aborted / Success`, but a narrow existing-connection check passed: protection was configured as `EncryptionRequired`, the same device's keyboard and mouse had active sessions, and two neutral reports were successfully sent through the API before the connection was checked again. The check is limited to 10 seconds; neutral reports contain no typing, clicks, movement, or scrolling.
 
-This is **not** proof of over-the-air encryption, input being received by the device app, or recovered Bluetooth advertising. Input remains local until **Ctrl + D + C** is pressed. Verify with a simple interaction in a test app, not an important document. If the required connection is lost, input returns locally and control must be restarted; do not wait for an automatic switch after reconnecting.
+This is **not** proof of over-the-air encryption, input being received by the device app, or recovered Bluetooth advertising. Input remains local until the active switch shortcut (**Ctrl + Alt + D** by default) is pressed. Verify with a simple interaction in a test app, not an important document. If the required connection is lost, input returns locally and control must be restarted; do not wait for an automatic switch after reconnecting.
 
 To test whether the problem has actually improved, use the [0.5 stability checklist](STABILITY-TESTS.md). Its targets of 20 cycles and a 1–2 hour session do not mean those tests have already passed on a user's device.
 
@@ -89,11 +95,23 @@ To test whether the problem has actually improved, use the [0.5 stability checkl
 **Ctrl + Alt + Q** requests a switch to the Windows input target. The switch does not yet have a response-time guarantee when a Bluetooth operation stalls; stop sending movement or text if the target is unclear.
 
 1. Release mouse buttons and keyboard keys, then try **Ctrl + Alt + Q** once.
-2. If you can still operate Windows, click **Hentikan sesi** (Stop session) or close iDock. Closing the app stops the control process started by that session.
+2. If you can still operate Windows, click **Disable control** to keep mirroring, **Stop session** to stop both, or close iDock. Closing the app stops the control process started by that session.
 3. If needed, open **Ctrl + Alt + Delete → Task Manager**. If you can operate Task Manager, end only the `iDock.exe` being used for testing; do not terminate Windows services or other Bluetooth processes in bulk.
 4. Do not continue testing with important documents. Note whether input recovered after closing the app, then report the reproduction steps and relevant logs.
 
 Test input switching with non-sensitive data before relying on it in your everyday workflow. Stuck input is a stability failure, not behavior to ignore.
+
+## A new shortcut does not work
+
+Check the **active** combination shown in Guide and shortcut settings. A newly saved choice applies after **Disable control → Enable control**; if the process has already stopped, choose **Enable control** directly. Mirroring does not need to stop. **Ctrl + Alt + D** is the default, not a replacement for every custom binding.
+
+Use Ctrl or Alt (Shift is optional), release Windows keys, and avoid shortcuts already used by Windows/other apps. Esc and switching windows cancel recording. **Ctrl + Alt + Q**, including with Shift, remains the return-to-Windows shortcut; **Ctrl + Alt + S** remains the screenshot shortcut. An invalid/unreadable file produces a default-binding warning; correct it through the UI and restart control. A failed save is not reported as a successful change.
+
+## A screenshot fails or looks blank
+
+Make sure **AirPlay Video Stream** is actually displaying video and is not minimized. Wait for rotation/resizing to finish, then use **Ctrl + Alt + S** or **Take screenshot**. If hotkey registration fails because another application uses it, use the button; this does not prove mirroring is broken. Choose **Open screenshot folder** to find output in the [data location](INSTALL.md#data-locations).
+
+Capture needs Windows Graphics Capture/GPU support. Windows policy, a changed/closed window, multiple candidate windows, or no frame can cause failure. Protected content may be blank; iDock does not bypass protection or fall back to capturing the whole desktop. If output cannot be written, check permissions/disk space and the path in the status; do not run as Administrator just to hide a storage problem. Attach redacted logs and the renderer/window size when reporting an issue.
 
 ## Movement or video feels delayed
 

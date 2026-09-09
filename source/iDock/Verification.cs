@@ -29,6 +29,9 @@ internal static class Verification
         UiVerification.Run(Check);
         MirrorLifecycleVerification.Run(Check);
         LocalizationVerification.Run(Check);
+        HotkeyVerification.Run(Check);
+        SessionActionVerification.Run(Check);
+        ScreenshotCaptureVerification.Run(Check);
 
         var assembly = typeof(App).Assembly;
         Check(assembly.GetName().Name == "iDock",

@@ -23,10 +23,10 @@ Mirroring/control does not require a companion app on the device, a Mac, a jailb
 
 Download only from the [project repository's GitHub Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest). For everyday use, choose an installer or portable asset, **not** the automatically generated **Source code** links. If the version mentioned in this guide has not been published, use an available release or wait for the next package. [Manual builds](DEVELOPMENT.md) remain available for developers; installer users do not need to build the application.
 
-For version 0.5.2, the installer is named `iDock-Setup-0.5.2-win-x64.exe`; use this example only if that version is available on Releases. Also download `SHA256SUMS.txt` from the same release. In PowerShell, navigate to the appropriate download folder and calculate the hash:
+For version 0.5.3, the installer is named `iDock-Setup-0.5.3-win-x64.exe`; use this example only if that version is available on Releases. Also download `SHA256SUMS.txt` from the same release. In PowerShell, navigate to the appropriate download folder and calculate the hash:
 
 ```powershell
-Get-FileHash -LiteralPath '.\iDock-Setup-0.5.2-win-x64.exe' -Algorithm SHA256
+Get-FileHash -LiteralPath '.\iDock-Setup-0.5.3-win-x64.exe' -Algorithm SHA256
 Get-Content -LiteralPath '.\SHA256SUMS.txt'
 ```
 
@@ -37,7 +37,7 @@ The installer is currently **not digitally signed**. Windows may show an unknown
 ## Install using the installer
 
 1. Close any active iDock session: **Ctrl + Alt + Q → Stop session** (**Hentikan sesi** in Indonesian), then close the application and choose Quit from UxPlay's system tray menu if it is still running.
-2. Run the verified installer. Review the Windows permission prompt and installer pages. The optional **Public Wi-Fi** permission is unchecked on a new installation; read [its explanation](#public-wi-fi-permission) before selecting it.
+2. Run the verified installer. Review the Windows permission prompt and installer pages. In 0.5.3, the optional **Public Wi-Fi permission is checked by default on fresh installations** and can still be unchecked; read [its explanation](#public-wi-fi-permission) before proceeding. Upgrades preserve the previous selection, including an opt-out.
 3. The application is installed in **`%ProgramFiles%\iDock`**, usually `C:\Program Files\iDock`. Personal data is stored separately in `%LOCALAPPDATA%\iDock`, not in Program Files.
 4. When installation finishes, open **iDock for Windows** from the Start Menu using a regular user account.
 5. Follow [First connection](#first-connection). Installing the launcher does not prove that the Bluetooth adapter or device connection is ready.
@@ -50,11 +50,13 @@ The installer preserves two receiver rules for the **Private profile and LocalSu
 
 Windows may classify your home Wi-Fi as **Public**. The receiver name may be visible through Bonjour while the video connection is still blocked because the receiver is allowed only on the Private profile. The Public classification alone does not establish whether a network is safe or unsafe; make sure you trust the network and the other devices on it.
 
-If you will use mirroring on trusted Wi-Fi classified as Public, select **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** when running installer 0.5.1 or later with this option. This option is **unchecked on a new installation**; a previous choice may be remembered during an upgrade. It adds inbound TCP/UDP permission only for the installed `vendor\uxplay\uxplay-windows.exe`, on the **Public** profile, **Wireless** interface type, and **LocalSubnet** remote addresses, without edge traversal. It does not open access to Bluetooth, every application, Public Ethernet, or the Domain profile.
+Review **Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)** during installation. In **0.5.3, it is checked by default on fresh installations**, remains visible, and can be unchecked before proceeding. **Upgrades preserve the previous choice, including an earlier unchecked selection**; do not assume upgrading automatically enables it. This differs from 0.5.1/0.5.2 installers, which left it unchecked on fresh installations. When selected, it adds inbound TCP/UDP permission only for the installed `vendor\uxplay\uxplay-windows.exe`, on the **Public** profile, **Wireless** interface type, and **LocalSubnet** remote addresses, without edge traversal. It does not open access to Bluetooth, every application, Public Ethernet, or the Domain profile.
 
 **The permission persists across all Wi-Fi networks classified as Public**, including networks you connect to later. It is not restricted to the current SSID and does not authenticate trusted devices. Run the receiver only on networks you trust. LocalSubnet restricts where connections originate, but does not prove that a peer is safe. Do not enable this option to bypass workplace or school network policy.
 
 To revoke the additional permission, close the session, run the installer for your current version again, and clear the checkbox. The installer removes only `iDock.AirPlay.TCP.PublicWireless.v1` and `iDock.AirPlay.UDP.PublicWireless.v1` rules that still exactly match its ownership definition. If an administrator has changed a rule or its name is ambiguous, the installer requests a review instead of forcibly deleting it. Private rules are preserved.
+
+**For administrators deploying without the wizard:** on fresh 0.5.3 installations, `/SILENT` or `/VERYSILENT` also inherits the selected Public Wi-Fi default. To opt out explicitly without replacing other task choices, add `/MERGETASKS="!publicwifi"` to the installer arguments. It applies after previous choices are restored, so it also opts out during upgrades. This is deployment guidance for administrator review, not an instruction to run the installer automatically. [Official Inno Setup parameters](https://jrsoftware.org/ishelp/topic_setupcmdline.htm).
 
 This option does not fix client isolation, administrator block rules, or an unsuitable Bonjour configuration. Do not automatically change a Public profile to Private: existing Bonjour rules may use a different profile, which could stop device discovery. Check the [discovery and video paths separately](TROUBLESHOOTING.md#receiver-not-found-or-video-not-connecting).
 
@@ -77,7 +79,8 @@ Choose the portable location before starting mirroring for the first time: Bonjo
 3. If a Windows Firewall prompt appears, allow the correct component only on the trusted network you are using. Do not open access to every application or disable the Firewall.
 4. On the device, choose **Control Center → Screen Mirroring → uxplay-windows**. Confirm that video appears in a separate window.
 5. For input, click **Enable control** (**Aktifkan kontrol**), then pair the laptop through **Settings → Accessibility → Touch → AssistiveTouch → Devices → Bluetooth Devices** on the device.
-6. Once the input connection is available, use **Ctrl + D + C** to select the device and **Ctrl + Alt + Q** to return to Windows. See [Usage](USAGE.md) for the key sequence and input target behavior.
+6. Once the input connection is available, use the displayed switch shortcut (**Ctrl + Alt + D** by default) to select the device and **Ctrl + Alt + Q** to return to Windows. See [Usage](USAGE.md) for shortcut settings, **Disable control**, and **Ctrl + Alt + S** screenshots.
+7. If the device's onscreen keyboard stays hidden after BLE connects, enable **Show Onscreen Keyboard** in the device's AssistiveTouch settings, then tap a text field. Input targeting Windows does not mean the external keyboard is disconnected; see the [onscreen keyboard guide](USAGE.md#the-device-onscreen-keyboard).
 
 ## Data locations
 
@@ -88,10 +91,14 @@ Starting with source version 0.5.2, choose **Settings → Language → Bahasa In
 | Application | `%ProgramFiles%\iDock` | Selected package folder |
 | Language preference (0.5.2) | `%LOCALAPPDATA%\iDock\data\ui-settings.json` | `data\ui-settings.json` in the package folder |
 | Pointer settings | `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json` | `data\blehid\pointer-settings.json` in the package folder |
+| Switch shortcut (0.5.3) | `%LOCALAPPDATA%\iDock\data\blehid\hotkey-settings.json` | `data\blehid\hotkey-settings.json` in the package folder |
+| PNG screenshots (0.5.3) | `%LOCALAPPDATA%\iDock\data\screenshots` | `data\screenshots` in the package folder |
 | Launcher/diagnostic logs | `%LOCALAPPDATA%\iDock\logs` | `logs` in the package folder |
 | Backend data and logs | `%LOCALAPPDATA%\iDock\data\blehid` | `data\blehid` in the package folder |
 
 Bluetooth pairing is managed by Windows and the device. UxPlay video settings are stored in the Windows user profile, separately from iDock's pointer settings. Scroll to **Diagnostics** (**Diagnostik**), below **Settings** (**Pengaturan**), then select **Open logs** (**Buka log**) to open the log location for the current mode.
+
+Screenshots are not uploaded automatically and remain private user data. Review images before sharing them; do not add `data\screenshots` to public source. Updating or uninstalling the app is not intended to delete user settings or screenshots.
 
 ## Upgrading, moving folders, and uninstalling
 
@@ -99,7 +106,7 @@ Bluetooth pairing is managed by Windows and the device. UxPlay video settings ar
 
 Return input to Windows, close iDock/UxPlay, then run the next version's installer from a verified source. Use the same installation path and back up `%LOCALAPPDATA%\iDock` if you want a copy of settings/logs. Do not use an active installation folder as a developer build output directory.
 
-Review the Public Wi-Fi selection each time you run Setup: it is unchecked on a new installation, but a previous choice may be remembered during upgrades or reinstalls. Clearing the checkbox revokes Public rules still exactly owned by the installer; Private rules remain. If the computer uses a custom repair from a support session, do not assume the upgrade removes it. The computer owner needs to review and manually clean up only those repair rules before evaluating a new package's test results; see [release test preparation](RELEASING.md#pre-publication-checklist).
+Review the Public Wi-Fi selection each time you run Setup: in 0.5.3 it is checked by default on fresh installations, but previous choices are retained during upgrades or repeat Setup runs, including an opt-out. Clearing the checkbox revokes Public rules still exactly owned by the installer; Private rules remain. If the computer uses a custom repair from a support session, do not assume the upgrade removes it. The computer owner needs to review and manually clean up only those repair rules before evaluating a new package's test results; see [release test preparation](RELEASING.md#pre-publication-checklist).
 
 ### Upgrade a portable package or migrate the application name
 

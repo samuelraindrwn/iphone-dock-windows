@@ -26,10 +26,10 @@ Seluruh kontrol berada dalam satu halaman. Mulai dari bagian atas dan gulir ke b
 | --- | --- | --- |
 | 1 | **Panduan** | Tiga langkah koneksi pertama serta nama laptop untuk pairing. |
 | 2 | **Layar perangkat** dan **Mouse & keyboard** | Kartu untuk memulai mirroring/kontrol dan melihat status koneksi masing-masing. |
-| 3 | **Pengaturan pointer** | Sensitivitas dan orientasi pointer. |
+| 3 | **Pengaturan** | Bahasa, sensitivitas, dan orientasi pointer. |
 | 4 | **Diagnostik** | Status pemeriksaan dan log sesi; **Buka log** membuka folder log lokal. |
 
-Ringkasan pintasan ditampilkan di bagian atas: **Ctrl + D + C** mengalihkan target input dan **Ctrl + Alt + Q** mengembalikannya ke Windows. Tidak ada menu samping atau halaman terpisah yang perlu dibuka.
+Ringkasan di bagian atas menunjukkan pintasan alih target yang aktif (**Ctrl + Alt + D** secara default), **Ctrl + Alt + Q** untuk kembali ke Windows, serta **Ctrl + Alt + S** untuk screenshot. Tidak ada menu samping atau halaman terpisah yang perlu dibuka.
 
 Footer tetap di bagian bawah jendela menampilkan nama/versi aplikasi, tautan **GitHub** ke repository, dan **Laporkan masalah** ke halaman Issues. Sebelum membuat laporan, periksa serta samarkan informasi pribadi pada log atau screenshot yang akan dilampirkan.
 
@@ -39,13 +39,13 @@ Gunakan Tab untuk berpindah kontrol, tombol panah pada pilihan/slider, serta Ent
 
 1. Buka **iDock for Windows** melalui Start Menu; untuk portable, buka `iDock.exe` dari folder paket tetap.
 2. Pada kartu **Layar perangkat** di bawah **Panduan**, klik **Buka mirroring**. Di perangkat pilih **Control Center → Screen Mirroring → uxplay-windows**.
-3. Klik **Aktifkan kontrol**, tunggu perangkat input tersambung, lalu tekan **Ctrl + D + C** untuk memilih perangkat.
+3. Klik **Aktifkan kontrol**, tunggu perangkat input tersambung, lalu gunakan pintasan alih target yang ditampilkan (**Ctrl + Alt + D** secara default) untuk memilih perangkat.
 4. Buka aplikasi yang ingin diuji. Letakkan jendela video UxPlay di samping editor.
 5. Untuk kembali mengetik di editor atau mengubah pengaturan iDock for Windows, tekan **Ctrl + Alt + Q**.
 
 Video dan kontrol adalah dua koneksi berbeda. Keduanya bisa dipakai terpisah. Tulisan receiver dibuka berarti proses video sudah dimulai, bukan konfirmasi bahwa perangkat telah mengirim gambar.
 
-Jika nama receiver terlihat tetapi gambar tidak tersambung, periksa [profil jaringan dan izin receiver](TROUBLESHOOTING.md#receiver-tidak-muncul-atau-video-tidak-tersambung). Installer 0.5.1 menyediakan pilihan Public Wi-Fi tanpa manual build; pahami [cakupan dan cara mencabutnya](INSTALL.md#izin-wi-fi-public) sebelum memilih.
+Jika nama receiver terlihat tetapi gambar tidak tersambung, periksa [profil jaringan dan izin receiver](TROUBLESHOOTING.md#receiver-tidak-muncul-atau-video-tidak-tersambung). Installer 0.5.3 mencentang pilihan Public Wi-Fi secara default pada instalasi baru, tetapi upgrade tetap memakai pilihan sebelumnya termasuk opt-out. Opsi tetap dapat dihilangkan centangnya; pahami [cakupan dan cara mencabutnya](INSTALL.md#izin-wi-fi-public) sebelum melanjutkan.
 
 ## Kontrol mouse dan keyboard
 
@@ -55,22 +55,36 @@ Untuk pairing pertama:
 2. Klik **Aktifkan kontrol**.
 3. Di aplikasi **Settings perangkat**, buka **Accessibility → Touch → AssistiveTouch**, lalu aktifkan AssistiveTouch.
 4. Masih pada halaman pengaturan AssistiveTouch, buka **Devices → Bluetooth Devices**, pilih nama laptop yang ditampilkan iDock for Windows, lalu selesaikan konfirmasi pairing yang muncul. Ini menu di Settings, **bukan** tombol **Device** pada menu AssistiveTouch yang mengambang di layar. Jalur ini sesuai [panduan perangkat pointer Apple](https://support.apple.com/en-us/111775).
-5. Setelah koneksi input tersedia, gunakan **Ctrl + D + C**: tekan dan tahan Ctrl serta D, tekan C, lalu lepaskan semua tombol. Periksa status target di iDock sebelum menggerakkan pointer atau mengetik.
+5. Setelah koneksi input tersedia, gunakan pintasan alih target yang aktif (**Ctrl + Alt + D** secara default). Periksa status target di iDock sebelum menggerakkan pointer atau mengetik.
 
 Nama menu perangkat pada panduan mengikuti tampilan berbahasa Inggris. Terjemahan dan letaknya dapat berbeda menurut bahasa serta versi iOS/iPadOS.
 
 Input awal tetap ke Windows, bukan langsung dialihkan saat pairing. Status `Connected` pada Bluetooth umum perangkat tidak cukup: iDock for Windows memerlukan koneksi HID keyboard/mouse.
 
-Jika muncul **“koneksi lama terverifikasi; iklan Bluetooth belum siap”**, versi 0.5 memakai koneksi HID lama setelah pemeriksaan terbatas; advertising belum dinyatakan pulih. Pilih perangkat hanya dengan sengaja memakai hotkey, lalu coba interaksi ringan. Jika koneksi ini hilang dan sesi dinyatakan gagal, **restart kontrol** melalui **Hentikan sesi → Aktifkan kontrol**; buka mirroring kembali bila ikut berhenti. Tidak ada reset radio atau penghapusan pairing otomatis. Rincian dan batas pemeriksaannya ada di [troubleshooting](TROUBLESHOOTING.md#koneksi-lama-terverifikasi-iklan-bluetooth-belum-siap).
+Jika muncul **“koneksi lama terverifikasi; iklan Bluetooth belum siap”**, versi 0.5 memakai koneksi HID lama setelah pemeriksaan terbatas; advertising belum dinyatakan pulih. Pilih perangkat hanya dengan sengaja memakai hotkey, lalu coba interaksi ringan. Jika koneksi ini hilang dan sesi dinyatakan gagal, **restart kontrol** melalui **Nonaktifkan kontrol → Aktifkan kontrol** bila prosesnya masih berjalan; bila sudah berhenti, langsung **Aktifkan kontrol**. Mirroring tidak perlu dihentikan. Tidak ada reset radio atau penghapusan pairing otomatis. Rincian dan batas pemeriksaannya ada di [troubleshooting](TROUBLESHOOTING.md#koneksi-lama-terverifikasi-iklan-bluetooth-belum-siap).
 
 | Kontrol | Fungsi |
 | --- | --- |
-| **Ctrl + D + C** | Berpindah target input; dengan satu perangkat, berpindah antara laptop dan perangkat. |
+| **Pintasan alih target** (default **Ctrl + Alt + D**) | Berpindah target input; dengan satu perangkat, berpindah antara laptop dan perangkat. |
 | **Ctrl + Alt + Q** | Mengembalikan target input ke Windows tanpa menghentikan sesi kontrol. |
 | Gerakan mouse | Menggerakkan pointer perangkat secara relatif. |
 | Klik kiri / tahan dan gerakkan | Klik / drag sesuai pemetaan tombol AssistiveTouch. |
 | Roda mouse | Scroll pada aplikasi yang mendukungnya. |
 | Keyboard | Mengetik pada kolom yang sedang fokus di perangkat. |
+
+### Keyboard layar perangkat
+
+Saat kontrol Bluetooth tersambung, iPhone/iPad mengenali keyboard eksternal meskipun target input iDock masih Windows. Karena itu keyboard layar dapat tidak muncul sebelum pintasan alih target ditekan. **Ctrl + Alt + Q** mengubah tujuan input, bukan melepas koneksi keyboard BLE.
+
+Jika tetap ingin mengetik lewat layar perangkat, pada perangkat buka **Settings → Accessibility → Touch → AssistiveTouch**, aktifkan **Show Onscreen Keyboard**, lalu ketuk kolom teks lagi. Apple mendokumentasikan opsi ini untuk penggunaan pointer saat keyboard tersambung. Nama/letak menu dapat berbeda menurut bahasa atau versi OS; ini setelan perangkat yang Anda ubah sendiri, bukan perubahan otomatis oleh iDock. [Panduan resmi Apple](https://support.apple.com/en-ie/111775).
+
+### Mengubah pintasan
+
+Klik **Ubah pintasan** di bagian Panduan untuk membuka jendela pengaturan pintasan. Klik **Rekam pintasan**, tekan kombinasi yang diinginkan, lalu periksa status penyimpanan sebelum menutup jendela. Kombinasi memerlukan **Ctrl atau Alt**, boleh ditambah Shift, bersama satu tombol yang didukung. Shift saja, tombol Windows, Esc sebagai pemicu, dan kombinasi yang tidak didukung ditolak. Esc membatalkan rekaman; berpindah ke jendela lain juga membatalkannya.
+
+Pintasan baru berlaku **saat kontrol dijalankan berikutnya**. Jika kontrol sedang aktif, tekan **Ctrl + Alt + Q**, klik tombol merah **Nonaktifkan kontrol**, lalu **Aktifkan kontrol**. Mirroring tetap berjalan. Panduan tetap menampilkan pintasan sesi yang sedang aktif; dialog membedakan pintasan aktif dari yang disimpan untuk sesi berikutnya. Setelan yang gagal disimpan tidak dianggap berhasil.
+
+**Ctrl + Alt + Q** tidak dapat diubah dan tidak dapat dipilih sebagai pintasan alih target, termasuk varian dengan Shift. **Ctrl + Alt + S** dicadangkan untuk screenshot. Hindari kombinasi milik aplikasi lain: pengaturan alih target tidak dapat mendeteksi seluruh konflik shortcut sistem/aplikasi. **Kembalikan default** memilih Ctrl + Alt + D untuk sesi berikutnya.
 
 Posisi pointer perangkat tidak dipetakan satu-ke-satu ke posisi kursor Windows di jendela video. Mengklik koordinat tertentu di jendela UxPlay saja bukan mekanisme injeksi sentuhan; pilih target perangkat dengan hotkey, lalu lihat pointer perangkat saat bergerak. Gestur multitouch bukan fitur yang dijanjikan.
 
@@ -78,21 +92,35 @@ Jika lebih dari satu host HID tersambung, backend memiliki siklus pemilihan targ
 
 Jika hotkey tidak mengembalikan input, hentikan pengiriman input dan ikuti [pemulihan input Windows](TROUBLESHOOTING.md#input-tidak-kembali-ke-windows). Waktu respons hotkey belum dijamin ketika operasi Bluetooth macet.
 
+## Screenshot layar perangkat
+
+Mulai **0.5.3**, sambungkan Screen Mirroring dan biarkan jendela **AirPlay Video Stream** terbuka (jangan minimize). Tekan **Ctrl + Alt + S** atau klik **Ambil screenshot** pada kartu **Layar perangkat**. Hotkey bekerja saat input di laptop maupun saat kontrol perangkat aktif. Screenshot tidak memerlukan Bluetooth jika hanya mirroring yang digunakan.
+
+Hasilnya adalah **PNG dari tampilan video di laptop**, bukan screenshot asli yang masuk ke Photos iPhone/iPad. Ukurannya mengikuti area video yang dirender; kualitas mengikuti stream AirPlay. Judul/bingkai Windows dan kursor Windows tidak disertakan, tetapi bilah hitam serta pointer AssistiveTouch yang sudah menjadi bagian stream dapat ikut tersimpan.
+
+- Klik **Buka folder screenshot** untuk melihat hasil. Instalasi menyimpan ke `%LOCALAPPDATA%\iDock\data\screenshots`; portable/build manual ke `data\screenshots` di folder paket.
+- Nama file unik; pengambilan berikutnya tidak menimpa screenshot sebelumnya. Status menampilkan path hasil atau alasan gagal.
+- Penangkapan hanya menargetkan jendela video milik sesi iDock ini, bukan seluruh desktop atau aplikasi lain yang menutupinya. Tidak ada unggahan atau penyalinan clipboard otomatis.
+- Jika minimize, video belum ada, berganti orientasi/ukuran saat diambil, Windows menolak capture, atau ada lebih dari satu calon jendela video, pulihkan tampilan lalu coba kembali. Jangan mengandalkan screenshot konten terlindungi; konten tersebut dapat kosong/tidak tersedia.
+- Windows dapat menampilkan indikator/bingkai capture. Jika Ctrl + Alt + S dipakai aplikasi lain dan tidak dapat didaftarkan, gunakan tombol **Ambil screenshot**. Lepas semua tombol sebelum menekan shortcut lagi; menahan shortcut tidak membuat screenshot berulang.
+
+Screenshot berpotensi memuat data sensitif dari HP. Periksa sebelum membagikan. Folder screenshot tidak ikut paket rilis dan tidak dihapus ketika sesi berakhir atau aplikasi di-uninstall.
+
 ## Sensitivitas pointer
 
-Gulir ke bagian **Pengaturan pointer**. Slider **Sensitivitas pointer** mengatur jarak gerakan, bukan latensi atau FPS:
+Gulir ke bagian **Pengaturan**. Slider **Sensitivitas pointer** mengatur jarak gerakan, bukan latensi atau FPS:
 
 - Rentang **0.25×–3.00×**; **1.00×** adalah normal.
 - Nilai di bawah 1 memperlambat gerakan; nilai di atas 1 mempercepatnya.
 - **Reset** mengembalikan sensitivitas ke 1.00× tanpa menghapus orientasi.
 
-Untuk mencoba: **Ctrl + Alt + Q → ubah slider → tunggu “Tersimpan” → Ctrl + D + C**. Coba 0.75× untuk target kecil atau 1.25× jika gerakan terasa terlalu pendek. Tidak perlu restart atau pairing ulang.
+Untuk mencoba: **Ctrl + Alt + Q → ubah slider → tunggu “Tersimpan” → pintasan alih target yang aktif**. Coba 0.75× untuk target kecil atau 1.25× jika gerakan terasa terlalu pendek. Tidak perlu restart atau pairing ulang.
 
 Antarmuka menyimpan setelah jeda perubahan sekitar 200 ms; backend membaca pembaruan setiap 250 ms. Perubahan biasanya diterapkan dalam sekitar setengah detik, bukan jaminan waktu real-time. Hanya X/Y pointer yang dikalikan; klik, keyboard, roda, dan interval pengiriman Bluetooth tetap sama.
 
 ## Portrait dan landscape
 
-Pada bagian **Pengaturan pointer**, gunakan **Orientasi kontrol** untuk mengoreksi arah pointer setelah layar perangkat diputar:
+Pada bagian **Pengaturan**, gunakan **Orientasi kontrol** untuk mengoreksi arah pointer setelah layar perangkat diputar:
 
 | Posisi perangkat | Pilihan |
 | --- | --- |
@@ -108,6 +136,8 @@ Kembalikan input ke laptop, pilih orientasi, tunggu tersimpan, lalu pilih perang
 Rotasi belum otomatis. Setelah perangkat ditegakkan kembali, pilih Portrait lagi. Uji gerakan ke kanan dan ke atas sambil melihat layar perangkat asli. Transformasi arah sudah diperiksa otomatis, tetapi kecocokan orientasi/arah pada perangkat nyata tetap perlu dikonfirmasi. Jika koreksinya berlawanan, coba pilihan landscape satunya.
 
 ## Mengakhiri sesi
+
+Untuk menghentikan **kontrol saja**, lepaskan tombol yang ditahan, tekan **Ctrl + Alt + Q**, lalu klik tombol merah **Nonaktifkan kontrol**. Input tetap di laptop, mirroring terus berjalan, dan pairing/pengaturan tidak dihapus. Tombol berubah kembali menjadi **Aktifkan kontrol**. Warna merah berarti proses kontrol sesi ini berjalan, bukan bukti perangkat HID sudah tersambung; periksa status di atasnya.
 
 Lepaskan tombol mouse/keyboard yang sedang ditahan, tekan **Ctrl + Alt + Q**, lalu klik **Hentikan sesi** atau tutup iDock for Windows. Proses receiver/kontrol yang dimulai iDock for Windows beserta turunannya dihentikan. Proses aplikasi lain tidak ditargetkan.
 

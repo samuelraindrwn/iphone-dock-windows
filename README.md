@@ -20,7 +20,7 @@ Jalankan installer, tinjau permintaan izin Windows, lalu buka **iDock for Window
 
 Installer belum ditandatangani secara digital. Periksa asal unduhan, versi, dan checksum sebelum menjalankannya; jangan menonaktifkan SmartScreen, antivirus, atau Firewall. Lihat [verifikasi unduhan](docs/INSTALL.md#verifikasi-unduhan).
 
-Secara default izin receiver hanya berlaku pada jaringan **Private/LocalSubnet**. Installer 0.5.1 menyediakan pilihan tambahan untuk **Wi-Fi berprofil Public**, tidak dicentang pada instalasi baru. Aktifkan hanya setelah memahami [cakupan izin jaringan](docs/INSTALL.md#izin-wi-fi-public): izin berlaku pada semua Wi-Fi Public, bukan hanya nama jaringan saat pemasangan. Profil jaringan, Bonjour, dan Bluetooth tidak diubah.
+Installer mempertahankan izin receiver **Private/LocalSubnet**. Pada **0.5.3**, pilihan tambahan **Wi-Fi berprofil Public dicentang secara default pada instalasi baru**; pilihan tetap terlihat dan dapat dihilangkan centangnya. Upgrade mempertahankan pilihan terdahulu, termasuk jika sebelumnya dinonaktifkan. Tinjau [cakupan izin jaringan](docs/INSTALL.md#izin-wi-fi-public) sebelum melanjutkan: hanya receiver yang dipasang, **Public + Wireless + LocalSubnet**, tetapi berlaku pada semua Wi-Fi Public, bukan hanya nama jaringan saat pemasangan. Hilangkan centang jika tidak ingin memberi izin tersebut. Profil jaringan, Bonjour, dan Bluetooth tidak diubah.
 
 ### 2. Tampilkan layar perangkat
 
@@ -36,24 +36,31 @@ Nama receiver yang muncul di perangkat belum membuktikan jalur video dapat tersa
 
 1. Nyalakan Bluetooth Windows dan perangkat, lalu klik **Aktifkan kontrol** pada kartu **Mouse & keyboard**.
 2. Di aplikasi **Settings** perangkat, buka **Accessibility → Touch → AssistiveTouch**, aktifkan, lalu pilih **Devices → Bluetooth Devices**. Pasangkan nama laptop yang ditampilkan pada **Panduan** iDock.
-3. Setelah koneksi input tersedia, tekan dan tahan **Ctrl + D**, tekan **C**, lalu lepaskan semua tombol. Periksa target sebelum menggerakkan pointer atau mengetik.
-4. Gunakan **Ctrl + Alt + Q** untuk mengembalikan input ke Windows. Gulir ke **Pengaturan pointer** untuk mencoba sensitivitas dan orientasi pointer.
+3. Setelah koneksi input tersedia, gunakan pintasan alih target yang ditampilkan aplikasi (**Ctrl + Alt + D** secara default). Periksa target sebelum menggerakkan pointer atau mengetik.
+4. Gunakan **Ctrl + Alt + Q** untuk mengembalikan input ke Windows. Gulir ke **Pengaturan** untuk mencoba sensitivitas, orientasi pointer, dan bahasa.
+
+Pintasan alih target dapat diubah melalui **Ubah pintasan** di bagian Panduan; **Ctrl + Alt + Q** tetap dan tidak dapat diubah. Perubahan berlaku setelah kontrol dinonaktifkan lalu diaktifkan lagi; mirroring tidak perlu dihentikan. Lihat [mengubah pintasan](docs/USAGE.md#mengubah-pintasan).
+
+Pada **0.5.3**, tombol merah **Nonaktifkan kontrol** menghentikan mouse/keyboard tanpa menutup mirroring. **Ctrl + Alt + S** atau tombol **Ambil screenshot** menyimpan tampilan perangkat sebagai PNG lokal; lihat [cara pakai](docs/USAGE.md). Dokumentasi ini mengikuti source 0.5.3; periksa versi installer yang tersedia di Releases.
 
 Halaman pairing berada di **Settings**, bukan menu AssistiveTouch yang mengambang. Status Bluetooth umum `Connected` belum membuktikan mouse/keyboard HID tersambung. [Panduan penggunaan lengkap](docs/USAGE.md) menjelaskan status, hotkey, dan pemulihan koneksi.
 
 ## Fitur
 
-- Antarmuka terang satu halaman: **Panduan** di atas, diikuti kartu mirroring/kontrol, **Pengaturan pointer**, dan **Diagnostik**. Semua bagian dapat dicapai dengan menggulir.
+- Antarmuka terang satu halaman: **Panduan** di atas, diikuti kartu mirroring/kontrol, **Pengaturan**, dan **Diagnostik**. Semua bagian dapat dicapai dengan menggulir.
 - Mirroring AirPlay di jendela terpisah melalui UxPlay Windows.
 - Menutup jendela video **AirPlay Video Stream** mengakhiri sesi mirroring/kontrol setelah jeda singkat; minimize tidak. Lihat [perilaku penutupan sesi](docs/USAGE.md#mengakhiri-sesi).
 - Pointer relatif, klik, drag, scroll, dan keyboard melalui Bluetooth HID.
+- Pintasan alih target yang dapat diatur, dengan pintasan kembali ke Windows yang tetap.
+- Tombol merah **Nonaktifkan kontrol** tanpa memutus mirroring.
+- Screenshot PNG lokal melalui **Ctrl + Alt + S**, tanpa mengambil seluruh desktop.
 - Sensitivitas pointer **0.25×–3.00×** yang tersimpan otomatis.
 - Koreksi arah **portrait/landscape manual**, tanpa pairing ulang.
 - Pemeriksaan Bluetooth dan log lokal untuk membantu diagnosis.
 
 ### Bahasa aplikasi
 
-Pada build **0.5.2**, buka **Pengaturan → Bahasa**, lalu pilih **Bahasa Indonesia** atau **English**. Teks berubah langsung dan pilihan tersimpan untuk pembukaan berikutnya, tanpa memulai ulang sesi atau mengubah sensitivitas/orientasi. Installer 0.5.1 yang sudah ada belum memiliki pilihan ini; lihat [catatan pengembangan 0.5.2](docs/RELEASE-NOTES-0.5.2.md) untuk status ketersediaan dan verifikasi.
+Buka **Pengaturan → Bahasa**, lalu pilih **Bahasa Indonesia** atau **English**. Teks berubah langsung dan pilihan tersimpan untuk pembukaan berikutnya, tanpa memulai ulang sesi atau mengubah sensitivitas/orientasi. Fitur ini diperkenalkan pada 0.5.2; paket 0.5.1 belum memilikinya.
 
 Dokumentasi dua bahasa dapat dibaca terlepas dari versi aplikasi yang dipasang. Pesan Windows, log backend, dan antarmuka UxPlay terpisah tetap menggunakan bahasa asalnya; pengaturan ini tidak mengubah bahasa perangkat iOS/iPadOS.
 
@@ -93,6 +100,7 @@ Gunakan **.NET 10 SDK x64** untuk membangun. Build default bersifat *framework-d
 - [Checklist rilis dan installer](docs/RELEASING.md)
 - [Perubahan dan status pengujian 0.5.1](docs/RELEASE-NOTES-0.5.1.md)
 - [Pilihan bahasa dan status pengembangan 0.5.2](docs/RELEASE-NOTES-0.5.2.md)
+- [Pintasan, nonaktifkan kontrol, dan screenshot 0.5.3](docs/RELEASE-NOTES-0.5.3.md)
 - [Arsitektur serta penyimpanan data](docs/ARCHITECTURE.md)
 - [Kriteria dan checklist kestabilan](docs/STABILITY-TESTS.md)
 - [Roadmap iOS/iPadOS, latensi, dan perbaikan bug](docs/ROADMAP.md)

@@ -87,6 +87,7 @@ public partial class MainWindow
             SensitivityStatus.Text = UiText.T(sensitivityStatusKey);
             ControlStatus.Text = controlStatusObserved ? controlStatus.DisplayText : UiText.T("Control.NotConnected");
             RenderDiagnosticStatus();
+            RenderScreenshotStatus();
             LanguageStatus.Text = UiText.T(languageStatusKey, ResolveArguments(languageStatusArgs));
         }
         finally { applyingLanguage = false; }

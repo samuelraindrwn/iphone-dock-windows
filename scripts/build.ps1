@@ -145,6 +145,11 @@ try {
             throw "The generated package is incomplete: $requiredFile"
         }
     }
+    foreach ($captureRuntime in @('Microsoft.Windows.SDK.NET.dll', 'WinRT.Runtime.dll')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $stagePath $captureRuntime) -PathType Leaf)) {
+            throw "The generated launcher is missing its screenshot runtime: $captureRuntime"
+        }
+    }
     if ($SelfContained) {
         # Publish includes runtime binaries but does not copy their NuGet license
         # files. Preserve the actual restored runtime's notices, never replace

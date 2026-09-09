@@ -86,7 +86,7 @@ internal static partial class UiText
         entries.Add("Log.PointerSaveFailed", new("Pengaturan pointer gagal disimpan: {0}", "Could not save pointer settings: {0}"));
         entries.Add("Log.Startup", new("{0} {1} — startup Bluetooth memeriksa iklan dan koneksi HID secara terpisah.", "{0} {1} — Bluetooth startup checks advertising and HID connections separately."));
         entries.Add("Log.MirrorOpened", new("UxPlay dibuka. Tampilan video muncul setelah Screen Mirroring tersambung. Setup awal mungkin meminta instalasi Bonjour.", "UxPlay opened. Video appears after Screen Mirroring connects. Initial setup may ask to install Bonjour."));
-        entries.Add("Log.ControlStarted", new("Input tetap di laptop. Setelah pairing, Ctrl+D+C memilih perangkat; Ctrl+Alt+Q kembali ke laptop.", "Input stays on the laptop. After pairing, Ctrl+D+C selects the device; Ctrl+Alt+Q returns to the laptop."));
+        entries.Add("Log.ControlStarted", new("Input tetap di laptop. Setelah pairing, {0} memilih perangkat; {1} kembali ke laptop.", "Input stays on the laptop. After pairing, {0} selects the device; {1} returns to the laptop."));
         entries.Add("Log.SessionStopped", new("Sesi {0} dihentikan.", "The {0} session was stopped."));
         entries.Add("Log.SessionCleanup", new("{0} Input kembali ke laptop. Pairing, pengaturan, dan layanan Bonjour tetap tersimpan.", "{0} Input returns to the laptop. Pairing, settings, and Bonjour Service are retained."));
         entries.Add("Log.VideoReadFailed", new("Status jendela video belum dapat dibaca. Sesi tetap berjalan; gunakan Hentikan sesi jika diperlukan.", "Could not read the video window status. The session remains active; use Stop session if needed."));
@@ -95,5 +95,35 @@ internal static partial class UiText
         entries.Add("Log.MirrorWatchFailed", new("Pemantauan mirroring: {0}", "Mirroring watcher: {0}"));
         entries.Add("Log.ControlEnded", new("Proses Bluetooth berhenti. Lihat log atau jalankan Cek Bluetooth.", "The Bluetooth process exited. See the logs or run Check Bluetooth."));
         entries.Add("Log.CloseCleanupFailed", new("Sesi gagal dibersihkan saat menutup: {0}", "Could not clean up the session while closing: {0}"));
+
+        entries.Add("Hotkey.Title", new("Pintasan keyboard", "Keyboard shortcuts"));
+        entries.Add("Hotkey.Open", new("Ubah pintasan", "Change shortcuts"));
+        entries.Add("Hotkey.OpenAccessible", new("Buka pengaturan pintasan keyboard", "Open keyboard shortcut settings"));
+        entries.Add("Hotkey.WindowTitle", new("Pintasan keyboard", "Keyboard shortcuts"));
+        entries.Add("Hotkey.Intro", new("Pintasan input bekerja saat kontrol berjalan. Screenshot membutuhkan mirroring aktif. Tidak perlu membuka pengaturan ini untuk menggunakannya.", "Input shortcuts work while control is running. Screenshots need active mirroring. You do not need to keep these settings open."));
+        entries.Add("Hotkey.SwitchLabel", new("Alihkan target input", "Switch input target"));
+        entries.Add("Hotkey.SwitchHint", new("Berpindah antara laptop dan perangkat.", "Moves between the laptop and your device."));
+        entries.Add("Hotkey.ReleaseLabel", new("Kembali ke Windows", "Return to Windows"));
+        entries.Add("Hotkey.ReleaseFixed", new("Tetap tersedia selama kontrol berjalan dan tidak dapat diubah, agar input dapat dikembalikan ke Windows.", "Available while control is running and not editable, so input can be returned to Windows."));
+        entries.Add("Hotkey.ScreenshotLabel", new("Screenshot layar perangkat", "Device screen screenshot"));
+        entries.Add("Hotkey.ScreenshotFixed", new("Pintasan tetap. Menyimpan tampilan mirroring sebagai PNG di laptop, bukan ke Photos di perangkat.", "Fixed shortcut. Saves the mirrored display as a PNG on the laptop, not to Photos on your device."));
+        entries.Add("Hotkey.ActiveBinding", new("Aktif pada sesi kontrol ini: {0}.", "Active in this control session: {0}."));
+        entries.Add("Hotkey.Record", new("Rekam pintasan", "Record shortcut"));
+        entries.Add("Hotkey.RecordAccessible", new("Rekam kombinasi tombol baru untuk mengalihkan target input", "Record a new key combination for switching the input target"));
+        entries.Add("Hotkey.Recording", new("Tekan kombinasi baru… (Esc membatalkan)", "Press the new combination… (Esc cancels)"));
+        entries.Add("Hotkey.NeedModifier", new("Gunakan Ctrl atau Alt bersama satu tombol lain. Shift boleh ditambahkan.", "Use Ctrl or Alt together with one other key. Shift can be added."));
+        entries.Add("Hotkey.WindowsUnsupported", new("Tombol Windows tidak didukung. Lepaskan Windows lalu rekam ulang kombinasinya.", "The Windows key is not supported. Release Windows and record the combination again."));
+        entries.Add("Hotkey.RecordingCancelled", new("Perekaman dibatalkan karena jendela tidak lagi aktif.", "Recording was cancelled because this window lost focus."));
+        entries.Add("Hotkey.Unsupported", new("Tombol itu tidak dapat dikirim ke perangkat. Pilih tombol lain.", "That key cannot be sent to the device. Choose another key."));
+        entries.Add("Hotkey.ReservedRelease", new("Kombinasi itu dipakai untuk kembali ke Windows dan tidak dapat dipilih.", "That combination returns input to Windows and cannot be reassigned."));
+        entries.Add("Hotkey.ReservedScreenshot", new("Ctrl + Alt + S dipakai untuk screenshot dan tidak dapat dipilih.", "Ctrl + Alt + S is used for screenshots and cannot be reassigned."));
+        entries.Add("Hotkey.Invalid", new("Pengaturan pintasan tidak valid.", "The shortcut settings are not valid."));
+        entries.Add("Hotkey.Saved", new("Tersimpan. Berlaku saat kontrol dijalankan berikutnya.", "Saved. It applies the next time control starts."));
+        entries.Add("Hotkey.SavedRestartNeeded", new("Tersimpan. Nonaktifkan lalu aktifkan kontrol agar pintasan baru berlaku; mirroring tetap berjalan.", "Saved. Disable and enable control for the new shortcut to take effect; mirroring keeps running."));
+        entries.Add("Hotkey.Reset", new("Kembalikan default", "Restore default"));
+        entries.Add("Hotkey.ResetAccessible", new("Kembalikan pintasan ke Ctrl + Alt + D", "Restore the shortcut to Ctrl + Alt + D"));
+        entries.Add("Hotkey.Close", new("Tutup", "Close"));
+        entries.Add("Hotkey.SaveFailed", new("Pintasan gagal disimpan: {0}", "Could not save the shortcut: {0}"));
+        entries.Add("Hotkey.LoadFailed", new("Pintasan tersimpan tidak terbaca; default dipakai.", "The saved shortcut could not be read; the default is in use."));
     }
 }

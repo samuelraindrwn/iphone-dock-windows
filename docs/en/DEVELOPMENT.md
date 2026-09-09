@@ -98,7 +98,7 @@ dist/                  Build/package output; excluded from Git
 ## Make changes and contribute
 
 1. Keep changes focused on the problem being addressed; keep mirroring and input as separate paths.
-2. Add appropriate regression tests. For the UI, check minimum size, keyboard focus order, scrolling, the slider/ComboBox, accessibility labels, and long status messages. Preserve the single-page order: **Guide → Device screen/Mouse & keyboard cards → Pointer settings → Diagnostics** (**Panduan → Layar perangkat/Mouse & keyboard → Pengaturan pointer → Diagnostik** in Indonesian); shortcuts must be easy to find at the top.
+2. Add appropriate regression tests. For the UI, check minimum size, keyboard focus order, scrolling, the slider/ComboBox, accessibility labels, and long status messages. Preserve the single-page order: **Guide → Device screen/Mouse & keyboard cards → Settings → Diagnostics** (**Panduan → Layar perangkat/Mouse & keyboard → Pengaturan → Diagnostik** in Indonesian); shortcuts must be easy to find at the top.
 3. Run the build and hardware-free tests.
 4. If a change affects BLE/input, run the relevant parts of the [stability checklist](STABILITY-TESTS.md) on a real device. Record what remains untested.
 5. Update the documentation and submit changes through the repository's Git workflow. Do not claim support for every model/version based on one configuration.
@@ -125,6 +125,21 @@ Previews render the actual app UI with a generic laptop name, without starting a
 ```
 
 Inspect the images before updating the READMEs. The English screenshot must come from the English UI, not just a translated caption. Subsequent installer and portable builds copy both languages and their images.
+
+The keyboard shortcut window can be rendered on its own for a visual check. It uses an isolated settings file and neither reads nor writes the user's preference:
+
+```powershell
+.\dist\iDock\iDock.exe --preview-hotkey .\hotkey-id.png 470 560 id
+.\dist\iDock\iDock.exe --preview-hotkey .\hotkey-min.png 320 420 id
+```
+
+The height/width arguments follow the same order as `--preview`. Use the window's minimum size to confirm that the Record/Restore/Close buttons stay visible and that taller content can be scrolled.
+
+## Shortcut and screenshot contracts in 0.5.3
+
+`HotkeySettings` (launcher) and `HotkeyBinding` (backend) must accept the same combinations/JSON: UTF-8, optional BOM, at most 4096 bytes, known Ctrl/Alt/Shift flags, Ctrl or Alt required, and a supported trigger key. Keep **Ctrl + Alt + Q** (also with Shift) and **Ctrl + Alt + S** reserved. Settings load at control startup; do not change the active combination just because the UI saves a new choice. Add coverage for parsing, conflicts, repeats/key-ups, dialog cancellation, save failures, and active versus pending state.
+
+Screenshots belong to the launcher, not the HID backend. HWND selection must stay limited to the active session's receiver Job. Capture uses Windows Graphics Capture; never replace GPU/capture failure with desktop capture, a global title search, or another app's screenshot. Exclude `data\screenshots` from source/installers/ZIPs. Mathematical/layout tests do not prove real UxPlay frames; complete device capture checks before claiming end-to-end success.
 
 ## Build the installer
 

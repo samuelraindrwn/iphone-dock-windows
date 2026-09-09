@@ -6,7 +6,7 @@
   #error ReleaseDir is required
 #endif
 #ifndef AppVersion
-  #define AppVersion "0.5.2"
+  #define AppVersion "0.5.3"
 #endif
 
 [Setup]
@@ -48,7 +48,8 @@ VersionInfoProductVersion={#AppVersion}
 
 [Tasks]
 Name: desktopicon; Description: "Create a desktop shortcut"; GroupDescription: "Shortcuts:"; Flags: unchecked
-Name: publicwifi; Description: "Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)"; GroupDescription: "Optional network access - enable only if you trust local wireless peers:"; Flags: unchecked
+; Selected on a fresh install; UsePreviousTasks preserves an earlier opt-out.
+Name: publicwifi; Description: "Allow AirPlay from the local subnet on ALL Public Wi-Fi networks (not just this Wi-Fi)"; GroupDescription: "Network access - uncheck if you do not trust local wireless peers:"
 
 [Files]
 ; No root data/logs/local helpers enter the validated generated payload.

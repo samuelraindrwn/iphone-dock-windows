@@ -1,0 +1,77 @@
+<Window x:Class="iDock.HotkeyWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="clr-namespace:iDock"
+ Title="{DynamicResource Text.Hotkey.WindowTitle}" Icon="Assets/iDock.ico"
+ Width="560" Height="470" MinWidth="420" MinHeight="320"
+ SizeToContent="Manual" ResizeMode="CanResize"
+ WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+ Background="{DynamicResource WindowBackground}" Foreground="{DynamicResource TextPrimary}"
+ FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="14" UseLayoutRounding="True" SnapsToDevicePixels="True">
+ <Window.Resources>
+  <ResourceDictionary>
+   <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="DesignSystem.xaml" /></ResourceDictionary.MergedDictionaries>
+  </ResourceDictionary>
+ </Window.Resources>
+ <Grid Margin="26,22,26,20">
+  <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+
+  <StackPanel Grid.Row="0" Margin="0,0,0,18">
+   <TextBlock Text="{DynamicResource Text.Hotkey.Title}" Style="{StaticResource SectionHeading}" />
+   <TextBlock x:Name="IntroText" Text="{DynamicResource Text.Hotkey.Intro}" Style="{StaticResource BodyText}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0" />
+  </StackPanel>
+
+  <ScrollViewer x:Name="HotkeyScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False">
+  <!-- Keeps the cards clear of the scroll bar when the content is taller than the window. -->
+  <StackPanel Margin="0,0,4,0">
+   <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+    <StackPanel>
+     <TextBlock Text="{DynamicResource Text.Hotkey.SwitchLabel}" FontWeight="SemiBold" FontSize="13" />
+     <TextBlock Text="{DynamicResource Text.Hotkey.SwitchHint}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+     <Grid Margin="0,12,0,0">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+      <Border Background="{StaticResource AccentSoft}" CornerRadius="7" Padding="12,8" VerticalAlignment="Center">
+       <TextBlock x:Name="SwitchHotkeyText" Text="Ctrl + Alt + D" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource Accent}" TextWrapping="Wrap"
+                  AutomationProperties.LiveSetting="Polite" />
+      </Border>
+      <Button x:Name="RecordButton" Grid.Column="1" Content="{DynamicResource Text.Hotkey.Record}" Click="Record_Click"
+              Style="{StaticResource PrimaryButton}" Padding="14,8" Margin="10,0,0,0"
+              AutomationProperties.Name="{DynamicResource Text.Hotkey.RecordAccessible}" />
+     </Grid>
+     <TextBlock x:Name="SwitchStatus" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,10,0,0"
+                AutomationProperties.LiveSetting="Assertive" />
+     <TextBlock x:Name="ActiveHotkeyText" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+    </StackPanel>
+   </Border>
+
+   <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+    <StackPanel>
+     <TextBlock Text="{DynamicResource Text.Hotkey.ReleaseLabel}" FontWeight="SemiBold" FontSize="13" />
+     <TextBlock Text="{DynamicResource Text.Hotkey.ReleaseFixed}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+     <Border Background="#F6F7F9" CornerRadius="7" Padding="12,8" HorizontalAlignment="Left" Margin="0,12,0,0">
+      <TextBlock x:Name="ReleaseHotkeyText" Text="Ctrl + Alt + Q" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource MutedText}" />
+     </Border>
+    </StackPanel>
+   </Border>
+   <Border Style="{StaticResource Card}">
+    <StackPanel>
+     <TextBlock Text="{DynamicResource Text.Hotkey.ScreenshotLabel}" FontWeight="SemiBold" FontSize="13" />
+     <TextBlock Text="{DynamicResource Text.Hotkey.ScreenshotFixed}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+     <Border Background="#F6F7F9" CornerRadius="7" Padding="12,8" HorizontalAlignment="Left" Margin="0,12,0,0">
+      <TextBlock x:Name="ScreenshotHotkeyText" Text="Ctrl + Alt + S" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource MutedText}" />
+     </Border>
+    </StackPanel>
+   </Border>
+  </StackPanel>
+  </ScrollViewer>
+
+  <Grid Grid.Row="2" Margin="0,18,0,0">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+   <Button x:Name="ResetButton" Content="{DynamicResource Text.Hotkey.Reset}" Click="Reset_Click"
+           Style="{StaticResource QuietButton}" Padding="12,7" FontSize="12"
+           AutomationProperties.Name="{DynamicResource Text.Hotkey.ResetAccessible}" />
+   <Button x:Name="CloseButton" Grid.Column="2" Content="{DynamicResource Text.Hotkey.Close}" Click="Close_Click"
+           Padding="18,8" IsCancel="True" IsDefault="True" />
+  </Grid>
+ </Grid>
+</Window>

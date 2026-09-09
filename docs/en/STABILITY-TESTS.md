@@ -2,6 +2,18 @@
 
 [Bahasa Indonesia](../STABILITY-TESTS.md) · English
 
+## Shortcut, independent control stop, and screenshot checks for 0.5.3
+
+- [ ] Test the default **Ctrl + Alt + D**, then a different Ctrl/Alt combination. The active combination must not change before **Disable control → Enable control**; the app summary must keep showing the actual session binding. Restore the active choice to cancel a pending change.
+- [ ] Confirm **Ctrl + Alt + Q** still returns input to Windows, including with Shift held. Holding a shortcut must not repeatedly switch targets; no modifier/letter may remain pressed on the device after release. Test ordinary typing and Windows keys afterwards.
+- [ ] In shortcut settings, test Esc, focus loss, Windows keys, Shift alone, function keys, Enter, key repeats, reserved combinations, and save failures. Saved settings and UI status must agree after reopening.
+- [ ] With video and control running, the red **Disable control** button returns input locally and stops only control. Video continues. Enable control again without re-pairing; repeat with control only. **Stop session** and closing video with X must still stop both.
+- [ ] Take screenshots using **Ctrl + Alt + S** with input local, targeting the device, and mirroring only. Compare with the device display; the PNG must contain only the video client area, not the title bar or an overlapping app. Test **Take screenshot** and opening the output folder.
+- [ ] Test portrait/landscape, resize/DPI, minimize/restore, disconnected video, closing during capture, and write failures. Failed capture must give a reason without capturing another window/desktop. Holding a shortcut must not create many files; existing images must not be overwritten.
+- [ ] Test **Ctrl + Alt + S** conflicts with another app and try the screenshot button. Protected content may be blank; no bypass is claimed. Review PNGs for private data before attaching results.
+
+These are real-device targets, not automatically passed results. Record the version/payload and actual results in the [0.5.3 notes](RELEASE-NOTES-0.5.3.md).
+
 ## Additional language checks for 0.5.2
 
 - [ ] After upgrading, choose **Settings → Language → English**, close and reopen the app, and confirm the choice remains English. Repeat for Bahasa Indonesia.
@@ -34,7 +46,7 @@ These criteria are testing goals, not production certification or a cross-device
 
 ## What changed
 
-Version 0.5.1 adds **Public/Wireless/LocalSubnet** receiver permission through an installer option that is unchecked on new installations. Existing Private permissions are preserved. Test this option separately from Bluetooth, after the computer owner manually removes the local repair rules. Do not change the network profile to make a result appear to pass.
+Version 0.5.1 introduced **Public/Wireless/LocalSubnet** receiver permission. In **0.5.3**, its option is checked by default on fresh installations, can still be unchecked, and upgrades preserve the previous choice including opt-out. Existing Private permissions are preserved. Test this option separately from Bluetooth, after the computer owner manually removes the local repair rules. Do not change the network profile to make a result appear to pass.
 
 This version also ends the session when a previously observed video window is continuously absent for two seconds. X on the video window and Stop Screen Mirroring on the device can trigger the same path; minimizing/hiding while preserving the window does not. A replacement window appearing during the grace period cancels the shutdown. The limited X confirmation is recorded above; other variants still need real-device testing rather than conclusions based only on state-machine tests.
 
@@ -64,7 +76,7 @@ Run tests through the iDock for Windows UI. There is no need for CLI commands th
 - [ ] Open iDock for Windows and choose **Enable control / Aktifkan kontrol**, but do not press the host-selection hotkey yet. The mouse/keyboard still work in Windows.
 - [ ] Wait for startup to succeed or fail. No characters, clicks, scrolling, or pointer movement occur on the device without user input. The AssistiveTouch pointer appearing by itself is not unintended movement/input.
 - [ ] Record the observed path: `Started`, `StartedWithoutAllAdvertisementData`, fallback, or failure. Do not force/fake status to make fallback appear to pass.
-- [ ] Press **Ctrl + D + C**, check the target, then test movement, one click, dragging on test content, scrolling, and short text input.
+- [ ] Press the active switch shortcut (**Ctrl + Alt + D** by default), check the target, then test movement, one click, dragging on test content, scrolling, and short text input.
 - [ ] Press **Ctrl + Alt + Q**. Subsequent typing goes to Windows Notepad, not the device. No keys/buttons or dragging remain held.
 - [ ] If startup fails, input stays local and the UI does not claim control is active. Save the relevant failure log excerpt.
 
@@ -72,7 +84,7 @@ For fallback, also record whether the UI shows the existing-connection warning. 
 
 ## B. Target: 20 start/reconnect cycles
 
-Perform 20 manual cycles, for example 10 rounds of **Stop session → Enable control** (**Hentikan sesi → Aktifkan kontrol**) and 10 rounds of closing/reopening iDock for Windows. **Stop session / Hentikan sesi** can also stop video; start mirroring and reconnect if necessary. Keep existing pairing during these tests.
+Perform 20 manual cycles, for example 10 rounds of **Disable control → Enable control** while mirroring continues and 10 rounds of closing/reopening iDock for Windows. Test **Stop session** separately to verify both stop; reopen mirroring and reconnect afterwards. Keep existing pairing during these tests.
 
 For each cycle:
 
@@ -126,10 +138,10 @@ Turning off AssistiveTouch or hiding the pointer **does not prove** the mouse GA
 ## E. Interface and usage order
 
 - [ ] On initial opening, **Guide / Panduan** and the shortcut summary are easy to find at the top. The three connection steps and laptop name are readable.
-- [ ] Scroll from top to bottom: **Guide → Device screen/Mouse & keyboard cards → Pointer settings → Diagnostics** (**Panduan → Layar perangkat/Mouse & keyboard → Pengaturan pointer → Diagnostik**). All controls are reachable without a sidebar or switching pages.
+- [ ] Scroll from top to bottom: **Guide → Device screen/Mouse & keyboard cards → Settings → Diagnostics** (**Panduan → Layar perangkat/Mouse & keyboard → Pengaturan → Diagnostik**). All controls are reachable without a sidebar or switching pages.
 - [ ] At the minimum window size and tested scaling/DPI, content is not clipped horizontally; content below the viewport can be reached by scrolling.
 - [ ] After **Ctrl + Alt + Q**, use Tab, arrow keys, and Enter/Space as appropriate. Focus is visible, the slider/dropdown work, and layout changes do not make controls unreachable.
-- [ ] Change sensitivity and orientation under **Pointer settings / Pengaturan pointer**, then check saving and pointer behavior as usual. Scrolling or moving focus must not change the input target on its own.
+- [ ] Change sensitivity and orientation under **Settings / Pengaturan**, then check saving and pointer behavior as usual. Scrolling or moving focus must not change the input target on its own.
 - [ ] **Diagnostics / Diagnostik** shows relevant status, and **Open logs / Buka log** opens the data location for the installation mode in use.
 
 Record results for the actual window size, scaling/DPI, and input method tested. Layout checks do not prove Bluetooth connectivity or video quality passed real-device testing.

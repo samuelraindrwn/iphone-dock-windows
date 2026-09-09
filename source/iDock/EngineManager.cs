@@ -11,6 +11,9 @@ internal sealed class EngineManager : IDisposable
     private readonly string root;
     private readonly MirrorWindowLifecycle mirrorLifecycle = new();
     public EngineManager(string root) => this.root = root;
+    // Hardware-free ownership fixtures use real, isolated jobs, never a BLE peripheral.
+    internal EngineManager(string root, ProcessJob mirror, ProcessJob control) : this(root)
+    { this.mirror = mirror; this.control = control; }
     public bool MirrorRunning => mirror?.IsRunning == true;
     public bool ControlRunning => control?.IsRunning == true;
     public string BleLogPath => Path.Combine(UserStorage.Root, "data", "blehid", "logs", "blehid.log");
@@ -66,12 +69,36 @@ internal sealed class EngineManager : IDisposable
         return mirrorLifecycle.Observe(session, snapshot,
             TimeSpan.FromSeconds((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency));
     }
-    public void StartControl()
+    internal MirrorWindowSnapshot CaptureVideoWindows() => mirror is { } owned
+        ? mirrorLifecycle.Capture(owned.ReadIsRunning, owned.ContainsProcess)
+        : new(true, false, []);
+    internal Func<uint, bool> GetMirrorOwnershipCheck()
+    {
+        var owned = mirror;
+        return processId =>
+        {
+            if (owned is null || !ReferenceEquals(mirror, owned)) return false;
+            try { return owned.IsRunning && owned.ContainsProcess(processId); }
+            catch (ObjectDisposedException) { return false; } // Session ended during an asynchronous capture.
+            catch (System.ComponentModel.Win32Exception) { return false; }
+        };
+    }
+    public void StartControl(string? screenshotEventName = null)
     {
         if (ControlRunning) return;
         if (HasExistingControl()) throw UiText.TagException(new InvalidOperationException(UiText.T("Engine.ControlInUse")), "Engine.ControlInUse");
         control?.Dispose();
-        control = new ProcessJob(StartInfo(Exe("blehid", "BleHid.Cli.exe"), "--background"));
+        var info = StartInfo(Exe("blehid", "BleHid.Cli.exe"), "--background");
+        // Do not inherit a stale endpoint from another launcher/session.
+        info.Environment.Remove("BLEHID_SCREENSHOT_EVENT");
+        if (screenshotEventName is not null) info.Environment["BLEHID_SCREENSHOT_EVENT"] = screenshotEventName;
+        control = new ProcessJob(info);
+    }
+    public void StopControl()
+    {
+        // Only our HID job. Keep receiver, video observation and diagnostics intact.
+        var owned = control; control = null;
+        owned?.Dispose();
     }
     public async Task<(int ExitCode, string Report)> DiagnoseAsync()
     {

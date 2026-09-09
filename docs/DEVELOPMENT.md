@@ -98,7 +98,7 @@ dist/                  Hasil build/paket; tidak masuk Git
 ## Mengubah dan mengirim kontribusi
 
 1. Batasi perubahan pada masalah yang ingin diselesaikan; simpan alur mirroring dan input terpisah.
-2. Tambahkan tes regresi yang sesuai. Untuk UI, periksa ukuran minimum, urutan fokus keyboard, scroll, slider/ComboBox, label aksesibilitas, dan status panjang. Pertahankan urutan satu halaman: **Panduan → kartu Layar perangkat/Mouse & keyboard → Pengaturan pointer → Diagnostik**; pintasan harus mudah ditemukan di bagian atas.
+2. Tambahkan tes regresi yang sesuai. Untuk UI, periksa ukuran minimum, urutan fokus keyboard, scroll, slider/ComboBox, label aksesibilitas, dan status panjang. Pertahankan urutan satu halaman: **Panduan → kartu Layar perangkat/Mouse & keyboard → Pengaturan → Diagnostik**; pintasan harus mudah ditemukan di bagian atas.
 3. Jalankan build serta tes tanpa perangkat keras.
 4. Jika perubahan menyentuh BLE/input, jalankan bagian relevan dari [checklist kestabilan](STABILITY-TESTS.md) pada perangkat nyata. Catat yang belum diuji.
 5. Perbarui dokumentasi dan kirim perubahan melalui workflow Git yang digunakan repository. Jangan menyatakan semua model/versi didukung hanya dari satu konfigurasi.
@@ -125,6 +125,21 @@ Pratinjau menggunakan UI aplikasi asli dengan nama laptop generik, tanpa memulai
 ```
 
 Periksa hasil gambar sebelum memperbarui README. Screenshot English harus berasal dari UI English, bukan hanya caption terjemahan. Installer dan portable berikutnya menyalin kedua bahasa beserta gambar.
+
+Jendela pintasan keyboard dapat dirender terpisah untuk pemeriksaan visual, memakai berkas setelan terisolasi tanpa membaca atau menulis preferensi pengguna:
+
+```powershell
+.\dist\iDock\iDock.exe --preview-hotkey .\hotkey-id.png 470 560 id
+.\dist\iDock\iDock.exe --preview-hotkey .\hotkey-min.png 320 420 id
+```
+
+Argumen tinggi/lebar mengikuti urutan yang sama seperti `--preview`. Gunakan ukuran minimum jendela untuk memeriksa bahwa tombol Rekam/Kembalikan/Tutup tetap terlihat dan isi yang lebih tinggi dapat digulir.
+
+## Kontrak pintasan dan screenshot 0.5.3
+
+`HotkeySettings` (launcher) dan `HotkeyBinding` (backend) harus menerima kombinasi/JSON yang sama: UTF-8, BOM opsional, maksimum 4096 byte, flags Ctrl/Alt/Shift yang dikenal, minimal Ctrl atau Alt, dan pemicu yang didukung. Pertahankan **Ctrl + Alt + Q** (juga dengan Shift) serta **Ctrl + Alt + S** sebagai kombinasi yang dicadangkan. Pengaturan dibaca saat startup kontrol; jangan mengubah kombinasi aktif hanya karena UI menyimpan pilihan baru. Tambahkan tes untuk parser, konflik, repeat/key-up, pembatalan dialog, kegagalan save, dan status aktif versus tertunda.
+
+Screenshot dimiliki launcher, bukan backend HID. Pemilihan HWND wajib terbatas pada Job receiver sesi aktif. Capture menggunakan Windows Graphics Capture; jangan mengganti kegagalan GPU/capture dengan pengambilan desktop, pencarian judul global, atau screenshot aplikasi lain. Data `data\screenshots` tidak boleh masuk ke source/installer/ZIP. Tes matematis/layout tidak membuktikan frame UxPlay nyata; lakukan checklist capture pada perangkat sebelum klaim keberhasilan end-to-end.
 
 ## Menyusun installer
 

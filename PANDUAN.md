@@ -4,11 +4,13 @@ Bahasa Indonesia · [English](docs/en/GUIDE.md)
 
 iDock menampilkan layar iPhone/iPad dan menyediakan kontrol mouse/keyboard dari Windows. Mulai dengan installer jika hanya ingin menggunakan aplikasi; alur build manual tetap tersedia untuk developer.
 
-Pada installer **0.5.1**, izin mirroring pada **Wi-Fi Public** adalah pilihan tambahan yang tidak dicentang pada instalasi baru. Baca [cakupannya](docs/INSTALL.md#izin-wi-fi-public) sebelum mengaktifkan: izin tersebut menetap untuk semua Wi-Fi Public, bukan hanya jaringan saat ini. Lihat [catatan 0.5.1](docs/RELEASE-NOTES-0.5.1.md) untuk membedakan perubahan aplikasi dan pengujian yang sudah dilakukan.
+Pada installer **0.5.3**, izin mirroring **Wi-Fi Public dicentang secara default pada instalasi baru**, tetap terlihat, dan dapat dihilangkan centangnya. Upgrade mempertahankan pilihan sebelumnya, termasuk pilihan nonaktif. Baca [cakupannya](docs/INSTALL.md#izin-wi-fi-public) sebelum melanjutkan: izin hanya untuk receiver yang dipasang pada **Public + Wireless + LocalSubnet**, tetapi menetap untuk semua Wi-Fi Public, bukan hanya jaringan saat ini. Lihat [catatan 0.5.3](docs/RELEASE-NOTES-0.5.3.md) untuk perubahan dan batas pengujian.
 
-Antarmuka berada dalam satu halaman. Mulai dari **Panduan** di bagian paling atas, lalu gunakan kartu **Layar perangkat** dan **Mouse & keyboard**. Gulir ke bawah untuk **Pengaturan pointer** dan **Diagnostik**. Ringkasan pintasan di bagian atas membantu mengalihkan target input dan kembali ke Windows.
+Antarmuka berada dalam satu halaman. Mulai dari **Panduan** di bagian paling atas, lalu gunakan kartu **Layar perangkat** dan **Mouse & keyboard**. Gulir ke bawah untuk **Pengaturan** dan **Diagnostik**. Ringkasan pintasan di bagian atas membantu mengalihkan target input, kembali ke Windows, dan mengambil screenshot.
 
-Pada build **0.5.2**, bagian **Pengaturan pointer** menjadi **Pengaturan**, dengan tambahan **Bahasa → Bahasa Indonesia / English**. Pilihan berubah langsung dan tersimpan tanpa menghentikan sesi atau mereset pointer. Installer 0.5.1 belum memiliki fitur ini. Lihat [catatan 0.5.2](docs/RELEASE-NOTES-0.5.2.md).
+Pilih **Pengaturan → Bahasa → Bahasa Indonesia / English** untuk mengganti bahasa langsung tanpa menghentikan sesi atau mereset pointer. Fitur bahasa tersedia sejak 0.5.2.
+
+Pada **0.5.3**, **Ubah pintasan** mengatur kombinasi alih target (default **Ctrl + Alt + D**). Tombol merah **Nonaktifkan kontrol** menghentikan input tanpa menghentikan mirroring. **Ctrl + Alt + S** menyimpan screenshot PNG di laptop, bukan Photos di perangkat. Ikuti [cara pakai](docs/USAGE.md) dan [catatan 0.5.3](docs/RELEASE-NOTES-0.5.3.md); periksa versi paket yang sudah tersedia di Releases.
 
 1. [Instalasi](docs/INSTALL.md): unduhan GitHub Releases, verifikasi file, installer, portable, upgrade, dan uninstall.
 2. [Cara menggunakan aplikasi](docs/USAGE.md): mirroring, pairing Bluetooth, target input, sensitivitas, dan orientasi.

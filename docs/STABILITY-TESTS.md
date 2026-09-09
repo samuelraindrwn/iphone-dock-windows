@@ -2,6 +2,18 @@
 
 Bahasa Indonesia · [English](en/STABILITY-TESTS.md)
 
+## Pemeriksaan pintasan, nonaktifkan kontrol, dan screenshot 0.5.3
+
+- [ ] Uji default **Ctrl + Alt + D**, lalu kombinasi Ctrl/Alt yang berbeda. Kombinasi aktif tidak berubah sebelum **Nonaktifkan kontrol → Aktifkan kontrol**; ringkasan aplikasi tetap menunjukkan kombinasi sesi yang sebenarnya. Coba kembali ke pilihan aktif untuk membatalkan perubahan tertunda.
+- [ ] Pastikan **Ctrl + Alt + Q** tetap mengembalikan input ke Windows, termasuk bila Shift masih ditahan. Menahan pintasan tidak mengalihkan target berulang; tidak ada tombol modifier/huruf tertinggal di perangkat setelah dilepas. Uji pengetikan biasa dan tombol Windows setelahnya.
+- [ ] Pada dialog pintasan, uji Esc, kehilangan fokus, tombol Windows, Shift saja, F-key, Enter, tombol berulang, kombinasi yang dicadangkan, dan penyimpanan gagal. Pilihan tersimpan harus sama dengan status UI setelah buka ulang.
+- [ ] Saat video dan kontrol berjalan, tombol merah **Nonaktifkan kontrol** mengembalikan input lokal serta menghentikan hanya kontrol. Video terus berjalan. Aktifkan kontrol lagi tanpa pairing ulang; ulangi saat hanya kontrol yang berjalan. **Hentikan sesi** dan X video tetap mempertahankan perilaku penghentian keduanya.
+- [ ] Ambil screenshot dengan **Ctrl + Alt + S** saat input lokal, saat target di perangkat, dan saat hanya mirroring berjalan. Bandingkan dengan layar perangkat; pastikan PNG hanya area video, tidak menyertakan title bar atau aplikasi yang menutupinya. Uji tombol **Ambil screenshot** dan folder hasil.
+- [ ] Uji portrait/landscape, resize/DPI, minimize/restore, video belum tersambung, penutupan saat capture, serta kegagalan penyimpanan. Capture gagal harus memberi alasan dan tidak mengambil jendela/desktop lain. Hotkey ditahan tidak membuat banyak file; gambar terdahulu tidak tertimpa.
+- [ ] Uji konflik **Ctrl + Alt + S** dengan aplikasi lain dan coba tombol screenshot. Konten terlindungi dapat kosong; tidak ada klaim bypass. Periksa PNG untuk data pribadi sebelum melampirkan hasil.
+
+Langkah di atas adalah target perangkat nyata, bukan hasil lulus otomatis. Catat versi/payload dan hasil aktual di [catatan 0.5.3](RELEASE-NOTES-0.5.3.md).
+
 ## Tambahan pemeriksaan bahasa 0.5.2
 
 - [ ] Setelah upgrade, pilih **Pengaturan → Bahasa → English**, tutup dan buka ulang aplikasi, lalu pastikan pilihan tetap English. Ulangi untuk Bahasa Indonesia.
@@ -34,7 +46,7 @@ Kriteria ini adalah sasaran pengujian, bukan sertifikasi produksi atau jaminan l
 
 ## Apa yang berubah
 
-Versi 0.5.1 menambahkan izin receiver **Public/Wireless/LocalSubnet** melalui pilihan installer yang tidak dicentang pada instalasi baru. Izin Private lama tetap dipertahankan. Uji opsi ini secara terpisah dari Bluetooth, setelah aturan perbaikan lokal dibersihkan secara manual oleh pemilik komputer. Jangan mengubah profil jaringan untuk membuat hasil terlihat lulus.
+Versi 0.5.1 memperkenalkan izin receiver **Public/Wireless/LocalSubnet**. Pada **0.5.3**, pilihan tersebut dicentang secara default pada instalasi baru, tetap dapat dihilangkan centangnya, dan upgrade mempertahankan pilihan sebelumnya termasuk opt-out. Izin Private lama tetap dipertahankan. Uji opsi ini secara terpisah dari Bluetooth, setelah aturan perbaikan lokal dibersihkan secara manual oleh pemilik komputer. Jangan mengubah profil jaringan untuk membuat hasil terlihat lulus.
 
 Versi ini juga mengakhiri sesi ketika jendela video yang sebelumnya teramati hilang terus-menerus selama dua detik. X pada jendela video dan Stop Screen Mirroring dari perangkat dapat memicu jalur yang sama; minimize/hide yang mempertahankan jendela tidak. Jendela pengganti dalam masa jeda membatalkan penghentian. Konfirmasi X terbatas sudah tercatat di atas; varian lain tetap perlu diuji pada perangkat, bukan disimpulkan dari tes state machine saja.
 
@@ -64,7 +76,7 @@ Jalankan tes melalui antarmuka iDock for Windows. Tidak perlu perintah CLI yang 
 - [ ] Buka iDock for Windows lalu **Aktifkan kontrol**, tetapi jangan tekan hotkey pemilihan host dulu. Mouse/keyboard masih bekerja di Windows.
 - [ ] Tunggu sampai startup selesai atau gagal. Tidak ada karakter, klik, scroll, ataupun gerakan pointer yang dibuat sendiri di perangkat. Munculnya pointer AssistiveTouch saja bukan gerakan/input tak diminta.
 - [ ] Catat jalur yang teramati: `Started`, `StartedWithoutAllAdvertisementData`, fallback, atau gagal. Jangan memaksa/memalsukan status agar fallback terlihat lulus.
-- [ ] Tekan **Ctrl + D + C**, cek target, lalu uji gerakan, satu klik, drag pada konten uji, scroll, dan pengetikan singkat.
+- [ ] Tekan pintasan alih target yang aktif (**Ctrl + Alt + D** secara default), cek target, lalu uji gerakan, satu klik, drag pada konten uji, scroll, dan pengetikan singkat.
 - [ ] Tekan **Ctrl + Alt + Q**. Pengetikan berikutnya masuk ke Notepad Windows, bukan perangkat. Tidak ada tombol atau drag yang tertahan.
 - [ ] Jika startup gagal, input tetap lokal dan UI tidak menyatakan kontrol aktif. Simpan potongan log kegagalannya.
 
@@ -72,7 +84,7 @@ Untuk fallback, catat juga apakah UI menampilkan peringatan koneksi lama. Jika s
 
 ## B. Target 20 siklus start/reconnect
 
-Lakukan 20 siklus manual, misalnya 10 kali **Hentikan sesi → Aktifkan kontrol** dan 10 kali menutup/membuka kembali iDock for Windows. **Hentikan sesi** juga dapat menghentikan video; buka mirroring dan sambungkan ulang bila diperlukan. Pertahankan pairing yang ada selama pengujian ini.
+Lakukan 20 siklus manual, misalnya 10 kali **Nonaktifkan kontrol → Aktifkan kontrol** dengan mirroring tetap berjalan dan 10 kali menutup/membuka kembali iDock for Windows. Uji **Hentikan sesi** terpisah untuk memastikan keduanya berhenti; buka mirroring dan sambungkan ulang sesudah itu. Pertahankan pairing yang ada selama pengujian ini.
 
 Pada setiap siklus:
 
@@ -126,10 +138,10 @@ Mematikan AssistiveTouch atau menyembunyikan pointer **belum membuktikan** langg
 ## E. Antarmuka dan urutan penggunaan
 
 - [ ] Pada pembukaan awal, **Panduan** dan ringkasan pintasan mudah ditemukan di bagian atas. Tiga langkah koneksi serta nama laptop dapat dibaca.
-- [ ] Gulir dari atas ke bawah: **Panduan → kartu Layar perangkat/Mouse & keyboard → Pengaturan pointer → Diagnostik**. Semua kontrol dapat dicapai tanpa menu samping atau perpindahan halaman.
+- [ ] Gulir dari atas ke bawah: **Panduan → kartu Layar perangkat/Mouse & keyboard → Pengaturan → Diagnostik**. Semua kontrol dapat dicapai tanpa menu samping atau perpindahan halaman.
 - [ ] Pada ukuran jendela minimum dan scaling/DPI yang diuji, isi tidak terpotong secara horizontal; bagian di bawah layar dapat dicapai dengan scroll.
 - [ ] Setelah **Ctrl + Alt + Q**, gunakan Tab, tombol panah, Enter/Space sesuai kontrol. Fokus terlihat, slider/dropdown dapat dioperasikan, dan tidak ada kontrol yang terlewat karena perubahan layout.
-- [ ] Ubah sensitivitas dan orientasi pada **Pengaturan pointer**, lalu periksa penyimpanan serta perilaku pointer seperti biasa. Menggulir atau memindahkan fokus tidak boleh mengalihkan target input dengan sendirinya.
+- [ ] Ubah sensitivitas dan orientasi pada **Pengaturan**, lalu periksa penyimpanan serta perilaku pointer seperti biasa. Menggulir atau memindahkan fokus tidak boleh mengalihkan target input dengan sendirinya.
 - [ ] Bagian **Diagnostik** menampilkan status yang relevan dan **Buka log** mengarah ke lokasi data mode instalasi yang digunakan.
 
 Catat hasil sesuai ukuran jendela, scaling/DPI, dan cara input yang benar-benar diuji. Pemeriksaan layout tidak membuktikan koneksi Bluetooth atau kualitas video telah lulus uji perangkat.

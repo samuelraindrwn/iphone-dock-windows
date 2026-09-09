@@ -12,7 +12,7 @@ Quick navigation: [daily routine](#daily-routine) · [Bluetooth control](#mouse-
 
 ## Getting to know the interface
 
-All controls are on one page. Start at the top and scroll down as needed. The 0.5.2 interface supports Indonesian and English; this guide includes both sets of labels. The already released 0.5.1 package has an Indonesian-only interface.
+All controls are on one page. Start at the top and scroll down as needed. The current interface supports Indonesian and English; this guide includes both sets of labels. The older 0.5.1 package has an Indonesian-only interface.
 
 | Order | Section | Contents |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ All controls are on one page. Start at the top and scroll down as needed. The 0.
 | 3 | **Pengaturan / Settings** | Interface language, pointer sensitivity, and orientation. In 0.5.1 this section is named **Pengaturan pointer** (Pointer settings). |
 | 4 | **Diagnostik** (Diagnostics) | Diagnostic status and the session log; **Buka log** (Open logs) opens the local log folder. |
 
-The shortcut summary appears at the top: **Ctrl + D + C** switches the input target, and **Ctrl + Alt + Q** returns it to Windows. There is no sidebar or separate page to open.
+The top summary shows the active switch shortcut (**Ctrl + Alt + D** by default), **Ctrl + Alt + Q** to return to Windows, and **Ctrl + Alt + S** for screenshots. There is no sidebar or separate page to open.
 
 The fixed footer at the bottom of the window shows the app name/version, a **GitHub** link to the repository, and **Laporkan masalah** (Report an issue), which opens the Issues page. Before submitting a report, review and redact private information in any logs or screenshots you attach.
 
@@ -33,19 +33,19 @@ Return input to Windows with **Ctrl + Alt + Q**, then scroll to **Pengaturan →
 
 If saving fails, the selected language still applies to the current session and a warning appears below the selector. Fix access to the data folder before relying on the preference being restored on the next launch. Do not run as Administrator or loosen Program Files permissions as a workaround.
 
-The selector changes iDock's own interface, status messages, and newly generated app messages. Previous log entries and raw Windows/backend messages are not rewritten. UxPlay and device Settings retain their own language settings. This selector is **not available in 0.5.1**; consult the release page for the availability of the 0.5.2 build.
+The selector changes iDock's own interface, status messages, and newly generated app messages. Previous log entries and raw Windows/backend messages are not rewritten. UxPlay and device Settings retain their own language settings. This selector is **not available in 0.5.1**; consult the release page for available package versions.
 
 ## Daily routine
 
 1. Open **iDock for Windows** from the Start Menu; for the portable package, open `iDock.exe` from its permanent package folder.
 2. On the **Layar perangkat** (Device screen) card below **Panduan** (Guide), click **Buka mirroring** (Open mirroring). On the device, choose **Control Center → Screen Mirroring → uxplay-windows**.
-3. Click **Aktifkan kontrol** (Enable control), wait for the input device to connect, then press **Ctrl + D + C** to select the device.
+3. Click **Aktifkan kontrol** (Enable control), wait for the input device to connect, then use the displayed switch shortcut (**Ctrl + Alt + D** by default) to select the device.
 4. Open the app you want to test. Place the UxPlay video window beside your editor.
 5. To type in your editor again or change iDock for Windows settings, press **Ctrl + Alt + Q**.
 
 Video and control are two separate connections. Either can be used independently. A receiver-opened message means the video process has started, not that the device has begun sending an image.
 
-If the receiver name appears but video does not connect, check the [network profile and receiver permissions](TROUBLESHOOTING.md#receiver-not-found-or-video-not-connecting). Installer 0.5.1 offers a Public Wi-Fi option without requiring a manual build; understand [its scope and how to revoke it](INSTALL.md) before selecting it.
+If the receiver name appears but video does not connect, check the [network profile and receiver permissions](TROUBLESHOOTING.md#receiver-not-found-or-video-not-connecting). Installer 0.5.3 checks Public Wi-Fi by default on fresh installations, while upgrades keep the previous choice including opt-out. The option can still be unchecked; understand [its scope and how to revoke it](INSTALL.md) before proceeding.
 
 ## Mouse and keyboard control
 
@@ -55,28 +55,56 @@ For first-time pairing:
 2. Click **Aktifkan kontrol** (Enable control).
 3. In the device's **Settings app**, open **Accessibility → Touch → AssistiveTouch**, then enable AssistiveTouch.
 4. Still on the AssistiveTouch settings page, open **Devices → Bluetooth Devices**, select the laptop name shown in iDock for Windows, and complete any pairing confirmation. This is a menu in Settings, **not** the **Device** button in the floating AssistiveTouch menu. The path follows [Apple's pointer-device guide](https://support.apple.com/en-us/111775).
-5. Once the input connection is available, use **Ctrl + D + C**: hold Ctrl and D, press C, then release all keys. Check the target status in iDock before moving the pointer or typing.
+5. Once the input connection is available, use the active switch shortcut (**Ctrl + Alt + D** by default). Check the target status in iDock before moving the pointer or typing.
 
 Device menu names in this guide follow the English interface. Their translations and locations may differ by language and iOS/iPadOS version.
 
 Input initially stays in Windows; pairing does not immediately switch it to the device. A `Connected` status in the device's general Bluetooth settings is not enough: iDock for Windows requires a keyboard/mouse HID connection.
 
-If you see **“koneksi lama terverifikasi; iklan Bluetooth belum siap”** (“existing connection verified; Bluetooth advertising is not ready”), version 0.5 uses an existing HID connection after a limited check; advertising has not been declared recovered. Deliberately select the device with the hotkey, then try a simple interaction. If this connection is lost and the session is marked failed, **restart control** using **Hentikan sesi → Aktifkan kontrol** (Stop session → Enable control); reopen mirroring if it also stopped. There is no automatic radio reset or pairing deletion. See [troubleshooting](TROUBLESHOOTING.md#existing-connection-verified-bluetooth-advertising-not-ready) for the check's details and limitations.
+If you see **“koneksi lama terverifikasi; iklan Bluetooth belum siap”** (“existing connection verified; Bluetooth advertising is not ready”), version 0.5 uses an existing HID connection after a limited check; advertising has not been declared recovered. Deliberately select the device with the hotkey, then try a simple interaction. If this connection is lost and the session is marked failed, **restart control** using **Disable control → Enable control** if the process is still running; if it has already stopped, choose **Enable control** directly. Mirroring does not need to stop. There is no automatic radio reset or pairing deletion. See [troubleshooting](TROUBLESHOOTING.md#existing-connection-verified-bluetooth-advertising-not-ready) for the check's details and limitations.
 
 | Control | Function |
 | --- | --- |
-| **Ctrl + D + C** | Switches input targets; with one device, switches between the laptop and device. |
+| **Switch shortcut** (default **Ctrl + Alt + D**) | Switches input targets; with one device, switches between the laptop and device. |
 | **Ctrl + Alt + Q** | Returns the input target to Windows without ending the control session. |
 | Mouse movement | Moves the device pointer relatively. |
 | Left click / hold and move | Clicks / drags according to the AssistiveTouch button mapping. |
 | Mouse wheel | Scrolls in apps that support it. |
 | Keyboard | Types in the currently focused field on the device. |
 
+### The device onscreen keyboard
+
+When Bluetooth control connects, the iPhone/iPad recognizes an external keyboard even if iDock's input target is still Windows. The onscreen keyboard may therefore stay hidden before you press the switch shortcut. **Ctrl + Alt + Q** changes input routing, not the BLE keyboard connection.
+
+To keep typing on the device display, open the device's **Settings → Accessibility → Touch → AssistiveTouch**, enable **Show Onscreen Keyboard**, then tap a text field again. Apple documents this option for pointer use with a connected keyboard. Labels/locations can differ by language or OS version; this is a device preference you change yourself, not an automatic iDock change. [Official Apple guide](https://support.apple.com/en-ie/111775).
+
+### Changing the shortcuts
+
+Click **Change shortcuts** in the Guide section, choose **Record shortcut**, press a combination, and check the save status before closing the dialog. A combination requires **Ctrl or Alt**, optionally Shift, plus a supported trigger key. Shift-only, Windows-key combinations, Esc triggers, and unsupported keys are rejected. Esc cancels recording; moving to another window also cancels it.
+
+A new shortcut applies **the next time control starts**. If control is already running, press **Ctrl + Alt + Q**, click the red **Disable control** button, then **Enable control**. Mirroring keeps running. The guide keeps showing the active session's shortcut; the dialog distinguishes that binding from the one saved for the next session. A failed save is not treated as success.
+
+**Ctrl + Alt + Q** cannot be changed or chosen as the switch shortcut, including the variant with Shift. **Ctrl + Alt + S** is reserved for screenshots. Avoid shortcuts used by other applications: switch-shortcut settings cannot detect every OS/application shortcut conflict. **Restore default** selects Ctrl + Alt + D for the next session.
+
 The device pointer is not mapped one-to-one to the Windows cursor's position inside the video window. Clicking a coordinate in the UxPlay window is not touch injection: select the device target with the hotkey, then watch the device pointer as you move. Multitouch gestures are not a promised feature.
 
 If more than one HID host is connected, the backend cycles through targets; always check the status before typing. Use one device during initial testing. Do not type sensitive information unless the target is clear.
 
 If the hotkey does not return input, stop sending input and follow [Windows input recovery](TROUBLESHOOTING.md#input-does-not-return-to-windows). Hotkey response time is not guaranteed when a Bluetooth operation stalls.
+
+## Device screenshots
+
+Starting with **0.5.3**, connect Screen Mirroring and keep **AirPlay Video Stream** open (not minimized). Press **Ctrl + Alt + S** or click **Take screenshot** in the **Device screen** card. The hotkey works with input on the laptop and while controlling the device. Bluetooth is not required for mirroring-only screenshots.
+
+The result is a **PNG of the video rendered on the laptop**, not a native screenshot saved in iPhone/iPad Photos. Dimensions follow the rendered video area and quality follows the AirPlay stream. Windows title/frame and the Windows cursor are excluded; letterboxing and an AssistiveTouch pointer already present in the stream may remain.
+
+- Choose **Open screenshot folder** to view results. Installed builds save to `%LOCALAPPDATA%\iDock\data\screenshots`; portable/manual builds save to `data\screenshots` inside the package folder.
+- Every capture gets a unique filename without overwriting previous captures. Status shows its path or an error.
+- Only this iDock session's owned video window is captured, never the entire desktop or other applications covering it. There is no automatic upload or clipboard copy.
+- Restore the video and retry if it is minimized, missing, changing orientation/size, blocked from capture by Windows, or more than one candidate video window is found. Protected content may be blank/unavailable; capturing it is not promised.
+- Windows may show a capture indicator/border. If another app owns Ctrl + Alt + S and registration fails, use **Take screenshot** instead. Release all keys before pressing again; holding the shortcut does not continuously take screenshots.
+
+Screenshots can contain sensitive phone data. Review before sharing. The screenshot folder is excluded from release packages and is not deleted when the session ends or the app is uninstalled.
 
 ## Pointer sensitivity
 
@@ -86,7 +114,7 @@ Scroll to **Pengaturan / Settings** (**Pengaturan pointer** in 0.5.1). The **Sen
 - Values below 1 slow movement; values above 1 speed it up.
 - **Reset** returns sensitivity to 1.00× without clearing the orientation.
 
-To experiment: **Ctrl + Alt + Q → adjust the slider → wait for “Tersimpan” (Saved) → Ctrl + D + C**. Try 0.75× for small targets or 1.25× if movement feels too short. No restart or re-pairing is needed.
+To experiment: **Ctrl + Alt + Q → adjust the slider → wait for “Tersimpan” (Saved) → active switch shortcut**. Try 0.75× for small targets or 1.25× if movement feels too short. No restart or re-pairing is needed.
 
 The interface saves after approximately 200 ms without further changes; the backend reads updates every 250 ms. Changes typically take effect in about half a second, which is not a real-time guarantee. Only the pointer's X/Y movement is multiplied; clicks, keyboard input, the wheel, and the Bluetooth report interval remain unchanged.
 
@@ -108,6 +136,8 @@ Return input to the laptop, select an orientation, wait for it to save, then sel
 Rotation is not automatic. Select Portrait again after returning the device upright. Test rightward and upward movement while watching the actual device screen. Direction transformations have automated checks, but the matching orientation/direction on real hardware still needs confirmation. If the correction is reversed, try the other landscape option.
 
 ## Ending a session
+
+To stop **control only**, release held keys/buttons, press **Ctrl + Alt + Q**, then click the red **Disable control** button. Input stays on the laptop, mirroring continues, and pairing/settings are preserved. The button returns to **Enable control**. Red means this session's control process is running, not proof that HID has connected; check the status above it.
 
 Release any held mouse buttons or keyboard keys, press **Ctrl + Alt + Q**, then click **Hentikan sesi** (Stop session) or close iDock for Windows. The receiver/control processes started by iDock for Windows and their descendants are stopped. Other applications' processes are not targeted.
 

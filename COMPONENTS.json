@@ -1,5 +1,5 @@
 {
-  "application": { "name": "iDock for Windows", "version": "0.5.2", "runtime": ".NET 10 Windows Desktop", "architecture": "x64" },
+  "application": { "name": "iDock for Windows", "version": "0.5.3", "runtime": ".NET 10 Windows Desktop", "architecture": "x64" },
   "components": [
     {
       "name": "UxPlay Windows", "version": "2.0.0.1736", "modified": false,
@@ -8,7 +8,7 @@
       "archiveSha256": "9d3a51c15fc9db857351195e7eb7bbb21700d9ae25d936a54bcf8536b62cca18"
     },
     {
-      "name": "Windows BLE HID CLI", "version": "v0.4.0-idock.5", "modified": true,
+      "name": "Windows BLE HID CLI", "version": "v0.4.0-idock.6", "modified": true,
       "modifications": "source/blehid-patched/IDOCK-MODIFICATIONS.md",
       "runtime": ".NET 10; compiled from included modified source. Manual builds are framework-dependent by default; release installer and portable packages are self-contained.",
       "source": "https://github.com/abhishek-raj/windows-ble-hid/tree/v0.4.0",

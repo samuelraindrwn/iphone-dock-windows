@@ -18,8 +18,8 @@ internal static partial class UiText
             "Waiting for mouse/keyboard pairing through AssistiveTouch"));
         entries.Add("Control.Controlling", new("Mengontrol {0} — {1}", "Controlling {0} — {1}"));
         entries.Add("Control.ConnectedReady", new(
-            "{0} tersambung — input di laptop; Ctrl+D+C memilih perangkat",
-            "{0} connected — input is on the laptop; Ctrl+D+C selects the device"));
+            "{0} tersambung — input di laptop; gunakan hotkey pindah kontrol yang ditampilkan di panduan",
+            "{0} connected — input is on the laptop; use the switch shortcut shown in the guide"));
         entries.Add("Control.ConnectedNotReady", new(
             "{0} tersambung — kontrol input belum siap",
             "{0} connected — input control is not ready"));

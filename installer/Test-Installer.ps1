@@ -154,7 +154,7 @@ $policy = New-TestPolicy
 Invoke-iDockFirewallChanges $policy $definitions 'Preflight' $publicDefinitions
 Assert-Installer ($policy.Rules.AddCalls -eq 0 -and $policy.Rules.RemoveCalls -eq 0) 'default preflight validates both families read-only'
 Invoke-iDockFirewallChanges $policy $definitions 'Install' $publicDefinitions
-Assert-Installer ($policy.Rules.Items.Count -eq 2 -and $policy.Rules.RemoveCalls -eq 0) 'unchecked fresh install remains private-only'
+Assert-Installer ($policy.Rules.Items.Count -eq 2 -and $policy.Rules.RemoveCalls -eq 0) 'deselecting public wireless on a fresh install remains private-only'
 $privateBefore = @($policy.Rules.Items)
 Invoke-iDockFirewallChanges $policy $allDefinitions 'Install'
 Assert-Installer ($policy.Rules.Items.Count -eq 4 -and $policy.Rules.AddCalls -eq 4) 'v0.5.0 upgrade opt-in adds only public pair'
@@ -282,6 +282,8 @@ foreach ($path in @('installed.mode', 'data/hosts.json', 'logs/idock.log', '.git
 }
 Assert-InstallerThrows { Assert-iDockPortableRelativePath 'docs/example.md' $true } 'portable reparse path rejected'
 Assert-InstallerThrows { Assert-iDockPortableRelativePath 'ui-settings.json' } 'portable rejects a stray user language preference'
+Assert-InstallerThrows { Assert-iDockPortableRelativePath 'hotkey-settings.json' } 'portable rejects a stray user hotkey preference'
+Assert-InstallerThrows { Assert-iDockPortableRelativePath 'data/screenshots/iDock-example.png' } 'portable rejects personal phone screenshots'
 
 $iss = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'iDock.iss') -Raw
 $helper = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Configure-Firewall.ps1') -Raw
@@ -295,7 +297,12 @@ Assert-Installer ($iss -match 'function InitializeUninstall\(\): Boolean') 'unin
 Assert-Installer ($iss -match 'PreflightUninstall') 'uninstall preflight independent of rule changes'
 Assert-Installer ($iss -match 'InstallerProcessId.*GetCurrentProcessId') 'exact uninstaller PID passed'
 Assert-Installer ($iss -match 'ExecAndLogOutput') 'helper failure details recorded in setup log'
-Assert-Installer ($iss -match 'Name: publicwifi;.*ALL Public Wi-Fi networks.*Flags: unchecked') 'public wireless consent is explicit and unchecked by default'
+$publicWifiTasks = @([regex]::Matches($iss, '(?m)^Name:\s*publicwifi;[^\r\n]*'))
+Assert-Installer ($publicWifiTasks.Count -eq 1) 'exactly one public wireless task is presented'
+$publicWifiTask = $publicWifiTasks[0].Value
+Assert-Installer ($publicWifiTask -match 'ALL Public Wi-Fi networks' -and $publicWifiTask -match 'uncheck if you do not trust') 'public wireless scope and opt-out are explicit'
+Assert-Installer ($publicWifiTask -notmatch '\b(?:Flags|Components|Check):') 'public wireless task is visible and selected by default on fresh installation'
+Assert-Installer ($iss -notmatch 'WizardSelectTasks|TasksList\.Checked|DisableReadyPage=yes') 'setup does not force task selection or hide final review'
 Assert-Installer ($iss -match 'UsePreviousTasks=yes') 'upgrades display prior task choice for review instead of silently resetting consent'
 Assert-Installer ($iss -match "WizardIsTaskSelected\('publicwifi'\)" -and $iss -match "Args := Args \+ ' -AllowPublicWireless'") 'selected task explicitly passes opt-in switch'
 Assert-Installer ($iss -match "if \(Mode = 'Preflight'\) or \(Mode = 'Install'\) then") 'uninstaller never depends on setup task selection'

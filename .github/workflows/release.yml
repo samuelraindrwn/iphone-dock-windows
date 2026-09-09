@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag matching COMPONENTS.json (for example v0.5.1)'
+        description: 'Existing release tag matching COMPONENTS.json (for example v0.5.3)'
         required: true
         type: string
 
@@ -44,7 +44,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:REQUESTED_TAG -notmatch '^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
-            throw 'Select an existing three-part release tag such as v0.5.1. Branches and arbitrary refs are not release inputs.'
+            throw 'Select an existing three-part release tag such as v0.5.3. Branches and arbitrary refs are not release inputs.'
           }
           "tag=$($env:REQUESTED_TAG)" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
@@ -199,14 +199,18 @@ jobs:
 
           - Use the Setup EXE for guided installation, or extract the complete portable ZIP. Documentation: [English](https://github.com/$($env:GH_REPO)/blob/$($env:RELEASE_TAG)/README.en.md) / [Bahasa Indonesia](https://github.com/$($env:GH_REPO)/blob/$($env:RELEASE_TAG)/README.md); both are also included in the package.
           - Choose English or Bahasa Indonesia in Settings → Language / Pengaturan → Bahasa. The choice takes effect immediately and is saved without restarting the session or resetting pointer settings. External tools and existing logs keep their original language.
-          - Setup keeps Private-network receiver permissions by default. The optional Public Wi-Fi permission allows local peers on every Public wireless network; enable it only after reviewing the network guidance in docs/INSTALL.md.
+          - Configure the switch-target shortcut (default Ctrl + Alt + D). Ctrl + Alt + Q returns input to Windows; Ctrl + Alt + S is reserved for local PNG screenshots of the mirrored video window. The red Disable control button stops Bluetooth control without stopping mirroring.
+          - Setup retains Private/LocalSubnet receiver rules. Public Wi-Fi permission is checked by default on fresh 0.5.3 installations and can be unchecked; upgrades retain the previous choice, including opt-out. Permission is limited to the installed receiver on Public/Wireless/LocalSubnet, across all Public Wi-Fi networks, not only the current Wi-Fi. Review [network access and silent-install opt-out](https://github.com/$($env:GH_REPO)/blob/$($env:RELEASE_TAG)/docs/en/INSTALL.md#public-wi-fi-permission) before proceeding.
+          - If the device's onscreen keyboard stays hidden while Bluetooth control is connected, enable Show Onscreen Keyboard in the device's AssistiveTouch settings. Returning input to Windows does not disconnect the BLE keyboard.
           - Once an AirPlay video window has appeared, closing it (or ending the stream so the window disappears) ends this iDock session after a short grace period. Minimizing the window keeps the session running.
           - Verify downloads against SHA256SUMS.txt. This pipeline does not code-sign iDock; Windows may show an unknown-publisher or SmartScreen warning.
           - Compatibility depends on Windows, the Bluetooth adapter/driver, iOS/iPadOS and the network. This is an independent project, not an Apple product.
 
+          Detailed changes and validation limits: [English](https://github.com/$($env:GH_REPO)/blob/$($env:RELEASE_TAG)/docs/en/RELEASE-NOTES-$version.md) / [Bahasa Indonesia](https://github.com/$($env:GH_REPO)/blob/$($env:RELEASE_TAG)/docs/RELEASE-NOTES-$version.md).
+
           Source commit: $($env:RELEASE_COMMIT)
 
-          Maintainer gate: hardware-free checks passed, but this draft still requires clean-Windows installation, upgrade/uninstall, physical-device review, and verification of corresponding-source/license obligations for the bundled dependencies before publication. Replace this paragraph with the actual validation results when publishing.
+          Maintainer gate: hardware-free checks passed, but this draft still requires clean-Windows installation, upgrade/uninstall, physical-device review (including the new hotkeys and real screenshot capture), and verification of corresponding-source/license obligations for the bundled dependencies before publication. Native screenshot capture has not yet been verified on the normal interactive Windows desktop; a sandbox-only test returned a zero-size frame and is not proof of success or a user-facing failure. Replace this paragraph with the actual validation results when publishing.
           "@
           # --verify-tag never creates a tag. gh release create fails if a release
           # already exists; there is deliberately no --clobber or update fallback.

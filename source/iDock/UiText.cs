@@ -55,9 +55,13 @@ internal static partial class UiText
         var result = new Dictionary<string, Translation>(StringComparer.Ordinal);
         AddWindowEntries(result);
         AddEngineEntries(result);
+        AddScreenshotEntries(result);
+        AddSessionActionEntries(result);
         return new System.Collections.ObjectModel.ReadOnlyDictionary<string, Translation>(result);
     }
 
     static partial void AddWindowEntries(Dictionary<string, Translation> entries);
     static partial void AddEngineEntries(Dictionary<string, Translation> entries);
+    static partial void AddScreenshotEntries(Dictionary<string, Translation> entries);
+    static partial void AddSessionActionEntries(Dictionary<string, Translation> entries);
 }

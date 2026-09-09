@@ -6,13 +6,13 @@
 
 This document is for maintainers. A public release contains a ready-to-use application and user instructions; publication does not turn untested device compatibility into confirmed support.
 
-## Release artifacts for 0.5.2
+## Release artifacts for 0.5.3
 
-- **`iDock-Setup-0.5.2-win-x64.exe`**: Windows x64 installer with the application runtime.
-- **`iDock-0.5.2-win-x64-portable.zip`**: complete self-contained package, without an installer marker at the application root.
+- **`iDock-Setup-0.5.3-win-x64.exe`**: Windows x64 installer with the application runtime.
+- **`iDock-0.5.3-win-x64-portable.zip`**: complete self-contained package, without an installer marker at the application root.
 - **`SHA256SUMS.txt`**: SHA-256 hashes of download artifacts.
 - **`installer-build.json`**: version, runtime, compiler, and installer build metadata.
-- [Release notes for 0.5.2](RELEASE-NOTES-0.5.2.md): features, requirements, changes, known limitations, and results of tests actually performed.
+- [Release notes for 0.5.3](RELEASE-NOTES-0.5.3.md): features, requirements, changes, known limitations, and results of tests actually performed.
 
 GitHub's automatically generated **Source code** archives are neither installers nor ready-to-use application packages. Project source remains available in the repository. `installer-build.json` is a packaging report, not certification that installation passed on a clean Windows system.
 
@@ -39,7 +39,7 @@ Inspect the entire package: launcher/backend binaries, UxPlay dependencies, runt
 
 - Application location: `%ProgramFiles%\iDock`, usually `C:\Program Files\iDock`. The `installed.mode` marker selects per-user data/logs in `%LOCALAPPDATA%\iDock`.
 - The installer does not automatically move portable data or change Bluetooth pairing.
-- Existing **Private/LocalSubnet** receiver rules are preserved. The `publicwifi` task adds separate **Public/Wireless/LocalSubnet** receiver rules; it is unchecked on a new installation, and a previous choice may be remembered during an upgrade. Explain that permission persists across **all Public Wi-Fi networks**, not one SSID, and does not authenticate peers. Do not change the network profile, global Firewall policy, or other applications' rules.
+- Existing **Private/LocalSubnet** receiver rules are preserved. The `publicwifi` task adds separate **Public/Wireless/LocalSubnet** receiver rules; it is checked by default on fresh 0.5.3 installations, remains visible and can be unchecked, and `UsePreviousTasks=yes` preserves the previous choice, including opt-out, during upgrades. Explain that permission persists across **all Public Wi-Fi networks**, not one SSID, and does not authenticate peers. Do not change the network profile, global Firewall policy, or other applications' rules.
 - Running the installer again and clearing the Public Wi-Fi option revokes only Public rules exactly owned by the installer. Collisions/modified rules cause preflight to request review instead of overwriting them. Uninstall considers both rule families and preserves modified/ambiguous rules.
 - An existing Bonjour service is not silently reconfigured. On a new setup, UxPlay may request Bonjour installation the first time mirroring is opened.
 - Uninstall preserves user data and pairing. Bonjour is a shared service: the service and required binaries must not be removed merely because the launcher is uninstalled.
@@ -51,6 +51,8 @@ Check an item only after completing it, and record results against the commit an
 
 - [ ] **Remove the influence of temporary repairs:** if the test computer uses a local repair helper, its owner returns input to Windows, closes the session, and manually runs the helper's removal option as Administrator after reviewing its scope. Remove only repair rules exactly owned by that helper; keep the journal and do not remove other rules. Verify that the repair rules are no longer active before testing the new installer. Otherwise, the repair may mask an installer bug. Installer 0.5.0 does not clean up that repair-rule family.
 - [ ] Source, application version, documentation, installer name, and release tag agree.
+- [ ] **0.5.3:** test default/custom shortcuts, fixed release, repeats/key-ups, active versus pending settings, and the red **Disable control** button without interrupting mirroring. Preserve input recovery and pairing when restarting control.
+- [ ] **0.5.3 screenshots:** Ctrl + Alt + S and **Take screenshot** produce video-client PNGs with local/device input and mirroring only. Test closed/minimized/changed windows, hotkey conflicts, capture protection, and unwritable output folders. Confirm the desktop/other apps are not captured and screenshot data is excluded from packages.
 - [ ] Manual framework-dependent and self-contained packages build successfully.
 - [ ] Launcher/UI, data-path, backend, and application shutdown checks pass.
 - [ ] **Video closure on a real device:** after video appears, X ends video/control and returns input to Windows after the monitoring delay. Minimizing/hiding while preserving the window does not stop the session; a replacement window within two seconds cancels shutdown. Also test Stop Screen Mirroring from the device, rotation, and control without video. Pairing/settings remain intact and other applications' processes are untouched.
@@ -58,9 +60,9 @@ Check an item only after completing it, and record results against the commit an
 - [ ] **Clean Windows without an SDK/runtime:** the installer installs successfully, and the application opens as a regular user.
 - [ ] **First connection:** test Bonjour, permission prompts, restricted network rules, AirPlay, and HID pairing with a real device.
 - [ ] **Existing Bonjour:** its configuration, service, other applications using it, and Firewall rules not owned by iDock remain intact.
-- [ ] **Public Wi-Fi:** the option is unchecked on a new installation; test it off/on, run the installer again to revoke it, and verify the exact Public + Wireless + LocalSubnet + receiver executable scope without edge traversal. Verify that it does not cover Public Ethernet or Domain. Record IPv4 and IPv6 results separately.
+- [ ] **Public Wi-Fi:** on fresh 0.5.3 installations the option is checked by default and can be unchecked; verify upgrades retain both opted-out and selected choices, test it off/on, run the installer again to revoke it, and verify the exact Public + Wireless + LocalSubnet + receiver executable scope without edge traversal. Verify that it does not cover Public Ethernet or Domain. Record IPv4 and IPv6 results separately.
 - [ ] **Rules and policies:** collisions, administrator-modified rules, duplicates, partial failures, and rollback do not change other rules, network profiles, Bonjour, Bluetooth, or global policy. Block rules/organizational policies are reported, not bypassed.
-- [ ] **Upgrade 0.5.1 → 0.5.2:** user settings/data are preserved, active processes are handled safely, and the language choice persists without resetting the pointer. Also retain Firewall migration coverage from 0.5.0: Private.v1 remains intact and Public permission is not enabled without consent. Test reinstallation with a remembered selection and revoking that selection.
+- [ ] **Upgrade 0.5.1/0.5.2 → 0.5.3:** user settings/data are preserved, active processes are handled safely, and the language choice persists without resetting the pointer. Also retain Firewall migration coverage from 0.5.0: Private.v1 remains intact and Public permission is not enabled without consent. Test reinstallation with a remembered selection and revoking that selection.
 - [ ] **Uninstall:** the launcher is removed, other users/applications relying on Bonjour are not broken, and data/pairing are preserved.
 - [ ] The portable ZIP is extracted to a different safe location and runs without an installed runtime, while continuing to use package-local data.
 - [ ] Keyboard, scaling/DPI, minimum window size, scrolling, slider, orientation, and status display are checked. Section order remains **Guide** (**Panduan**) → mirroring/control cards → **Settings** (**Pengaturan**) → **Diagnostics** (**Diagnostik**), with shortcuts visible at the top.
@@ -88,8 +90,8 @@ Both use Windows x64 and the .NET 10 SDK, run installer checks without installat
 
 The [Build release draft](../../.github/workflows/release.yml) workflow supports two triggers:
 
-1. Push a version tag that already points to a release-ready commit, for example **`v0.5.2`**.
-2. Open **Actions → Build release draft → Run workflow**, then set the **tag** input to an **existing** tag, for example `v0.5.2`.
+1. Push a version tag that already points to a release-ready commit, for example **`v0.5.3`**.
+2. Open **Actions → Build release draft → Run workflow**, then set the **tag** input to an **existing** tag, for example `v0.5.3`.
 
 The tag must use `vMAJOR.MINOR.PATCH`, and its version must match `COMPONENTS.json` and the application project. The workflow does not create or move tags. Ensure that the tagged commit already includes all required source, scripts, documentation, and workflows.
 
