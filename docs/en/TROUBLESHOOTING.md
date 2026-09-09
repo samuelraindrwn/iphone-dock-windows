@@ -146,6 +146,25 @@ The example above is not a configuration automatically applied to every installa
 
 Move the pointer for a few seconds, then stop and watch whether the image is still catching up. If it gets worse, remove only `-fps 60` and restart. To return to default synchronization, also remove `-vsync no`. Change one factor at a time and compare against the actual device screen.
 
+## Opening the logs
+
+Scroll to the **Diagnostik** (Diagnostics) section below **Pengaturan** (Settings) and click **Buka log** (Open logs). Windows opens the log folder for the mode currently in use, so there is no need to locate the path manually.
+
+That button opens the `logs` folder, which holds the launcher log `idock.log` and the `bluetooth-diagnostics.txt` report. **The Bluetooth backend log lives in a separate folder**, `data\blehid\logs\blehid.log`, and does not open with it; open that folder yourself when the report concerns control. The [data-location table](INSTALL.md) lists complete paths for both modes.
+
+If the button cannot open the folder, browse to these paths in Explorer:
+
+| Package type | Launcher log | Backend log |
+| --- | --- | --- |
+| Installer | `%LOCALAPPDATA%\iDock\logs` | `%LOCALAPPDATA%\iDock\data\blehid\logs` |
+| Portable / manual build | `logs` in the package folder | `data\blehid\logs` in the package folder |
+
+For an installer installation, paste `%LOCALAPPDATA%\iDock\logs` into the Explorer address bar or the Run box (**Win + R**). The log folder is created the first time the app runs; an empty folder means no session has been recorded yet, not proof of a failure.
+
+For mirroring problems, `idock.log` is the relevant file. Note the time of the connection attempt so the matching lines are easy to find. Keep in mind that a line recording only that the receiver was opened **does not prove** that discovery or the video connection succeeded; see the [three-stage breakdown](#receiver-not-found-or-video-not-connecting) above. UxPlay's own messages appear in the receiver window/tray, separately from the launcher log.
+
+Logs stay on your computer and are not uploaded automatically. Redact sensitive contents before sharing them.
+
 ## Reporting a problem
 
 Choose **Diagnostik → Buka log** (Diagnostics → Open logs), then submit a report through the [project's GitHub Issues](https://github.com/samuelraindrwn/iphone-dock-windows/issues). Use this format to make the issue traceable:

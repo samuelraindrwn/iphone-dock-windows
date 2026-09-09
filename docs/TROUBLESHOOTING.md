@@ -146,6 +146,25 @@ Contoh di atas bukan konfigurasi yang otomatis diterapkan ke setiap instalasi. `
 
 Gerakkan pointer beberapa detik, lalu berhenti dan perhatikan apakah gambar masih mengejar. Jika memburuk, hapus hanya `-fps 60` dan restart. Untuk kembali ke sinkronisasi default, hapus juga `-vsync no`. Ubah satu faktor pada satu waktu dan bandingkan dengan layar perangkat asli.
 
+## Membuka log
+
+Gulir ke bagian **Diagnostik** di bawah **Pengaturan**, lalu klik **Buka log**. Windows membuka folder log untuk mode yang sedang digunakan, sehingga path tidak perlu dicari manual.
+
+Tombol tersebut membuka folder `logs`, yang berisi log launcher `idock.log` dan laporan `bluetooth-diagnostics.txt`. **Log backend Bluetooth berada di folder terpisah** `data\blehid\logs\blehid.log` dan tidak ikut terbuka; buka folder itu sendiri bila laporan menyangkut kontrol. [Tabel lokasi data](INSTALL.md#lokasi-data) memuat path lengkap kedua mode.
+
+Jika tombol tidak dapat membuka folder, buka path berikut melalui Explorer:
+
+| Jenis paket | Log launcher | Log backend |
+| --- | --- | --- |
+| Installer | `%LOCALAPPDATA%\iDock\logs` | `%LOCALAPPDATA%\iDock\data\blehid\logs` |
+| Portable / build manual | `logs` di folder paket | `data\blehid\logs` di folder paket |
+
+Tempel `%LOCALAPPDATA%\iDock\logs` pada bilah alamat Explorer atau kotak Run (**Win + R**) untuk instalasi installer. Folder log dibuat saat aplikasi pertama dijalankan; folder kosong berarti belum ada sesi yang tercatat, bukan bukti kegagalan.
+
+Untuk masalah mirroring, `idock.log` adalah berkas yang relevan. Catat waktu percobaan sambungan agar baris yang sesuai mudah ditemukan. Perlu diingat bahwa baris yang hanya mencatat receiver dibuka **tidak membuktikan** discovery atau sambungan video berhasil; lihat [pembagian tiga tahap](#receiver-tidak-muncul-atau-video-tidak-tersambung) di atas. Pesan UxPlay sendiri muncul pada jendela/tray receiver, terpisah dari log launcher.
+
+Log tersimpan di komputer Anda dan tidak diunggah otomatis. Samarkan isi sensitif sebelum membagikannya.
+
 ## Mengirim laporan masalah
 
 Pilih **Diagnostik → Buka log**, kemudian buat laporan melalui [GitHub Issues proyek](https://github.com/samuelraindrwn/iphone-dock-windows/issues). Gunakan format berikut agar masalah dapat ditelusuri:
