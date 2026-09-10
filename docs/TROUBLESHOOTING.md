@@ -10,6 +10,7 @@ Pilih gejala yang sesuai:
 
 - [Build gagal atau aplikasi tidak terbuka](#build-atau-aplikasi-tidak-bisa-dibuka)
 - [Receiver tidak ditemukan atau video terputus](#receiver-tidak-muncul-atau-video-tidak-tersambung)
+- [Video berhenti saat layar perangkat mati](#video-berhenti-saat-layar-perangkat-mati)
 - [Bluetooth Connected, tetapi kontrol belum terhubung](#bluetooth-connected-tetapi-kontrol-belum-terhubung)
 - [Bluetooth belum siap atau Aborted](#bluetooth-belum-siap-aborted-atau-akses-ditolak)
 - [Input tidak kembali ke Windows](#input-tidak-kembali-ke-windows)
@@ -55,6 +56,16 @@ Installer mempertahankan **Private/LocalSubnet**. Opsi **Allow AirPlay from the 
 Jangan otomatis mengganti Public menjadi Private untuk mencoba memperbaiki mirroring. Aturan Bonjour yang sudah ada dapat hanya berlaku pada salah satu profil; perubahan tersebut dapat menukar masalah koneksi video menjadi masalah discovery. Installer tidak mengubah profil jaringan, layanan/aturan Bonjour, atau kebijakan Firewall global. Aturan blok administrator, kebijakan organisasi, VPN, dan client isolation tetap memerlukan peninjauan yang sesuai; jangan mematikan pengamanan untuk melewatinya.
 
 Pada satu setup iPhone 11/Windows 11, pengguna mengonfirmasi **installer 0.5.0** berhasil mirroring setelah aturan receiver tambahan dibatasi ke antarmuka/IP/subnet IPv4 lokal. Kemudian, smoke test **0.5.1** dengan opsi installer Public Wi-Fi aktif berhasil menurut pengguna setelah aturan repair sementara dilepas. Pemeriksaan lokal memastikan versi dan aturan yang terpasang; ini bukan bukti semua jaringan/IPv6 sudah berfungsi. Skrip perbaikan khusus komputer bukan langkah instalasi publik; lihat [hasil dan batas pengujian 0.5.1](RELEASE-NOTES-0.5.1.md).
+
+## Video berhenti saat layar perangkat mati
+
+Ini perilaku iOS/iPadOS, bukan kegagalan iDock. Saat layar perangkat terkunci — baik karena Auto-Lock maupun tombol power ditekan — sistem menghentikan Screen Mirroring, sehingga receiver tidak lagi menerima frame dan jendela videonya hilang. iDock kemudian mengakhiri sesi melalui [aturan dua detik](#receiver-tidak-muncul-atau-video-tidak-tersambung) yang sama seperti penutupan jendela biasa.
+
+Tidak ada pengaturan di iDock yang dapat mempertahankan video pada kondisi ini; keputusan menghentikan stream berada sepenuhnya pada perangkat. Untuk pemakaian sebagai dock, matikan penguncian otomatis pada perangkat melalui **Settings → Display & Brightness → Auto-Lock → Never**, lalu sambungkan ulang Screen Mirroring. Layar yang menyala terus menambah konsumsi daya, jadi hubungkan perangkat ke sumber daya.
+
+Kontrol Bluetooth mengikuti jalur yang terpisah dari video dan tidak bergantung pada status layar. Namun karena hilangnya jendela video mengakhiri seluruh sesi, kontrol milik sesi tersebut ikut berhenti; ini penutupan sesi, bukan pairing yang gagal. Jika mirroring belum pernah dibuka, kontrol standalone tidak terpengaruh oleh layar perangkat yang mati.
+
+Perilaku di atas diamati pada satu konfigurasi iPhone 11/Windows 11. Ambang waktu dan alur penutupan sesi diperiksa oleh pengujian otomatis; reaksi setiap versi iOS/iPadOS terhadap penguncian layar belum diverifikasi menyeluruh, dan iPad belum diuji secara fisik.
 
 ## Bluetooth Connected, tetapi kontrol belum terhubung
 

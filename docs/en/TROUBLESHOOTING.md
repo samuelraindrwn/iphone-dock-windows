@@ -10,6 +10,7 @@ Choose the matching symptom:
 
 - [Build fails or the app will not open](#build-fails-or-the-app-will-not-open)
 - [Receiver not found or video disconnects](#receiver-not-found-or-video-not-connecting)
+- [Video stops when the device screen turns off](#video-stops-when-the-device-screen-turns-off)
 - [Bluetooth says Connected, but control is not connected](#bluetooth-says-connected-but-control-is-not-connected)
 - [Bluetooth is not ready or reports Aborted](#bluetooth-is-not-ready-aborted-or-access-is-denied)
 - [Input does not return to Windows](#input-does-not-return-to-windows)
@@ -55,6 +56,16 @@ The installer preserves **Private/LocalSubnet**. **Allow AirPlay from the local 
 Do not automatically change Public to Private to try to fix mirroring. Existing Bonjour rules may apply to only one profile; changing profiles can exchange a video-connection issue for a discovery issue. The installer does not change the network profile, Bonjour services/rules, or global Firewall policy. Administrator block rules, organization policy, VPNs, and client isolation still require appropriate review; do not disable protections to bypass them.
 
 On one iPhone 11/Windows 11 setup, the user confirmed successful mirroring with **installer 0.5.0** after an additional receiver rule was restricted to the local IPv4 interface/IP/subnet. Later, a **0.5.1** smoke test with the installer's Public Wi-Fi option enabled succeeded according to the user after the temporary repair rules were removed. Local checks confirmed the installed version and rules; this does not prove that every network or IPv6 works. Computer-specific repair scripts are not a public installation step; see the [0.5.1 test results and limitations](RELEASE-NOTES-0.5.1.md).
+
+## Video stops when the device screen turns off
+
+This is iOS/iPadOS behavior, not an iDock failure. When the device screen locks — whether from Auto-Lock or the power button — the system stops Screen Mirroring, so the receiver no longer receives frames and its video window disappears. iDock then ends the session through the same [two-second rule](#receiver-not-found-or-video-not-connecting) that applies to closing the window normally.
+
+No iDock setting can keep video alive in this situation; the decision to stop the stream belongs entirely to the device. For dock use, disable automatic locking on the device under **Settings → Display & Brightness → Auto-Lock → Never**, then reconnect Screen Mirroring. Keeping the screen on increases power consumption, so connect the device to a power source.
+
+Bluetooth control follows a path separate from video and does not depend on screen state. However, because losing the video window ends the whole session, control owned by that session stops as well; this is session closure, not a pairing failure. If mirroring was never opened, standalone control is unaffected by the device screen turning off.
+
+The behavior above was observed on one iPhone 11/Windows 11 configuration. The timing threshold and session-closure flow are covered by automated checks; how each iOS/iPadOS version reacts to screen locking has not been verified exhaustively, and iPad has not been physically tested.
 
 ## Bluetooth says Connected, but control is not connected
 
