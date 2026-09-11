@@ -17,6 +17,8 @@ internal sealed class EngineManager : IDisposable
     public bool MirrorRunning => mirror?.IsRunning == true;
     public bool ControlRunning => control?.IsRunning == true;
     public string BleLogPath => Path.Combine(UserStorage.Root, "data", "blehid", "logs", "blehid.log");
+    // The last lifecycle sample, so window layout does not enumerate the desktop a second time.
+    internal MirrorWindowSnapshot? LastMirrorSnapshot { get; private set; }
 
     public static bool HasExistingControl()
     {
@@ -66,6 +68,7 @@ internal sealed class EngineManager : IDisposable
         if (mirror is null) return MirrorLifecycleEvent.None;
         var session = mirrorLifecycle.Generation;
         var snapshot = mirrorLifecycle.Capture(mirror.ReadIsRunning, mirror.ContainsProcess);
+        LastMirrorSnapshot = snapshot;
         return mirrorLifecycle.Observe(session, snapshot,
             TimeSpan.FromSeconds((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency));
     }
@@ -134,6 +137,7 @@ internal sealed class EngineManager : IDisposable
     public void Dispose()
     {
         mirrorLifecycle.Reset();
+        LastMirrorSnapshot = null;
         // Clear references before disposing so a queued refresh cannot inspect an
         // ended job. Always attempt all owned cleanup even if one disposal fails.
         var ownedControl = control; control = null;

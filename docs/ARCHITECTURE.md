@@ -63,6 +63,16 @@ Launcher hanya memilih jendela video dari proses dalam Job receiver milik sesiny
 
 PNG disimpan ke `data\screenshots` di root penyimpanan pengguna/paket, tidak ke Photos perangkat dan tidak diunggah otomatis. Ini adalah frame mirroring pada laptop, bukan jaminan resolusi screenshot native perangkat. Ukuran/rotasi/hasil GPU dan batas waktu perlu diuji dengan receiver nyata.
 
+## Tampilan jendela video dan suara receiver
+
+Mulai 0.6.0, launcher dapat mengubah **geometri** jendela video milik sesinya. Ini satu-satunya pengecualian dari prinsip pengamatan read-only, dan cakupannya sempit: `MirrorWindowPositioner` hanya menerima jendela yang sudah dibuktikan `MirrorWindowLifecycle` berada dalam Job receiver, hanya memanggil `SetWindowPos`/`SetWindowLongPtr` untuk bingkai dan posisi, serta tidak mengirim input atau pesan lain. Rasio stream diambil dari ukuran klien jendela saat pertama terlihat — renderer D3D11/D3D12 menampilkan jendelanya setelah menyesuaikan ke ukuran video — dan setiap HWND ditata sekali agar ukuran yang diubah pengguna tidak dilawan. Perhitungan tata letak (`MirrorWindowLayout`) murni dan diuji tanpa jendela nyata.
+
+Volume memakai Core Audio session control (`ISimpleAudioVolume`) pada sesi audio yang PID-nya lolos `ProcessJob.ContainsProcess`, di setiap endpoint render aktif. Ini kontrol per aplikasi yang sama dengan Volume Mixer; volume sistem dan aplikasi lain tidak disentuh. Sesi audio baru ada ketika receiver memutar suara, sehingga nilai diterapkan ulang dari refresh satu detik selama mirroring berjalan. Backend BLE tidak terlibat sama sekali.
+
+Decoder video adalah satu-satunya konfigurasi UxPlay yang ditulis launcher. Wrapper `uxplay-windows` merakit argumennya hanya dari `arguments.txt` di `QStandardPaths::AppDataLocation` (bukan argv, bukan variabel lingkungan), sehingga `UxPlayArguments` mengedit file itu tepat sebelum receiver dijalankan: hanya pasangan `-vd d3d11h264dec` yang ditambah/dihapus, token lain dipertahankan verbatim, `-vd` lain milik pengguna tidak diganti, penulisan atomik, dan file asli dicadangkan sekali sebagai `arguments.txt.idock-backup`. Keputusan memakai flag datang dari `VideoDecoderProbe`: `ID3D11VideoDevice` ditanya profil `D3D11_DECODER_PROFILE_H264_VLD_NOFGT` dengan keluaran NV12, pemeriksaan yang sama yang dilakukan plugin GStreamer d3d11 sebelum mendaftarkan elemen. Jawaban negatif atau kegagalan apa pun berarti decoder software; pengguna juga dapat memaksa **Software**.
+
+`MirrorSettings` menyimpan `{"Volume":100,"Muted":false,"WindowMode":"default","VideoDecoder":"auto"}` secara atomik pada `data\mirror-settings.json`, terpisah dari bahasa dan pengaturan pointer. File yang tidak ada berarti tidak ada yang dikelola; file tidak valid ditolak tanpa ditimpa dan ditampilkan pada UI.
+
 ## Gerakan pointer dan pengaturan
 
 Backend menggabungkan gerakan relatif X/Y, lalu mengirimnya mengikuti pacing koneksi HID. Sensitivitas mengalikan perpindahan dan mempertahankan sisa pecahan agar gerakan kecil tidak hilang. Rotasi manual mengubah arah setelah scaling. Klik, keyboard, roda, descriptor HID, dan interval Bluetooth tidak diubah oleh slider/orientasi.

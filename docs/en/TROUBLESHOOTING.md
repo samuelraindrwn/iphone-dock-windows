@@ -11,6 +11,7 @@ Choose the matching symptom:
 - [Build fails or the app will not open](#build-fails-or-the-app-will-not-open)
 - [Receiver not found or video disconnects](#receiver-not-found-or-video-not-connecting)
 - [Video stops when the device screen turns off](#video-stops-when-the-device-screen-turns-off)
+- [Video window mode or audio volume does not apply](#video-window-mode-or-audio-volume-does-not-apply)
 - [Bluetooth says Connected, but control is not connected](#bluetooth-says-connected-but-control-is-not-connected)
 - [Bluetooth is not ready or reports Aborted](#bluetooth-is-not-ready-aborted-or-access-is-denied)
 - [Input does not return to Windows](#input-does-not-return-to-windows)
@@ -66,6 +67,22 @@ No iDock setting can keep video alive in this situation; the decision to stop th
 Bluetooth control follows a path separate from video and does not depend on screen state. However, because losing the video window ends the whole session, control owned by that session stops as well; this is session closure, not a pairing failure. If mirroring was never opened, standalone control is unaffected by the device screen turning off.
 
 The behavior above was observed on one iPhone 11/Windows 11 configuration. The timing threshold and session-closure flow are covered by automated checks; how each iOS/iPadOS version reacts to screen locking has not been verified exhaustively, and iPad has not been physically tested.
+
+## Video window mode or audio volume does not apply
+
+Both **0.6.0** settings work only on the receiver process started by this iDock session and take effect only once there is something to change:
+
+- **The display mode is not applied:** the video window must already be visible and not minimized; before Screen Mirroring connects there is no window to lay out. The status under the selector reads “Applied to 1 video window(s).” on success. If the window was resized manually, click **Apply again**.
+- **The window returns to its old size after rotation:** UxPlay creates a new window on rotation; iDock lays it out again within about a quarter of a second. If it does not, click **Apply again**, then report the device model and renderer (D3D11/D3D12).
+- **Fullscreen covers iDock:** on a single monitor this is expected. **Alt + Tab** to iDock and choose another mode, or **Stop session**.
+- **The frame looks different after returning to “Leave to UxPlay”:** iDock restores the style and position recorded when the window was first seen. If UxPlay has since replaced the window (for example after rotation), there is nothing to restore.
+- **The volume does not change:** the receiver's audio session exists only after the device sends sound. Play something on the device, then wait about a second. The status reads “Applied to 1 receiver audio session(s).” on success. If the device itself is silent, iDock cannot turn its sound on.
+- **The Volume Mixer shows a different value:** while mirroring is running, iDock returns the saved value; change it from the iDock slider, not from the Mixer.
+- **Video does not appear after the GPU decoder was enabled:** choose **Video decoder → Software**, then **Stop session** and **Open mirroring** again; the flag is removed from `arguments.txt`. The original contents are kept in `arguments.txt.idock-backup` in the same folder. Report the GPU/driver model and the “D3D11 decoder probe” line from the launcher log.
+- **arguments.txt could not be updated:** mirroring still opens with the previous contents. Check permissions on `%APPDATA%\leapbtw\uxplay-windows` or whether another editor holds the file.
+- **A “could not apply” status:** see the launcher log for the Windows detail. Choose **Leave to UxPlay** or move the slider back to 100% to stop managing the window/volume; the session keeps running.
+
+Layout math, settings validation, and read-only enumeration are checked automatically. Behavior on specific renderers, GPU drivers, DPI scales, and audio devices has not been verified on real hardware at the time of writing; include the renderer, monitor count, and DPI scale when reporting.
 
 ## Bluetooth says Connected, but control is not connected
 
@@ -134,6 +151,8 @@ Move the laptop mouse while watching the **actual device screen**:
 - **Direction is wrong only in landscape:** choose the matching control orientation. Rotation is not automatic.
 
 ### Testing video latency
+
+Starting with 0.6.0, the GPU decoder (`-vd d3d11h264dec`) is managed from **Settings → Video decoder** and written to `arguments.txt` automatically when mirroring opens; see [Usage](USAGE.md#video-decoder). The rest of this section covers other options that are still edited manually.
 
 UxPlay offers `-vsync no` to display frames without waiting for audio/video timestamp synchronization. This can help interactive use, at the risk of audio and video being less synchronized. It does not guarantee zero delay; frames can still fall behind if decoding cannot keep up with the stream. See the [upstream UxPlay guide](https://github.com/FDH2/UxPlay#after-installation).
 

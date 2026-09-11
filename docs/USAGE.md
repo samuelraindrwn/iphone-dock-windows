@@ -26,7 +26,7 @@ Seluruh kontrol berada dalam satu halaman. Mulai dari bagian atas dan gulir ke b
 | --- | --- | --- |
 | 1 | **Panduan** | Tiga langkah koneksi pertama serta nama laptop untuk pairing. |
 | 2 | **Layar perangkat** dan **Mouse & keyboard** | Kartu untuk memulai mirroring/kontrol dan melihat status koneksi masing-masing. |
-| 3 | **Pengaturan** | Bahasa, sensitivitas, dan orientasi pointer. |
+| 3 | **Pengaturan** | Bahasa, sensitivitas dan orientasi pointer, serta mulai 0.6.0 tampilan jendela video, decoder video, dan suara mirroring. |
 | 4 | **Diagnostik** | Status pemeriksaan dan log sesi; **Buka log** membuka folder log lokal. |
 
 Ringkasan di bagian atas menunjukkan pintasan alih target yang aktif (**Ctrl + Alt + D** secara default), **Ctrl + Alt + Q** untuk kembali ke Windows, serta **Ctrl + Alt + S** untuk screenshot. Tidak ada menu samping atau halaman terpisah yang perlu dibuka.
@@ -135,6 +135,45 @@ Kembalikan input ke laptop, pilih orientasi, tunggu tersimpan, lalu pilih perang
 
 Rotasi belum otomatis. Setelah perangkat ditegakkan kembali, pilih Portrait lagi. Uji gerakan ke kanan dan ke atas sambil melihat layar perangkat asli. Transformasi arah sudah diperiksa otomatis, tetapi kecocokan orientasi/arah pada perangkat nyata tetap perlu dikonfirmasi. Jika koreksinya berlawanan, coba pilihan landscape satunya.
 
+## Tampilan jendela video
+
+Mulai **0.6.0**, bagian **Pengaturan** memiliki pilihan **Tampilan video** untuk jendela **AirPlay Video Stream** milik sesi iDock:
+
+| Pilihan | Perilaku |
+| --- | --- |
+| **Biarkan UxPlay · tanpa perubahan** | Default. iDock tidak menyentuh ukuran atau bingkai jendela video; perilaku sama seperti versi sebelumnya. |
+| **Windowed · mengikuti bentuk perangkat** | Jendela diubah mengikuti rasio stream perangkat (portrait atau landscape), diskalakan agar muat sekitar 85% area kerja monitor, lalu ditengahkan. Ukuran piksel asli tidak dipaksakan karena stream portrait 1080p lebih tinggi dari kebanyakan layar laptop. |
+| **Fullscreen · seluruh monitor** | Bingkai jendela dihilangkan dan jendela menutupi seluruh monitor tempat jendela berada. Rasio dipertahankan dengan bilah hitam. |
+
+Pilihan tersimpan otomatis dan diterapkan setelah jendela video terlihat, sekitar seperempat detik setelah muncul. Hanya jendela video dari proses receiver milik sesi ini yang diubah; jendela pengaturan/tray UxPlay dan aplikasi lain tidak disentuh. Rotasi perangkat biasanya membuat UxPlay membuat jendela video baru, dan jendela baru itu ditata lagi mengikuti pilihan.
+
+Ukuran jendela yang Anda ubah manual **tidak** ditimpa selama jendela yang sama masih ada. Klik **Terapkan ulang** untuk menata kembali sesuai pilihan. Memilih kembali **Biarkan UxPlay** mengembalikan bingkai dan posisi jendela seperti sebelum diubah, selama jendela itu masih ada.
+
+Pada satu monitor, mode fullscreen menutupi jendela iDock. Gunakan **Alt + Tab** untuk kembali ke iDock, lalu ubah pilihan; **Ctrl + Alt + Q** tetap mengembalikan input ke Windows. Pilihan ini berbeda dari checkbox **Force Fullscreen** pada jendela pengaturan UxPlay, yang memerlukan restart receiver dan tidak diubah oleh iDock.
+
+Perhitungan tata letak dan penyimpanan pilihan diperiksa otomatis. Hasil pada renderer, monitor, dan skala DPI tertentu belum diverifikasi pada perangkat nyata saat dokumen ini ditulis; ikuti [checklist kestabilan](STABILITY-TESTS.md) dan gunakan **Biarkan UxPlay** jika hasilnya tidak sesuai.
+
+## Decoder video
+
+Pilihan **Decoder video** pada **Pengaturan** menentukan apakah UxPlay memakai decoder H.264 GPU (`-vd d3d11h264dec`) atau software:
+
+- **Otomatis · GPU bila didukung** (default): saat aplikasi dibuka, iDock memeriksa lewat Direct3D 11 apakah GPU menyediakan profil decoder H.264 dengan keluaran NV12 — pemeriksaan yang sama dengan plugin GStreamer sebelum mendaftarkan `d3d11h264dec`. Hasilnya ditampilkan di bawah pilihan. Jika didukung, flag dipakai; jika tidak, decoder software dipakai tanpa perubahan.
+- **Software · tanpa GPU**: flag dihapus. Pilih ini bila video tidak muncul setelah decoder GPU aktif, atau untuk membandingkan.
+
+Pilihan diterapkan **saat mirroring dibuka**: sebelum receiver dijalankan, iDock menulis `%APPDATA%\leapbtw\uxplay-windows\arguments.txt` milik UxPlay — file yang sama yang dibuka tombol **Edit UxPlay Arguments (Advanced)** di tray UxPlay. Yang diubah hanya pasangan `-vd d3d11h264dec`; opsi lain seperti `-fps 60` atau `-vsync no` tetap, dan pilihan `-vd` lain yang Anda tulis sendiri tidak diganti. Sebelum pengeditan pertama, file asli disalin sekali ke `arguments.txt.idock-backup` di folder yang sama dan tidak pernah ditimpa lagi. Kegagalan menulis dicatat dan tidak menghalangi mirroring.
+
+Perubahan pilihan berlaku pada **Buka mirroring** berikutnya, bukan pada sesi yang sedang berjalan. Pada satu setup iPhone 11/Windows 11, `-vd d3d11h264dec` yang ditambahkan manual dilaporkan pengguna berjalan aman; pengeditan otomatis dan probe belum diverifikasi pada perangkat lain, dan hasil probe bukan jaminan pipeline GStreamer berhasil pada setiap driver.
+
+## Suara mirroring
+
+Slider **Suara mirroring** (0–100%) dan tombol **Bisukan** mengatur volume **per aplikasi** untuk receiver `uxplay-windows` milik sesi iDock — kontrol yang sama dengan Volume Mixer Windows untuk satu aplikasi. Volume sistem, aplikasi lain, dan volume pada perangkat tidak diubah.
+
+- Nilai tersimpan otomatis sekitar 200 ms setelah slider berhenti; **Bisukan** langsung tersimpan tanpa mengubah posisi slider dan berubah menjadi **Suarakan**.
+- Pengaturan diterapkan **tanpa restart** UxPlay, saat sesi audio receiver ada — yaitu setelah perangkat mengirim suara. iDock memeriksanya kembali sekitar setiap satu detik selama mirroring berjalan, sehingga perubahan pada Volume Mixer dikembalikan ke nilai yang tersimpan.
+- Sebelum slider atau tombol pernah disentuh, tidak ada file yang dibuat dan volume receiver tidak diubah; perilaku sama seperti versi sebelumnya.
+
+Windows mengingat volume per aplikasi. Jika UxPlay dijalankan di luar iDock, Volume Mixer masih memakai nilai terakhir yang diterapkan; ubah di Volume Mixer atau kembalikan slider ke 100% dari iDock saat mirroring berjalan. Jika suara tidak pernah terdengar sama sekali, periksa volume perangkat dan pastikan mirroring memang mengirim audio; slider ini tidak dapat mengaktifkan suara yang tidak dikirim perangkat.
+
 ## Mengakhiri sesi
 
 Untuk menghentikan **kontrol saja**, lepaskan tombol yang ditahan, tekan **Ctrl + Alt + Q**, lalu klik tombol merah **Nonaktifkan kontrol**. Input tetap di laptop, mirroring terus berjalan, dan pairing/pengaturan tidak dihapus. Tombol berubah kembali menjadi **Aktifkan kontrol**. Warna merah berarti proses kontrol sesi ini berjalan, bukan bukti perangkat HID sudah tersambung; periksa status di atasnya.
@@ -157,7 +196,7 @@ Untuk mencatat kestabilan pada konfigurasi perangkat Anda, ikuti [checklist manu
 
 ## Data dan batas penggunaan
 
-Untuk **installer**, pengaturan pointer tersimpan di `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, log launcher di `%LOCALAPPDATA%\iDock\logs\idock.log`, dan log backend di `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. Untuk **portable/build manual default**, path relatif `data\blehid` dan `logs` berada di folder paket. Lihat [tabel lokasi data](INSTALL.md#lokasi-data).
+Untuk **installer**, pengaturan pointer tersimpan di `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, log launcher di `%LOCALAPPDATA%\iDock\logs\idock.log`, dan log backend di `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. Untuk **portable/build manual default**, path relatif `data\blehid` dan `logs` berada di folder paket. Lihat [tabel lokasi data](INSTALL.md#lokasi-data). Pilihan tampilan jendela video dan suara mirroring (0.6.0) tersimpan di `data\mirror-settings.json` pada basis yang sama; file ini baru dibuat setelah salah satu kontrol tersebut diubah.
 
 Tidak ada unggahan log otomatis. Periksa dan samarkan nama perangkat, alamat Bluetooth, path pengguna, dan informasi pribadi sebelum membagikan log.
 

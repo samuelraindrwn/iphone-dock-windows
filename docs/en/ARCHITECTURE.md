@@ -63,6 +63,16 @@ The launcher selects a video window only from processes in its own receiver Job.
 
 PNGs are saved to `data\screenshots` under the user/package storage root, not to the device's Photos and not uploaded automatically. This is a laptop mirroring frame, not a guarantee of native-device screenshot resolution. Size, rotation, GPU output, and timeouts need testing with the real receiver.
 
+## Video window and receiver audio
+
+Starting with 0.6.0, the launcher can change the **geometry** of its own session's video window. This is the single exception to the read-only observation principle, and it is narrow: `MirrorWindowPositioner` only receives windows that `MirrorWindowLifecycle` has proved to be inside the receiver Job, only calls `SetWindowPos`/`SetWindowLongPtr` for frame and position, and sends no input or other messages. The stream aspect ratio comes from the window's client size when it is first seen — the D3D11/D3D12 renderers show their window after sizing it to the video — and each HWND is laid out once so a user's manual resize is never fought. The layout math (`MirrorWindowLayout`) is pure and tested without real windows.
+
+Volume uses Core Audio session control (`ISimpleAudioVolume`) on audio sessions whose PID passes `ProcessJob.ContainsProcess`, on every active render endpoint. This is the same per-application control the Volume Mixer exposes; the system volume and other applications are not touched. The audio session only exists once the receiver plays sound, so the value is reapplied from the one-second refresh while mirroring is running. The BLE backend is not involved at all.
+
+The video decoder is the only UxPlay configuration the launcher writes. The `uxplay-windows` wrapper assembles its arguments only from `arguments.txt` under `QStandardPaths::AppDataLocation` (not argv, not an environment variable), so `UxPlayArguments` edits that file right before the receiver starts: only the `-vd d3d11h264dec` pair is added or removed, other tokens are kept verbatim, a different user `-vd` is never replaced, the write is atomic, and the original file is backed up once as `arguments.txt.idock-backup`. The decision to use the flag comes from `VideoDecoderProbe`: `ID3D11VideoDevice` is asked for the `D3D11_DECODER_PROFILE_H264_VLD_NOFGT` profile with NV12 output, the same check GStreamer's d3d11 plugin makes before registering the element. A negative answer or any failure means the software decoder; the user can also force **Software**.
+
+`MirrorSettings` atomically stores `{"Volume":100,"Muted":false,"WindowMode":"default","VideoDecoder":"auto"}` in `data\mirror-settings.json`, separate from the language and pointer settings. A missing file means nothing is managed; an invalid file is rejected without being overwritten and is reported in the UI.
+
 ## Pointer movement and settings
 
 The backend combines relative X/Y movement, then sends it at the HID connection's pace. Sensitivity scales displacement and preserves fractional remainders so small movements are not lost. Manual rotation changes direction after scaling. The slider/orientation controls do not change clicks, keyboard input, the mouse wheel, the HID descriptor, or the Bluetooth interval.

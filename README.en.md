@@ -37,11 +37,13 @@ Seeing the receiver name does not prove the video connection is working. If the 
 1. Turn on Bluetooth on Windows and your device, then click **Enable control (Aktifkan kontrol)** in **Mouse & keyboard**.
 2. In the device's **Settings** app, open **Accessibility → Touch → AssistiveTouch** and enable it. Select **Devices → Bluetooth Devices** and pair with the laptop name shown in iDock's **Guide**.
 3. Once input is connected, use the switch shortcut shown in the app (**Ctrl + Alt + D** by default). Check the input target before moving the pointer or typing.
-4. Use **Ctrl + Alt + Q** to return input to Windows. Scroll to **Settings (Pengaturan)** to adjust sensitivity, orientation, and the interface language.
+4. Use **Ctrl + Alt + Q** to return input to Windows. Scroll to **Settings (Pengaturan)** to adjust sensitivity, orientation, the interface language, and the video window and mirroring audio.
 
 The switch shortcut can be changed with **Change shortcuts** in the Guide section; **Ctrl + Alt + Q** is fixed and cannot be reassigned. Changes apply after disabling and enabling control; mirroring does not need to stop. See [changing the shortcuts](docs/en/USAGE.md#changing-the-shortcuts).
 
-In **0.5.3**, the red **Disable control** button stops mouse/keyboard control without closing mirroring. **Ctrl + Alt + S** or the **Take screenshot** button saves the mirrored display as a local PNG; see [Usage](docs/en/USAGE.md). This documentation describes the 0.5.3 source; check Releases for available installer versions.
+In **0.5.3**, the red **Disable control** button stops mouse/keyboard control without closing mirroring. **Ctrl + Alt + S** or the **Take screenshot** button saves the mirrored display as a local PNG; see [Usage](docs/en/USAGE.md). This documentation describes the 0.6.0 source; check Releases for available installer versions.
+
+In **0.6.0**, **Settings** adds **Video window** (leave to UxPlay, windowed following the device shape, or fullscreen), **Video decoder** (GPU when a Direct3D 11 probe supports it, with a software fallback and an `arguments.txt` backup), and a **Mirroring audio** slider with a **Mute** button. All of them touch only the receiver owned by the iDock session, and had not been verified on other hardware at release time; see the [0.6.0 notes](docs/en/RELEASE-NOTES-0.6.0.md).
 
 The pairing page is in **Settings**, not the floating AssistiveTouch menu. A general Bluetooth `Connected` status is not proof that HID mouse/keyboard control is connected. The [full user guide](docs/en/USAGE.md) explains connection status, shortcuts, and recovery.
 
@@ -103,6 +105,7 @@ Build with the **.NET 10 SDK x64**. The default build is *framework-dependent* a
 - [0.5.1 changes and test evidence](docs/en/RELEASE-NOTES-0.5.1.md)
 - [0.5.2 language support and development status](docs/en/RELEASE-NOTES-0.5.2.md)
 - [0.5.3 shortcuts, independent control stop, and screenshots](docs/en/RELEASE-NOTES-0.5.3.md)
+- [0.6.0 video window mode and mirroring audio](docs/en/RELEASE-NOTES-0.6.0.md)
 - [Architecture and data storage](docs/en/ARCHITECTURE.md)
 - [Stability criteria and checklist](docs/en/STABILITY-TESTS.md)
 - [iOS/iPadOS compatibility, latency, and bug-fix roadmap](docs/en/ROADMAP.md)

@@ -2,6 +2,17 @@
 
 [Bahasa Indonesia](../STABILITY-TESTS.md) · English
 
+## Video window and mirroring audio checks for 0.6.0
+
+Real-device targets for the two new **Settings** controls; no results were recorded when the 0.6.0 notes were written. Record the renderer (D3D11/D3D12), monitor count, and DPI scale with every result.
+
+- **Windowed:** after Screen Mirroring connects, the video window is laid out to the device aspect ratio, fits about 85% of the work area, and is centered within about a quarter of a second. Rotating the device produces a new window that is laid out again. A manual resize is not overridden until **Apply again**.
+- **Fullscreen:** the window covers the whole monitor without a frame, the aspect ratio is preserved with black bars, and **Alt + Tab** to iDock still works. Returning to **Leave to UxPlay** restores the same window's frame/position.
+- **Touches nothing else:** the UxPlay settings/tray window, other UxPlay receivers not started by iDock, and other applications do not change size or style.
+- **Audio:** while the device plays sound, the slider and **Mute** change only the `uxplay-windows` volume in the Volume Mixer within about a second, without a receiver restart. A change from the Mixer returns to the saved value while mirroring is running. The system volume and other applications do not change. Before the slider is touched, there is no `mirror-settings.json` and the volume is not changed.
+- **Decoder:** with **Automatic** and a positive probe, `arguments.txt` contains `-vd d3d11h264dec` after **Open mirroring**, other options are intact, and `arguments.txt.idock-backup` holds the original file. **Software** removes the pair on the next open. Video appears in both cases; record the GPU/driver and the probe line from the log.
+- **Recovery:** after **Stop session** and a new session, the same choices are applied again without extra steps; input and pairing are unaffected.
+
 ## Shortcut, independent control stop, and screenshot checks for 0.5.3
 
 - [ ] Test the default **Ctrl + Alt + D**, then a different Ctrl/Alt combination. The active combination must not change before **Disable control → Enable control**; the app summary must keep showing the actual session binding. Restore the active choice to cancel a pending change.

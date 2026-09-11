@@ -23,6 +23,8 @@ internal enum MirrorLifecycleEvent { None, ReadFailed, VideoWindowClosed, Receiv
 
 // Read-only observation: no global hooks, title-based process termination, or messages
 // sent to another app. UxPlay may recreate a window during a renderer/rotation change.
+// Geometry changes are the one exception and live in MirrorWindowPositioner, which only
+// ever receives windows this class proved to be in the session's own Job.
 internal sealed class MirrorWindowLifecycle
 {
     internal static readonly TimeSpan DisappearanceGrace = TimeSpan.FromSeconds(2);

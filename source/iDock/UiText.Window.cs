@@ -33,7 +33,7 @@ internal static partial class UiText
         entries.Add("Control.Enable", new("Aktifkan kontrol", "Enable control"));
         entries.Add("Control.Check", new("Cek Bluetooth", "Check Bluetooth"));
         entries.Add("Settings.Title", new("Pengaturan", "Settings"));
-        entries.Add("Settings.Description", new("Sesuaikan bahasa dan gerakan dengan cara Anda bekerja.", "Choose your language and adjust pointer movement."));
+        entries.Add("Settings.Description", new("Sesuaikan bahasa, gerakan pointer, jendela video, dan suara.", "Choose your language, pointer movement, video window, and audio."));
         entries.Add("Sensitivity.Title", new("Sensitivitas pointer", "Pointer sensitivity"));
         entries.Add("Sensitivity.Reset", new("Reset", "Reset"));
         entries.Add("Sensitivity.ResetAccessible", new("Reset sensitivitas ke 1 kali", "Reset sensitivity to normal (1×)"));

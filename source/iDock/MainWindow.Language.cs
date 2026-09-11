@@ -88,6 +88,7 @@ public partial class MainWindow
             ControlStatus.Text = controlStatusObserved ? controlStatus.DisplayText : UiText.T("Control.NotConnected");
             RenderDiagnosticStatus();
             RenderScreenshotStatus();
+            RenderMirrorStatuses();
             LanguageStatus.Text = UiText.T(languageStatusKey, ResolveArguments(languageStatusArgs));
         }
         finally { applyingLanguage = false; }

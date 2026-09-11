@@ -23,10 +23,10 @@ Mirroring/kontrol tidak memerlukan aplikasi pendamping di perangkat, Mac, jailbr
 
 Unduh hanya dari [GitHub Releases repository proyek](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest). Pilih asset installer atau portable, **bukan** tautan otomatis **Source code** untuk penggunaan biasa. Jika versi yang disebut di panduan belum terbit, gunakan rilis yang tersedia atau tunggu paket berikutnya. [Build manual](DEVELOPMENT.md) tetap tersedia untuk developer; pengguna installer tidak perlu membangun aplikasi.
 
-Untuk versi 0.5.3, installer bernama `iDock-Setup-0.5.3-win-x64.exe`; gunakan contoh ini hanya jika versi tersebut sudah tersedia pada Releases. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
+Untuk versi 0.6.0, installer bernama `iDock-Setup-0.6.0-win-x64.exe`; gunakan contoh ini hanya jika versi tersebut sudah tersedia pada Releases. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
 
 ```powershell
-Get-FileHash -LiteralPath '.\iDock-Setup-0.5.3-win-x64.exe' -Algorithm SHA256
+Get-FileHash -LiteralPath '.\iDock-Setup-0.6.0-win-x64.exe' -Algorithm SHA256
 Get-Content -LiteralPath '.\SHA256SUMS.txt'
 ```
 
@@ -93,6 +93,8 @@ Mulai source versi 0.5.2, pilih **Pengaturan → Bahasa → Bahasa Indonesia / E
 | Pengaturan pointer | `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json` | `data\blehid\pointer-settings.json` di folder paket |
 | Pintasan alih target (0.5.3) | `%LOCALAPPDATA%\iDock\data\blehid\hotkey-settings.json` | `data\blehid\hotkey-settings.json` di folder paket |
 | Screenshot PNG (0.5.3) | `%LOCALAPPDATA%\iDock\data\screenshots` | `data\screenshots` di folder paket |
+| Tampilan jendela video, decoder, dan suara mirroring (0.6.0) | `%LOCALAPPDATA%\iDock\data\mirror-settings.json` | `data\mirror-settings.json` di folder paket |
+| Argumen UxPlay yang diedit iDock (0.6.0) | `%APPDATA%\leapbtw\uxplay-windows\arguments.txt` dan cadangan `arguments.txt.idock-backup` | sama (file milik UxPlay, per pengguna Windows) |
 | Log launcher/diagnosis | `%LOCALAPPDATA%\iDock\logs` | `logs` di folder paket |
 | Data dan log backend | `%LOCALAPPDATA%\iDock\data\blehid` | `data\blehid` di folder paket |
 

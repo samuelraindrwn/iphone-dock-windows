@@ -11,6 +11,7 @@ Pilih gejala yang sesuai:
 - [Build gagal atau aplikasi tidak terbuka](#build-atau-aplikasi-tidak-bisa-dibuka)
 - [Receiver tidak ditemukan atau video terputus](#receiver-tidak-muncul-atau-video-tidak-tersambung)
 - [Video berhenti saat layar perangkat mati](#video-berhenti-saat-layar-perangkat-mati)
+- [Tampilan jendela video atau suara mirroring tidak berubah](#tampilan-jendela-video-atau-suara-mirroring-tidak-berubah)
 - [Bluetooth Connected, tetapi kontrol belum terhubung](#bluetooth-connected-tetapi-kontrol-belum-terhubung)
 - [Bluetooth belum siap atau Aborted](#bluetooth-belum-siap-aborted-atau-akses-ditolak)
 - [Input tidak kembali ke Windows](#input-tidak-kembali-ke-windows)
@@ -66,6 +67,22 @@ Tidak ada pengaturan di iDock yang dapat mempertahankan video pada kondisi ini; 
 Kontrol Bluetooth mengikuti jalur yang terpisah dari video dan tidak bergantung pada status layar. Namun karena hilangnya jendela video mengakhiri seluruh sesi, kontrol milik sesi tersebut ikut berhenti; ini penutupan sesi, bukan pairing yang gagal. Jika mirroring belum pernah dibuka, kontrol standalone tidak terpengaruh oleh layar perangkat yang mati.
 
 Perilaku di atas diamati pada satu konfigurasi iPhone 11/Windows 11. Ambang waktu dan alur penutupan sesi diperiksa oleh pengujian otomatis; reaksi setiap versi iOS/iPadOS terhadap penguncian layar belum diverifikasi menyeluruh, dan iPad belum diuji secara fisik.
+
+## Tampilan jendela video atau suara mirroring tidak berubah
+
+Kedua pengaturan pada **0.6.0** hanya bekerja pada proses receiver yang dimulai oleh sesi iDock ini dan baru berlaku setelah ada sesuatu untuk diubah:
+
+- **Mode tampilan tidak diterapkan:** jendela video harus sudah terlihat dan tidak minimized; sebelum Screen Mirroring tersambung, tidak ada jendela yang bisa ditata. Status di bawah pilihan menunjukkan “Diterapkan pada 1 jendela video.” ketika berhasil. Jika jendela sudah pernah diubah manual, klik **Terapkan ulang**.
+- **Jendela kembali ke ukuran lama setelah rotasi:** UxPlay membuat jendela baru saat rotasi; iDock menatanya lagi dalam sekitar seperempat detik. Jika tidak, klik **Terapkan ulang**, lalu laporkan model perangkat dan renderer (D3D11/D3D12).
+- **Fullscreen menutupi iDock:** pada satu monitor ini perilaku yang diharapkan. **Alt + Tab** ke iDock lalu pilih mode lain, atau **Hentikan sesi**.
+- **Bingkai jendela tampak berbeda setelah kembali ke “Biarkan UxPlay”:** iDock mengembalikan gaya dan posisi yang direkam saat jendela pertama terlihat. Jika jendela sudah diganti UxPlay (misalnya setelah rotasi), tidak ada yang perlu dikembalikan.
+- **Volume tidak berubah:** sesi audio receiver baru ada setelah perangkat mengirim suara. Putar sesuatu di perangkat, lalu tunggu sekitar satu detik. Status menunjukkan “Diterapkan pada 1 sesi audio receiver.” saat berhasil. Jika perangkat sendiri senyap, iDock tidak dapat menyalakan suaranya.
+- **Volume Mixer menampilkan nilai lain:** selama mirroring berjalan, iDock mengembalikan nilai tersimpan; ubah dari slider iDock, bukan dari Mixer.
+- **Video tidak muncul setelah decoder GPU aktif:** pilih **Decoder video → Software**, lalu **Hentikan sesi** dan **Buka mirroring** lagi; flag dihapus dari `arguments.txt`. Isi asli tersimpan di `arguments.txt.idock-backup` di folder yang sama. Laporkan model GPU/driver dan baris “Probe decoder D3D11” dari log launcher.
+- **arguments.txt gagal diperbarui:** mirroring tetap dibuka dengan isi lama. Periksa izin folder `%APPDATA%\leapbtw\uxplay-windows` atau apakah file sedang dibuka editor lain.
+- **Status “gagal diterapkan”:** lihat log launcher untuk detail dari Windows. Pilih **Biarkan UxPlay** atau kembalikan slider ke 100% untuk berhenti mengelola jendela/volume; sesi tetap berjalan.
+
+Perhitungan tata letak, validasi pengaturan, dan enumerasi read-only diperiksa otomatis. Perilaku pada renderer, driver GPU, skala DPI, dan perangkat audio tertentu belum diverifikasi pada perangkat nyata saat dokumen ini ditulis; sertakan renderer, jumlah monitor, dan skala DPI saat melapor.
 
 ## Bluetooth Connected, tetapi kontrol belum terhubung
 
@@ -134,6 +151,8 @@ Gerakkan mouse laptop sambil melihat **layar perangkat asli**:
 - **Arah salah hanya saat landscape:** pilih orientasi kontrol yang sesuai. Rotasi belum otomatis.
 
 ### Uji latensi video
+
+Mulai 0.6.0, decoder GPU (`-vd d3d11h264dec`) dikelola dari **Pengaturan → Decoder video** dan ditulis otomatis ke `arguments.txt` saat mirroring dibuka; lihat [cara pakai](USAGE.md#decoder-video). Bagian di bawah ini tentang opsi lain yang tetap diedit manual.
 
 UxPlay menyediakan mode `-vsync no` untuk menampilkan frame tanpa menunggu sinkronisasi timestamp audio/video. Ini dapat membantu penggunaan interaktif, dengan risiko suara dan gambar kurang sinkron. Ia tidak menjamin nol delay; jika decoding tidak mengejar stream, frame tetap dapat tertinggal. Lihat [panduan upstream UxPlay](https://github.com/FDH2/UxPlay#after-installation).
 

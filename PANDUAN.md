@@ -12,6 +12,8 @@ Pilih **Pengaturan → Bahasa → Bahasa Indonesia / English** untuk mengganti b
 
 Pada **0.5.3**, **Ubah pintasan** mengatur kombinasi alih target (default **Ctrl + Alt + D**). Tombol merah **Nonaktifkan kontrol** menghentikan input tanpa menghentikan mirroring. **Ctrl + Alt + S** menyimpan screenshot PNG di laptop, bukan Photos di perangkat. Ikuti [cara pakai](docs/USAGE.md) dan [catatan 0.5.3](docs/RELEASE-NOTES-0.5.3.md); periksa versi paket yang sudah tersedia di Releases.
 
+Pada **0.6.0**, **Pengaturan** menambahkan **Tampilan video** (biarkan UxPlay, windowed mengikuti bentuk perangkat, atau fullscreen), **Decoder video** (GPU bila didukung, dengan fallback software), dan slider **Suara mirroring** dengan tombol **Bisukan**. Semuanya hanya untuk receiver milik sesi iDock; lihat [catatan 0.6.0](docs/RELEASE-NOTES-0.6.0.md) untuk batas pengujiannya.
+
 1. [Instalasi](docs/INSTALL.md): unduhan GitHub Releases, verifikasi file, installer, portable, upgrade, dan uninstall.
 2. [Cara menggunakan aplikasi](docs/USAGE.md): mirroring, pairing Bluetooth, target input, sensitivitas, dan orientasi.
 3. [Pemecahan masalah](docs/TROUBLESHOOTING.md): aplikasi tidak terbuka, kontrol belum terhubung, keterlambatan, dan pelaporan bug.

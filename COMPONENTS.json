@@ -1,5 +1,5 @@
 {
-  "application": { "name": "iDock for Windows", "version": "0.5.3", "runtime": ".NET 10 Windows Desktop", "architecture": "x64" },
+  "application": { "name": "iDock for Windows", "version": "0.6.0", "runtime": ".NET 10 Windows Desktop", "architecture": "x64" },
   "components": [
     {
       "name": "UxPlay Windows", "version": "2.0.0.1736", "modified": false,

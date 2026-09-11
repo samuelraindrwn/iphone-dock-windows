@@ -18,7 +18,7 @@ All controls are on one page. Start at the top and scroll down as needed. The cu
 | --- | --- | --- |
 | 1 | **Panduan** (Guide) | Three initial connection steps and the laptop name to use for pairing. |
 | 2 | **Layar perangkat** (Device screen) and **Mouse & keyboard** | Cards for starting mirroring/control and viewing the status of each connection. |
-| 3 | **Pengaturan / Settings** | Interface language, pointer sensitivity, and orientation. In 0.5.1 this section is named **Pengaturan pointer** (Pointer settings). |
+| 3 | **Pengaturan / Settings** | Interface language, pointer sensitivity and orientation, and starting with 0.6.0 the video window mode, video decoder, and mirroring audio. In 0.5.1 this section is named **Pengaturan pointer** (Pointer settings). |
 | 4 | **Diagnostik** (Diagnostics) | Diagnostic status and the session log; **Buka log** (Open logs) opens the local log folder. |
 
 The top summary shows the active switch shortcut (**Ctrl + Alt + D** by default), **Ctrl + Alt + Q** to return to Windows, and **Ctrl + Alt + S** for screenshots. There is no sidebar or separate page to open.
@@ -135,6 +135,45 @@ Return input to the laptop, select an orientation, wait for it to save, then sel
 
 Rotation is not automatic. Select Portrait again after returning the device upright. Test rightward and upward movement while watching the actual device screen. Direction transformations have automated checks, but the matching orientation/direction on real hardware still needs confirmation. If the correction is reversed, try the other landscape option.
 
+## Video window display mode
+
+Starting with **0.6.0**, **Pengaturan / Settings** has a **Tampilan video / Video window** selector for the **AirPlay Video Stream** window owned by the iDock session:
+
+| Option | Behavior |
+| --- | --- |
+| **Leave to UxPlay · no changes** | Default. iDock does not touch the video window's size or frame; behavior matches earlier versions. |
+| **Windowed · follows the device shape** | The window is reshaped to the device stream's aspect ratio (portrait or landscape), scaled to fit about 85% of the monitor work area, and centered. The native pixel size is not forced, because a 1080p portrait stream is taller than most laptop displays. |
+| **Fullscreen · entire monitor** | The window frame is removed and the window covers the whole monitor it is on. The aspect ratio is preserved with black bars. |
+
+The choice is saved automatically and applied once the video window is visible, about a quarter of a second after it appears. Only the video window of the receiver process owned by this session is changed; the UxPlay settings/tray window and other applications are not touched. Rotating the device usually makes UxPlay create a new video window, and that new window is laid out again according to the choice.
+
+A size you change manually is **not** overridden while the same window exists. Click **Terapkan ulang / Apply again** to lay it out again. Selecting **Leave to UxPlay** again restores the frame and position recorded before the change, as long as that window still exists.
+
+On a single monitor, fullscreen covers the iDock window. Use **Alt + Tab** to return to iDock and change the option; **Ctrl + Alt + Q** still returns input to Windows. This option is different from the **Force Fullscreen** checkbox in the UxPlay settings window, which requires a receiver restart and is not changed by iDock.
+
+Layout math and preference storage are checked automatically. Results on specific renderers, monitors, and DPI scales have not been verified on real hardware at the time of writing; follow the [stability checklist](STABILITY-TESTS.md) and use **Leave to UxPlay** if the result is not right.
+
+## Video decoder
+
+The **Video decoder** option under **Settings** decides whether UxPlay uses the GPU H.264 decoder (`-vd d3d11h264dec`) or software:
+
+- **Automatic · GPU when supported** (default): when the app opens, iDock asks Direct3D 11 whether the GPU offers an H.264 decoder profile with NV12 output — the same check the GStreamer plugin makes before registering `d3d11h264dec`. The result is shown under the option. If supported, the flag is used; otherwise the software decoder stays in use without any change.
+- **Software · no GPU**: the flag is removed. Choose this if video does not appear after the GPU decoder was enabled, or to compare.
+
+The choice is applied **when mirroring opens**: before the receiver starts, iDock writes UxPlay's `%APPDATA%\leapbtw\uxplay-windows\arguments.txt` — the same file the **Edit UxPlay Arguments (Advanced)** button in the UxPlay tray opens. Only the `-vd d3d11h264dec` pair is changed; other options such as `-fps 60` or `-vsync no` stay, and a different `-vd` you wrote yourself is never replaced. Before the first edit, the original file is copied once to `arguments.txt.idock-backup` in the same folder and never overwritten again. A write failure is logged and does not block mirroring.
+
+A changed choice takes effect on the next **Open mirroring**, not in the running session. On one iPhone 11/Windows 11 setup, a manually added `-vd d3d11h264dec` was reported by the user to run safely; the automatic editing and the probe have not been verified on other hardware, and a positive probe is not a guarantee that the GStreamer pipeline succeeds on every driver.
+
+## Mirroring audio
+
+The **Suara mirroring / Mirroring audio** slider (0–100%) and the **Bisukan / Mute** button set the **per-application** volume of the `uxplay-windows` receiver owned by the iDock session — the same control the Windows Volume Mixer offers for one app. The system volume, other applications, and the device's own volume are not changed.
+
+- The value is saved automatically about 200 ms after the slider stops; **Mute** saves immediately without moving the slider and turns into **Suarakan / Unmute**.
+- The setting applies **without restarting** UxPlay, once the receiver's audio session exists — that is, after the device sends sound. iDock re-checks it about once per second while mirroring is running, so a change made in the Volume Mixer is returned to the saved value.
+- Before the slider or button is ever touched, no file is created and the receiver volume is not changed; behavior matches earlier versions.
+
+Windows remembers per-application volume. If UxPlay is started outside iDock, the Volume Mixer still uses the last applied value; change it in the Volume Mixer or move the slider back to 100% in iDock while mirroring is running. If no sound is ever heard, check the device volume and make sure mirroring is sending audio at all; this slider cannot enable audio the device does not send.
+
 ## Ending a session
 
 To stop **control only**, release held keys/buttons, press **Ctrl + Alt + Q**, then click the red **Disable control** button. Input stays on the laptop, mirroring continues, and pairing/settings are preserved. The button returns to **Enable control**. Red means this session's control process is running, not proof that HID has connected; check the status above it.
@@ -157,7 +196,7 @@ To record stability on your device configuration, follow the [manual checklist](
 
 ## Data and usage limitations
 
-For an **installer installation**, the 0.5.2 language preference is stored at `%LOCALAPPDATA%\iDock\data\ui-settings.json`, pointer settings at `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, the launcher log at `%LOCALAPPDATA%\iDock\logs\idock.log`, and the backend log at `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. For the **portable/default manual build**, the relative `data\ui-settings.json`, `data\blehid`, and `logs` paths are inside the package folder. See the [data-location table](INSTALL.md).
+For an **installer installation**, the 0.5.2 language preference is stored at `%LOCALAPPDATA%\iDock\data\ui-settings.json`, pointer settings at `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, the launcher log at `%LOCALAPPDATA%\iDock\logs\idock.log`, and the backend log at `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. For the **portable/default manual build**, the relative `data\ui-settings.json`, `data\blehid`, and `logs` paths are inside the package folder. See the [data-location table](INSTALL.md). The video window mode and mirroring audio choices (0.6.0) are stored in `data\mirror-settings.json` under the same root; the file is created only after one of those controls is changed.
 
 Logs are not uploaded automatically. Review and redact device names, Bluetooth addresses, user paths, and personal information before sharing logs.
 

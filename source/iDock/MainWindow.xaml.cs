@@ -27,13 +27,14 @@ public partial class MainWindow : Window
     private bool mirrorWasRunning, controlWasRunning;
 
     public MainWindow(bool preview = false, string? settingsPath = null, string? languageSettingsPath = null,
-        string? hotkeyPath = null, bool enableGlobalShortcuts = false)
+        string? hotkeyPath = null, bool enableGlobalShortcuts = false, string? mirrorSettingsPath = null)
     {
         if (settingsPath is not null) pointerSettingsPath = settingsPath;
         if (hotkeyPath is not null) hotkeySettingsPath = hotkeyPath;
         var languageLoadError = InitializeLanguagePreference(preview, languageSettingsPath);
         InitializeComponent();
         InitializeLanguageControls(languageLoadError);
+        InitializeMirrorPresentation(preview, mirrorSettingsPath);
         DeviceNameLabel.Text = Environment.MachineName;
         // A preview shows the defaults rather than reading the developer's own shortcut.
         if (preview) { UpdateHotkeyLabels(); return; }
@@ -180,7 +181,9 @@ public partial class MainWindow : Window
     }
     private async void Mirror_Click(object sender, RoutedEventArgs e) => await Run(() =>
     {
+        PrepareReceiverArguments();
         engines.StartMirror();
+        ResetMirrorPresentation();
         mirrorReadWarning = false;
         mirrorWasRunning = true;
         SetMirrorStatus("Mirror.Opened");
@@ -261,6 +264,7 @@ public partial class MainWindow : Window
         mirrorWasRunning = controlWasRunning = false;
         try
         {
+            ResetMirrorPresentation();
             screenshotCancellation?.Cancel();
             StopScreenshotChannel();
             engines.Dispose();
@@ -292,6 +296,8 @@ public partial class MainWindow : Window
                 EndSession("Mirror.VideoEnded", "Log.VideoEnded");
             else if (state == MirrorLifecycleEvent.ReceiverExited)
                 EndSession("Mirror.ReceiverEnded", "Log.ReceiverEnded");
+            else
+                ApplyMirrorLayout(force: false);
         }
         catch (Exception ex) { SetDiagnosticStatus("Diagnostic.Error", ex); AppendT("Log.MirrorWatchFailed", ex); }
     }
@@ -309,6 +315,7 @@ public partial class MainWindow : Window
         StopButton.IsEnabled = !busy && !closing && (engines.MirrorRunning || engines.ControlRunning);
         HotkeyButton.IsEnabled = !busy && !closing;
         ScreenshotButton.IsEnabled = !closing && !screenshotBusy && engines.MirrorRunning;
+        ReapplyDisplayButton.IsEnabled = !closing && engines.MirrorRunning;
         OpenScreenshotsButton.IsEnabled = !closing;
     }
     internal void RenderControlButton(bool running)
@@ -327,6 +334,7 @@ public partial class MainWindow : Window
         try
         {
             CheckMirrorLifecycle();
+            ApplyMirrorAudio();
             if (controlWasRunning) ReadBleLog();
             if (controlWasRunning && !engines.ControlRunning)
             {
@@ -370,7 +378,7 @@ public partial class MainWindow : Window
     private void WindowClosing(object? sender, CancelEventArgs e)
     {
         if (closed || closing) return;
-        closing = true; poll.Stop(); mirrorPoll.Stop(); SaveSensitivity(); SetButtons();
+        closing = true; poll.Stop(); mirrorPoll.Stop(); SaveSensitivity(); SaveMirrorSettings(); SetButtons();
         screenshotCancellation?.Cancel();
         StopScreenshotChannel();
         screenshotHotkey?.Dispose();

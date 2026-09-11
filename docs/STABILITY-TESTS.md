@@ -2,6 +2,17 @@
 
 Bahasa Indonesia · [English](en/STABILITY-TESTS.md)
 
+## Pemeriksaan tampilan jendela dan suara mirroring 0.6.0
+
+Target uji perangkat nyata untuk dua pengaturan baru pada **Pengaturan**; belum ada hasil yang tercatat saat catatan 0.6.0 ditulis. Catat renderer (D3D11/D3D12), jumlah monitor, dan skala DPI pada setiap hasil.
+
+- **Windowed:** setelah Screen Mirroring tersambung, jendela video ditata mengikuti rasio perangkat, muat sekitar 85% area kerja, dan ditengahkan dalam sekitar seperempat detik. Rotasi perangkat menghasilkan jendela baru yang ditata lagi. Ukuran yang diubah manual tidak ditimpa sampai **Terapkan ulang**.
+- **Fullscreen:** jendela menutupi seluruh monitor tanpa bingkai, rasio dipertahankan dengan bilah hitam, dan **Alt + Tab** ke iDock tetap bekerja. Kembali ke **Biarkan UxPlay** mengembalikan bingkai/posisi jendela yang sama.
+- **Tidak menyentuh yang lain:** jendela pengaturan/tray UxPlay, receiver UxPlay lain yang tidak dimulai iDock, dan aplikasi lain tidak berubah ukuran atau gaya.
+- **Suara:** saat perangkat memutar suara, slider dan **Bisukan** mengubah hanya volume `uxplay-windows` di Volume Mixer dalam sekitar satu detik, tanpa restart receiver. Perubahan dari Mixer kembali ke nilai tersimpan selama mirroring berjalan. Volume sistem dan aplikasi lain tidak berubah. Sebelum slider disentuh, tidak ada file `mirror-settings.json` dan volume tidak diubah.
+- **Decoder:** dengan **Otomatis** dan probe positif, `arguments.txt` memuat `-vd d3d11h264dec` setelah **Buka mirroring**, opsi lain utuh, dan `arguments.txt.idock-backup` berisi file asli. **Software** menghapus pasangan itu pada pembukaan berikutnya. Video tetap muncul pada keduanya; catat GPU/driver dan baris probe dari log.
+- **Pemulihan:** setelah **Hentikan sesi** dan sesi baru, pilihan yang sama diterapkan lagi tanpa langkah tambahan; input dan pairing tidak terpengaruh.
+
 ## Pemeriksaan pintasan, nonaktifkan kontrol, dan screenshot 0.5.3
 
 - [ ] Uji default **Ctrl + Alt + D**, lalu kombinasi Ctrl/Alt yang berbeda. Kombinasi aktif tidak berubah sebelum **Nonaktifkan kontrol → Aktifkan kontrol**; ringkasan aplikasi tetap menunjukkan kombinasi sesi yang sebenarnya. Coba kembali ke pilihan aktif untuk membatalkan perubahan tertunda.

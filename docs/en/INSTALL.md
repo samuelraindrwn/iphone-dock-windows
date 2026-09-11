@@ -23,10 +23,10 @@ Mirroring/control does not require a companion app on the device, a Mac, a jailb
 
 Download only from the [project repository's GitHub Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest). For everyday use, choose an installer or portable asset, **not** the automatically generated **Source code** links. If the version mentioned in this guide has not been published, use an available release or wait for the next package. [Manual builds](DEVELOPMENT.md) remain available for developers; installer users do not need to build the application.
 
-For version 0.5.3, the installer is named `iDock-Setup-0.5.3-win-x64.exe`; use this example only if that version is available on Releases. Also download `SHA256SUMS.txt` from the same release. In PowerShell, navigate to the appropriate download folder and calculate the hash:
+For version 0.6.0, the installer is named `iDock-Setup-0.6.0-win-x64.exe`; use this example only if that version is available on Releases. Also download `SHA256SUMS.txt` from the same release. In PowerShell, navigate to the appropriate download folder and calculate the hash:
 
 ```powershell
-Get-FileHash -LiteralPath '.\iDock-Setup-0.5.3-win-x64.exe' -Algorithm SHA256
+Get-FileHash -LiteralPath '.\iDock-Setup-0.6.0-win-x64.exe' -Algorithm SHA256
 Get-Content -LiteralPath '.\SHA256SUMS.txt'
 ```
 
@@ -93,6 +93,8 @@ Starting with source version 0.5.2, choose **Settings → Language → Bahasa In
 | Pointer settings | `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json` | `data\blehid\pointer-settings.json` in the package folder |
 | Switch shortcut (0.5.3) | `%LOCALAPPDATA%\iDock\data\blehid\hotkey-settings.json` | `data\blehid\hotkey-settings.json` in the package folder |
 | PNG screenshots (0.5.3) | `%LOCALAPPDATA%\iDock\data\screenshots` | `data\screenshots` in the package folder |
+| Video window mode, decoder, and mirroring audio (0.6.0) | `%LOCALAPPDATA%\iDock\data\mirror-settings.json` | `data\mirror-settings.json` in the package folder |
+| UxPlay arguments edited by iDock (0.6.0) | `%APPDATA%\leapbtw\uxplay-windows\arguments.txt` and the `arguments.txt.idock-backup` copy | same (UxPlay's own per-user file) |
 | Launcher/diagnostic logs | `%LOCALAPPDATA%\iDock\logs` | `logs` in the package folder |
 | Backend data and logs | `%LOCALAPPDATA%\iDock\data\blehid` | `data\blehid` in the package folder |
 

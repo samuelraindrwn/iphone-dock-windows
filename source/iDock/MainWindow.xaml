@@ -104,6 +104,45 @@
          </StackPanel>
         </Grid>
        </Border>
+       <Border BorderBrush="{StaticResource Hairline}" BorderThickness="0,1,0,0" Margin="0,19,0,0" Padding="0,18,0,0">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="155" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{DynamicResource Text.Display.Title}" FontWeight="SemiBold" /><TextBlock Text="{DynamicResource Text.Display.Description}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" /></StackPanel>
+         <StackPanel Grid.Column="1">
+          <DockPanel LastChildFill="True">
+           <Button x:Name="ReapplyDisplayButton" DockPanel.Dock="Right" Content="{DynamicResource Text.Display.Reapply}" Style="{StaticResource QuietButton}" Click="ReapplyDisplay_Click" IsEnabled="False" FontSize="12" Padding="8,4" Margin="8,0,0,0" VerticalAlignment="Center" AutomationProperties.Name="{DynamicResource Text.Display.ReapplyAccessible}" />
+           <ComboBox x:Name="DisplayModeCombo" SelectedIndex="0" SelectedValuePath="Tag" SelectionChanged="DisplayMode_Changed" FontSize="12" HorizontalContentAlignment="Left" AutomationProperties.Name="{DynamicResource Text.Display.Accessible}">
+            <ComboBoxItem Content="{DynamicResource Text.Display.Default}" Tag="default" /><ComboBoxItem Content="{DynamicResource Text.Display.Windowed}" Tag="windowed" /><ComboBoxItem Content="{DynamicResource Text.Display.Fullscreen}" Tag="fullscreen" />
+           </ComboBox>
+          </DockPanel>
+          <TextBlock Text="{DynamicResource Text.Display.Note}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,7,0,0" />
+          <TextBlock x:Name="DisplayStatus" Text="{DynamicResource Text.Display.AutoSaved}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0" AutomationProperties.LiveSetting="Polite" />
+         </StackPanel>
+        </Grid>
+       </Border>
+       <Border BorderBrush="{StaticResource Hairline}" BorderThickness="0,1,0,0" Margin="0,19,0,0" Padding="0,18,0,0">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="155" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+         <StackPanel VerticalAlignment="Center" Margin="0,0,16,0"><TextBlock Text="{DynamicResource Text.Decoder.Title}" FontWeight="SemiBold" /><TextBlock Text="{DynamicResource Text.Decoder.Description}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" /></StackPanel>
+         <StackPanel Grid.Column="1">
+          <ComboBox x:Name="DecoderCombo" SelectedIndex="0" SelectedValuePath="Tag" SelectionChanged="Decoder_Changed" FontSize="12" HorizontalContentAlignment="Left" AutomationProperties.Name="{DynamicResource Text.Decoder.Accessible}">
+           <ComboBoxItem Content="{DynamicResource Text.Decoder.Auto}" Tag="auto" /><ComboBoxItem Content="{DynamicResource Text.Decoder.Software}" Tag="software" />
+          </ComboBox>
+          <TextBlock Text="{DynamicResource Text.Decoder.Note}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,7,0,0" />
+          <TextBlock x:Name="DecoderStatus" Text="{DynamicResource Text.Decoder.Probing}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0" AutomationProperties.LiveSetting="Polite" />
+         </StackPanel>
+        </Grid>
+       </Border>
+       <Border BorderBrush="{StaticResource Hairline}" BorderThickness="0,1,0,0" Margin="0,19,0,0" Padding="0,18,0,0">
+        <StackPanel>
+         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+          <TextBlock Text="{DynamicResource Text.Audio.Title}" FontWeight="SemiBold" VerticalAlignment="Center" />
+          <Border Grid.Column="1" Background="{StaticResource AccentSoft}" CornerRadius="7" Padding="9,4" Margin="8,0,9,0"><TextBlock x:Name="VolumeValue" Text="100%" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Accent}" /></Border>
+          <Button x:Name="MuteButton" Grid.Column="2" Content="{DynamicResource Text.Audio.Mute}" Style="{StaticResource QuietButton}" Click="Mute_Click" FontSize="12" Padding="6,4" AutomationProperties.Name="{DynamicResource Text.Audio.MuteAccessible}" />
+         </Grid>
+         <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="10" IsMoveToPointEnabled="True" ValueChanged="Volume_Changed" Margin="0,10,0,0" AutomationProperties.Name="{DynamicResource Text.Audio.Accessible}" ToolTip="{DynamicResource Text.Audio.Tooltip}" />
+         <DockPanel Margin="0,1,0,0"><TextBlock DockPanel.Dock="Right" Text="{DynamicResource Text.Audio.Full}" Style="{StaticResource CaptionText}" /><TextBlock Text="{DynamicResource Text.Audio.Quiet}" Style="{StaticResource CaptionText}" /></DockPanel>
+         <TextBlock x:Name="AudioStatus" Text="{DynamicResource Text.Audio.AutoSaved}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,10,0,0" AutomationProperties.LiveSetting="Polite" />
+        </StackPanel>
+       </Border>
       </StackPanel>
      </Border>
      <Border x:Name="DiagnosticsSection" Style="{StaticResource Card}">

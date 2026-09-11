@@ -120,8 +120,8 @@ Dokumentasi Indonesia tetap pada `README.md` dan `docs/`; versi English pada `RE
 Pratinjau menggunakan UI aplikasi asli dengan nama laptop generik, tanpa memulai sesi atau membaca/menyimpan preferensi pengguna. Setelah build, hasilkan screenshot masing-masing bahasa:
 
 ```powershell
-.\dist\iDock\iDock.exe --preview .\docs\images\idock.png 1650 1100 id
-.\dist\iDock\iDock.exe --preview .\docs\images\idock-en.png 1650 1100 en
+.\dist\iDock\iDock.exe --preview .\docs\images\idock.png 2050 1100 id
+.\dist\iDock\iDock.exe --preview .\docs\images\idock-en.png 2050 1100 en
 ```
 
 Periksa hasil gambar sebelum memperbarui README. Screenshot English harus berasal dari UI English, bukan hanya caption terjemahan. Installer dan portable berikutnya menyalin kedua bahasa beserta gambar.

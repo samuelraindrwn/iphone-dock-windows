@@ -32,6 +32,8 @@ internal static class Verification
         HotkeyVerification.Run(Check);
         SessionActionVerification.Run(Check);
         ScreenshotCaptureVerification.Run(Check);
+        MirrorPresentationVerification.Run(Check);
+        DecoderVerification.Run(Check);
 
         var assembly = typeof(App).Assembly;
         Check(assembly.GetName().Name == "iDock",

@@ -6,13 +6,13 @@ Bahasa Indonesia · [English](en/RELEASING.md)
 
 Dokumen ini untuk maintainer. Rilis publik berisi aplikasi siap pakai serta petunjuk pengguna; publikasi tidak mengubah status kompatibilitas perangkat yang belum diuji menjadi didukung.
 
-## Artefak rilis 0.5.3
+## Artefak rilis 0.6.0
 
-- **`iDock-Setup-0.5.3-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
-- **`iDock-0.5.3-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
+- **`iDock-Setup-0.6.0-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
+- **`iDock-0.6.0-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
 - **`SHA256SUMS.txt`**: SHA-256 artefak unduhan.
 - **`installer-build.json`**: versi, runtime, compiler, dan metadata penyusunan installer.
-- [Catatan rilis 0.5.3](RELEASE-NOTES-0.5.3.md): fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
+- [Catatan rilis 0.6.0](RELEASE-NOTES-0.6.0.md): fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
 
 Arsip **Source code** yang dibuat GitHub otomatis bukan installer maupun paket aplikasi siap pakai. Source proyek tetap tersedia melalui repository. `installer-build.json` adalah laporan penyusunan paket, bukan sertifikat lolos instalasi pada Windows bersih.
 
@@ -53,6 +53,7 @@ Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefa
 - [ ] Source, versi aplikasi, dokumentasi, nama installer, dan tag rilis konsisten.
 - [ ] **0.5.3:** pintasan default/kustom, pelepasan tetap, repeat/key-up, pengaturan aktif versus tertunda, dan tombol merah **Nonaktifkan kontrol** diuji tanpa memutus mirroring. Pertahankan pemulihan input serta pairing pada restart kontrol.
 - [ ] **Screenshot 0.5.3:** Ctrl + Alt + S dan tombol **Ambil screenshot** menghasilkan PNG area video saat input lokal/perangkat dan mirroring saja. Uji jendela tertutup/minimize/berubah, konflik hotkey, proteksi capture, serta folder tidak dapat ditulis. Pastikan desktop/aplikasi lain tidak ikut tertangkap dan data screenshot tidak masuk paket.
+- [ ] **0.6.0 tampilan dan suara:** uji **Windowed** dan **Fullscreen** pada portrait/landscape, rotasi (jendela baru), satu dan dua monitor, skala DPI berbeda, **Terapkan ulang**, dan kembali ke **Biarkan UxPlay**; pastikan jendela pengaturan UxPlay dan aplikasi lain tidak berubah. Uji slider **Suara mirroring** dan **Bisukan** saat perangkat memutar suara: hanya volume `uxplay-windows` di Volume Mixer yang berubah, tanpa restart receiver, dan nilai kembali setelah diubah dari Mixer. Uji **Decoder video** Otomatis/Software: `arguments.txt` hanya berubah pada pasangan `-vd d3d11h264dec`, cadangan `arguments.txt.idock-backup` dibuat sekali, dan video tetap muncul pada kedua pilihan.
 - [ ] Build manual framework-dependent dan paket self-contained berhasil dibuat.
 - [ ] Pemeriksaan launcher/UI, data path, backend, dan penutupan aplikasi lulus.
 - [ ] **Penutupan video pada perangkat nyata:** sesudah video muncul, X mengakhiri video/kontrol serta mengembalikan input ke Windows setelah jeda pemantauan. Minimize/hide yang mempertahankan jendela tidak menghentikan sesi; jendela pengganti dalam dua detik membatalkan penghentian. Uji juga Stop Screen Mirroring dari perangkat, rotasi, dan kontrol tanpa video. Pairing/pengaturan tetap ada dan proses aplikasi lain tidak disentuh.

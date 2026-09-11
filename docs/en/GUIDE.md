@@ -12,6 +12,8 @@ Choose **Settings → Language → English / Bahasa Indonesia**. The choice take
 
 In **0.5.3**, **Change shortcuts** sets the switch-target combination (default **Ctrl + Alt + D**). The red **Disable control** button stops input without stopping mirroring. **Ctrl + Alt + S** saves a PNG screenshot on the laptop, not in Photos on the device. Follow [Usage](USAGE.md) and the [0.5.3 notes](RELEASE-NOTES-0.5.3.md); check Releases for available package versions.
 
+In **0.6.0**, **Settings** adds **Video window** (leave to UxPlay, windowed following the device shape, or fullscreen), **Video decoder** (GPU when supported, with a software fallback), and a **Mirroring audio** slider with a **Mute** button. All of them apply only to the receiver owned by the iDock session; see the [0.6.0 notes](RELEASE-NOTES-0.6.0.md) for the testing limits.
+
 1. [Installation](INSTALL.md): GitHub Releases downloads, file verification, installer, portable package, upgrades, and uninstall.
 2. [Using the app](USAGE.md): mirroring, Bluetooth pairing, input target, sensitivity, orientation, and language.
 3. [Troubleshooting](TROUBLESHOOTING.md): launch failures, disconnected control, latency, and bug reports.

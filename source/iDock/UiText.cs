@@ -57,6 +57,8 @@ internal static partial class UiText
         AddEngineEntries(result);
         AddScreenshotEntries(result);
         AddSessionActionEntries(result);
+        AddMirrorEntries(result);
+        AddDecoderEntries(result);
         return new System.Collections.ObjectModel.ReadOnlyDictionary<string, Translation>(result);
     }
 
@@ -64,4 +66,6 @@ internal static partial class UiText
     static partial void AddEngineEntries(Dictionary<string, Translation> entries);
     static partial void AddScreenshotEntries(Dictionary<string, Translation> entries);
     static partial void AddSessionActionEntries(Dictionary<string, Translation> entries);
+    static partial void AddMirrorEntries(Dictionary<string, Translation> entries);
+    static partial void AddDecoderEntries(Dictionary<string, Translation> entries);
 }

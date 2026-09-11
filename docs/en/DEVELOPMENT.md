@@ -120,8 +120,8 @@ Indonesian documentation remains in `README.md` and `docs/`; English documentati
 Previews render the actual app UI with a generic laptop name, without starting a session or reading/saving user preferences. After building, generate a screenshot for each language:
 
 ```powershell
-.\dist\iDock\iDock.exe --preview .\docs\images\idock.png 1650 1100 id
-.\dist\iDock\iDock.exe --preview .\docs\images\idock-en.png 1650 1100 en
+.\dist\iDock\iDock.exe --preview .\docs\images\idock.png 2050 1100 id
+.\dist\iDock\iDock.exe --preview .\docs\images\idock-en.png 2050 1100 en
 ```
 
 Inspect the images before updating the READMEs. The English screenshot must come from the English UI, not just a translated caption. Subsequent installer and portable builds copy both languages and their images.

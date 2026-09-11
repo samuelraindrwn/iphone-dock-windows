@@ -37,11 +37,13 @@ Nama receiver yang muncul di perangkat belum membuktikan jalur video dapat tersa
 1. Nyalakan Bluetooth Windows dan perangkat, lalu klik **Aktifkan kontrol** pada kartu **Mouse & keyboard**.
 2. Di aplikasi **Settings** perangkat, buka **Accessibility → Touch → AssistiveTouch**, aktifkan, lalu pilih **Devices → Bluetooth Devices**. Pasangkan nama laptop yang ditampilkan pada **Panduan** iDock.
 3. Setelah koneksi input tersedia, gunakan pintasan alih target yang ditampilkan aplikasi (**Ctrl + Alt + D** secara default). Periksa target sebelum menggerakkan pointer atau mengetik.
-4. Gunakan **Ctrl + Alt + Q** untuk mengembalikan input ke Windows. Gulir ke **Pengaturan** untuk mencoba sensitivitas, orientasi pointer, dan bahasa.
+4. Gunakan **Ctrl + Alt + Q** untuk mengembalikan input ke Windows. Gulir ke **Pengaturan** untuk mencoba sensitivitas, orientasi pointer, bahasa, serta tampilan jendela video dan suara mirroring.
 
 Pintasan alih target dapat diubah melalui **Ubah pintasan** di bagian Panduan; **Ctrl + Alt + Q** tetap dan tidak dapat diubah. Perubahan berlaku setelah kontrol dinonaktifkan lalu diaktifkan lagi; mirroring tidak perlu dihentikan. Lihat [mengubah pintasan](docs/USAGE.md#mengubah-pintasan).
 
-Pada **0.5.3**, tombol merah **Nonaktifkan kontrol** menghentikan mouse/keyboard tanpa menutup mirroring. **Ctrl + Alt + S** atau tombol **Ambil screenshot** menyimpan tampilan perangkat sebagai PNG lokal; lihat [cara pakai](docs/USAGE.md). Dokumentasi ini mengikuti source 0.5.3; periksa versi installer yang tersedia di Releases.
+Pada **0.5.3**, tombol merah **Nonaktifkan kontrol** menghentikan mouse/keyboard tanpa menutup mirroring. **Ctrl + Alt + S** atau tombol **Ambil screenshot** menyimpan tampilan perangkat sebagai PNG lokal; lihat [cara pakai](docs/USAGE.md). Dokumentasi ini mengikuti source 0.6.0; periksa versi installer yang tersedia di Releases.
+
+Pada **0.6.0**, **Pengaturan** menambahkan **Tampilan video** (biarkan UxPlay, windowed mengikuti bentuk perangkat, atau fullscreen), **Decoder video** (GPU bila probe Direct3D 11 mendukung, dengan fallback software dan cadangan `arguments.txt`), dan slider **Suara mirroring** dengan tombol **Bisukan**. Semuanya hanya menyentuh receiver milik sesi iDock, dan belum diverifikasi pada perangkat lain saat rilis; lihat [catatan 0.6.0](docs/RELEASE-NOTES-0.6.0.md).
 
 Halaman pairing berada di **Settings**, bukan menu AssistiveTouch yang mengambang. Status Bluetooth umum `Connected` belum membuktikan mouse/keyboard HID tersambung. [Panduan penggunaan lengkap](docs/USAGE.md) menjelaskan status, hotkey, dan pemulihan koneksi.
 
@@ -101,6 +103,7 @@ Gunakan **.NET 10 SDK x64** untuk membangun. Build default bersifat *framework-d
 - [Perubahan dan status pengujian 0.5.1](docs/RELEASE-NOTES-0.5.1.md)
 - [Pilihan bahasa dan status pengembangan 0.5.2](docs/RELEASE-NOTES-0.5.2.md)
 - [Pintasan, nonaktifkan kontrol, dan screenshot 0.5.3](docs/RELEASE-NOTES-0.5.3.md)
+- [Tampilan jendela video dan suara mirroring 0.6.0](docs/RELEASE-NOTES-0.6.0.md)
 - [Arsitektur serta penyimpanan data](docs/ARCHITECTURE.md)
 - [Kriteria dan checklist kestabilan](docs/STABILITY-TESTS.md)
 - [Roadmap iOS/iPadOS, latensi, dan perbaikan bug](docs/ROADMAP.md)
