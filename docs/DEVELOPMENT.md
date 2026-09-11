@@ -28,6 +28,7 @@ Pastikan SDK `10.0.*` dan runtime `Microsoft.WindowsDesktop.App 10.0.*` tercantu
 ```powershell
 git clone https://github.com/samuelraindrwn/iphone-dock-windows.git
 Set-Location .\iphone-dock-windows
+git switch dev
 .\scripts\build.ps1
 .\scripts\test.ps1
 ```
@@ -95,13 +96,22 @@ dist/                  Hasil build/paket; tidak masuk Git
 
 `data`, `logs`, arsip build, laporan diagnostik lokal, serta skrip migrasi khusus komputer tidak boleh menjadi source publik. Jangan mengunggah pairing, identitas perangkat, atau screenshot pribadi.
 
+## Alur branch
+
+Repository memakai dua branch dengan peran berbeda:
+
+- **`dev`** adalah branch kerja harian. Semua perubahan source, script, dan dokumentasi masuk ke sini lebih dulu, baik lewat commit langsung oleh maintainer maupun pull request dari branch fitur.
+- **`main`** hanya menerima hasil rilis. Isinya selalu sama dengan rilis terakhir yang sudah atau sedang disiapkan, sehingga tag `v*` selalu dibuat di `main`.
+
+Saat `dev` dinilai siap dirilis, buka pull request dari `dev` ke `main`, tunggu workflow **Windows validation** hijau, gabungkan, lalu ikuti [panduan rilis](RELEASING.md) untuk membuat tag. Jangan commit langsung ke `main` dan jangan membuat tag dari `dev`. Branch fitur dibuat dari `dev` dan pull request-nya ditujukan ke `dev`, bukan ke `main`; pull request yang dibuka ke `main` secara tidak sengaja cukup diubah target branch-nya.
+
 ## Mengubah dan mengirim kontribusi
 
 1. Batasi perubahan pada masalah yang ingin diselesaikan; simpan alur mirroring dan input terpisah.
 2. Tambahkan tes regresi yang sesuai. Untuk UI, periksa ukuran minimum, urutan fokus keyboard, scroll, slider/ComboBox, label aksesibilitas, dan status panjang. Pertahankan urutan satu halaman: **Panduan → kartu Layar perangkat/Mouse & keyboard → Pengaturan → Diagnostik**; pintasan harus mudah ditemukan di bagian atas.
 3. Jalankan build serta tes tanpa perangkat keras.
 4. Jika perubahan menyentuh BLE/input, jalankan bagian relevan dari [checklist kestabilan](STABILITY-TESTS.md) pada perangkat nyata. Catat yang belum diuji.
-5. Perbarui dokumentasi dan kirim perubahan melalui workflow Git yang digunakan repository. Jangan menyatakan semua model/versi didukung hanya dari satu konfigurasi.
+5. Perbarui dokumentasi dan kirim perubahan ke branch `dev` sesuai [alur branch](#alur-branch) di atas. Jangan menyatakan semua model/versi didukung hanya dari satu konfigurasi.
 
 Jika PowerShell diblokir kebijakan, baca skrip dan ikuti kebijakan Windows/organisasi; jangan menonaktifkan keamanan sistem secara global.
 

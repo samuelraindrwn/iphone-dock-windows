@@ -76,6 +76,16 @@ Check an item only after completing it, and record results against the commit an
 
 **The user has confirmed a local 0.5.1 smoke test:** mirroring with the Public Wi-Fi option enabled and no temporary repair rules, plus session closure using X. The installed version/payload, rules, and closure events were checked; see [artifact hashes and evidence limits](RELEASE-NOTES-0.5.1.md#local-smoke-test--8-september-2026). This does not complete clean-Windows testing, full upgrade/uninstall testing, the network-option matrix, or closure while the input target is still the device. The compound checklist items above must not be checked solely on the basis of the smoke test. CI rebuilds need their own verification; the [real-device checklist](STABILITY-TESTS.md) has separate criteria for reconnects, long sessions, and input safety.
 
+## Branch flow for a release
+
+Day-to-day work happens on the `dev` branch; `main` only contains releases. Before creating a tag:
+
+1. Make sure every change intended for the release is on `dev`, including the version bump in `COMPONENTS.json`, the application project, and the docs, plus `docs/en/RELEASE-NOTES-<version>.md` with a `## Changes` section.
+2. Open a pull request from `dev` to `main`, wait for **Windows validation** to pass, then merge it. Use a regular merge so that `dev` and `main` keep the same history, not a squash that makes them diverge.
+3. Create the `vMAJOR.MINOR.PATCH` tag on the merge commit on `main`, then push the tag.
+
+Tags are not created from `dev`, and `main` receives no commits other than release merges. Even a hotfix lands on `dev` first and reaches `main` through the same pull request flow. Branch details are in the [developer guide](DEVELOPMENT.md#branch-flow).
+
 ## GitHub Actions
 
 ### Windows validation
@@ -91,7 +101,7 @@ Both use Windows x64 and the .NET 10 SDK, run installer checks without installat
 
 The [Build release draft](../../.github/workflows/release.yml) workflow supports two triggers:
 
-1. Push a version tag that already points to a release-ready commit, for example **`v0.6.0`**.
+1. Push a version tag that points to the release merge commit on `main`, for example **`v0.6.0`**.
 2. Open **Actions → Build release draft → Run workflow**, then set the **tag** input to an **existing** tag, for example `v0.6.0`.
 
 The tag must use `vMAJOR.MINOR.PATCH`, and its version must match `COMPONENTS.json` and the application project. The workflow does not create or move tags. Ensure that the tagged commit already includes all required source, scripts, documentation, and workflows.
@@ -108,7 +118,7 @@ The draft body is no longer one template shared by every version. The build job 
 
 The publication destination is the [iDock repository's Releases](https://github.com/samuelraindrwn/iphone-dock-windows/releases). Use a **draft release** to review notes and artifacts before publication.
 
-1. Ensure that the tested commit is in the repository and the tag points to the correct commit.
+1. Ensure that the tested commit has been merged from `dev` into `main` and the tag points to that merge commit.
 2. Prepare the installer, portable ZIP, and checksums from the same build. Checksums must cover the final files that will be uploaded.
 3. Run **Build release draft**, or upload to a draft manually if the build was produced locally. Do not treat workflow success as publication approval.
 4. Review names/versions, file sizes, package contents, checksums, licenses/source, and test-result notes.

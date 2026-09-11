@@ -76,6 +76,16 @@ Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefa
 
 **Smoke test lokal 0.5.1 sudah mendapat konfirmasi pengguna:** mirroring dengan opsi Public Wi-Fi aktif tanpa aturan repair sementara, serta penutupan sesi lewat X. Versi/payload terpasang, aturan, dan kejadian penutupan diperiksa; lihat [hash artefak dan batas bukti](RELEASE-NOTES-0.5.1.md#smoke-test-lokal--8-september-2026). Ini belum menyelesaikan uji fresh Windows, upgrade/uninstall lengkap, matriks pilihan jaringan, atau penutupan saat target input masih di perangkat. Checklist majemuk di atas tetap tidak boleh dicentang hanya berdasarkan smoke test. Build ulang CI perlu verifikasi tersendiri; [checklist perangkat nyata](STABILITY-TESTS.md) memiliki kriteria terpisah untuk reconnect, sesi panjang, dan keselamatan input.
 
+## Alur branch untuk rilis
+
+Pekerjaan harian berlangsung di branch `dev`; `main` hanya berisi rilis. Sebelum membuat tag:
+
+1. Pastikan semua perubahan yang akan dirilis sudah ada di `dev`, termasuk kenaikan versi di `COMPONENTS.json`, project aplikasi, dan dokumentasi, serta `docs/en/RELEASE-NOTES-<versi>.md` dengan bagian `## Changes`.
+2. Buka pull request dari `dev` ke `main`, tunggu **Windows validation** hijau, lalu gabungkan. Gunakan merge biasa agar riwayat `dev` dan `main` tetap sama, bukan squash yang membuat keduanya menyimpang.
+3. Buat tag `vMAJOR.MINOR.PATCH` pada commit merge di `main`, lalu push tag tersebut.
+
+Tag tidak dibuat dari `dev`, dan `main` tidak menerima commit di luar merge rilis. Perbaikan darurat pun masuk ke `dev` dulu, lalu digabungkan ke `main` lewat pull request yang sama. Rincian branch ada di [panduan developer](DEVELOPMENT.md#alur-branch).
+
 ## GitHub Actions
 
 ### Windows validation
@@ -91,7 +101,7 @@ Keduanya memakai Windows x64 dan .NET 10 SDK, menjalankan pemeriksaan installer 
 
 Workflow [Build release draft](../.github/workflows/release.yml) menyediakan dua cara pemicu:
 
-1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.6.0`**.
+1. Push tag versi yang sudah menunjuk commit merge rilis di `main`, misalnya **`v0.6.0`**.
 2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.6.0`.
 
 Tag wajib berbentuk `vMAJOR.MINOR.PATCH`, dan versinya harus sama dengan `COMPONENTS.json` serta project aplikasi. Workflow tidak membuat atau memindahkan tag. Pastikan commit yang ditag sudah menyertakan seluruh source, script, dokumentasi, dan workflow yang diperlukan.
@@ -108,7 +118,7 @@ Isi draft tidak lagi berupa template yang sama untuk semua versi. Pekerjaan buil
 
 Tujuan publikasi adalah [Releases repository iDock](https://github.com/samuelraindrwn/iphone-dock-windows/releases). Gunakan **draft release** untuk meninjau catatan dan artefak sebelum dipublikasikan.
 
-1. Pastikan commit yang diuji sudah berada di repository dan tag menunjuk commit yang benar.
+1. Pastikan commit yang diuji sudah digabungkan dari `dev` ke `main` dan tag menunjuk commit merge tersebut.
 2. Siapkan installer, ZIP portable, dan checksum dari build yang sama. Checksum harus mencakup file final yang akan diunggah.
 3. Jalankan **Build release draft**, atau unggah ke draft secara manual jika build dilakukan lokal. Jangan menyamakan workflow sukses dengan persetujuan publikasi.
 4. Periksa nama/versi, ukuran file, isi paket, checksum, lisensi/source, dan catatan hasil uji.

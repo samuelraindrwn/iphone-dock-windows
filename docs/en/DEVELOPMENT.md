@@ -28,6 +28,7 @@ Make sure SDK `10.0.*` and runtime `Microsoft.WindowsDesktop.App 10.0.*` are lis
 ```powershell
 git clone https://github.com/samuelraindrwn/iphone-dock-windows.git
 Set-Location .\iphone-dock-windows
+git switch dev
 .\scripts\build.ps1
 .\scripts\test.ps1
 ```
@@ -95,13 +96,22 @@ dist/                  Build/package output; excluded from Git
 
 `data`, `logs`, build archives, local diagnostic reports, and machine-specific migration scripts must not become public source. Do not upload pairing data, device identities, or private screenshots.
 
+## Branch flow
+
+The repository uses two branches with different roles:
+
+- **`dev`** is the day-to-day working branch. Every source, script, and documentation change lands here first, either as a direct maintainer commit or as a pull request from a feature branch.
+- **`main`** only receives releases. It always matches the latest release that has been published or is being prepared, so `v*` tags are always created on `main`.
+
+When `dev` is judged release-ready, open a pull request from `dev` to `main`, wait for the **Windows validation** workflow to pass, merge it, then follow the [release guide](RELEASING.md) to create the tag. Do not commit directly to `main` and do not tag from `dev`. Feature branches start from `dev` and their pull requests target `dev`, not `main`; a pull request accidentally opened against `main` only needs its base branch changed.
+
 ## Make changes and contribute
 
 1. Keep changes focused on the problem being addressed; keep mirroring and input as separate paths.
 2. Add appropriate regression tests. For the UI, check minimum size, keyboard focus order, scrolling, the slider/ComboBox, accessibility labels, and long status messages. Preserve the single-page order: **Guide → Device screen/Mouse & keyboard cards → Settings → Diagnostics** (**Panduan → Layar perangkat/Mouse & keyboard → Pengaturan → Diagnostik** in Indonesian); shortcuts must be easy to find at the top.
 3. Run the build and hardware-free tests.
 4. If a change affects BLE/input, run the relevant parts of the [stability checklist](STABILITY-TESTS.md) on a real device. Record what remains untested.
-5. Update the documentation and submit changes through the repository's Git workflow. Do not claim support for every model/version based on one configuration.
+5. Update the documentation and submit changes to the `dev` branch following the [branch flow](#branch-flow) above. Do not claim support for every model/version based on one configuration.
 
 If policy blocks PowerShell, read the scripts and follow Windows/organization policy; do not globally disable system security.
 
