@@ -91,14 +91,16 @@ Both use Windows x64 and the .NET 10 SDK, run installer checks without installat
 
 The [Build release draft](../../.github/workflows/release.yml) workflow supports two triggers:
 
-1. Push a version tag that already points to a release-ready commit, for example **`v0.5.3`**.
-2. Open **Actions → Build release draft → Run workflow**, then set the **tag** input to an **existing** tag, for example `v0.5.3`.
+1. Push a version tag that already points to a release-ready commit, for example **`v0.6.0`**.
+2. Open **Actions → Build release draft → Run workflow**, then set the **tag** input to an **existing** tag, for example `v0.6.0`.
 
 The tag must use `vMAJOR.MINOR.PATCH`, and its version must match `COMPONENTS.json` and the application project. The workflow does not create or move tags. Ensure that the tagged commit already includes all required source, scripts, documentation, and workflows.
 
 On a temporary Windows runner, the workflow builds the installer, tests a byte-identical payload copy in a separate test directory, then creates the portable ZIP from the payload untouched by tests. Test logs do not enter the public package. Only the four artifact filenames listed at the start of this document are uploaded; temporary Actions artifacts are retained for seven days.
 
-A separate job verifies checksums and confirms that the remote tag still points to the built commit, then creates a **draft release** using a GitHub token with `contents: write` permission. This job does not run repository scripts or built executables. There is no step to overwrite an existing release/asset. If draft creation fails or a draft already exists, inspect the state in GitHub before rerunning.
+A separate job verifies checksums and confirms that the remote tag still points to the built commit, then creates a **draft release** using a GitHub token with `contents: write` permission. This job does not run repository scripts or built executables. There is no step to overwrite an existing release/asset.
+
+The draft body is no longer one template shared by every version. The build job — which already checks out the tag — reads `docs/en/RELEASE-NOTES-<version>.md`, takes the `## Changes` section up to the next `##` heading, rewrites relative links to absolute URLs into the tagged tree, and passes it as a job output. The draft job inserts it under **What's new in <version>**, still without a checkout. Therefore **the English release notes file with a `## Changes` section must exist in the tagged commit**; if it is missing or empty, the build fails on purpose. The Indonesian notes remain linked from the draft. If draft creation fails or a draft already exists, inspect the state in GitHub before rerunning.
 
 **The workflow does not publish releases automatically.** Maintainers must complete the clean-Windows, device, privacy, and source/license-obligation checklist, update the notes with actual results, then select **Publish release**. Ensure that repository settings allow Actions and release creation by the workflow token.
 

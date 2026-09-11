@@ -91,14 +91,16 @@ Keduanya memakai Windows x64 dan .NET 10 SDK, menjalankan pemeriksaan installer 
 
 Workflow [Build release draft](../.github/workflows/release.yml) menyediakan dua cara pemicu:
 
-1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.5.3`**.
-2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.5.3`.
+1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.6.0`**.
+2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.6.0`.
 
 Tag wajib berbentuk `vMAJOR.MINOR.PATCH`, dan versinya harus sama dengan `COMPONENTS.json` serta project aplikasi. Workflow tidak membuat atau memindahkan tag. Pastikan commit yang ditag sudah menyertakan seluruh source, script, dokumentasi, dan workflow yang diperlukan.
 
 Pada runner Windows sementara, workflow membangun installer, memeriksa salinan byte-identik dari payload dalam direktori uji terpisah, lalu membuat ZIP portable dari payload yang tidak disentuh tes. Log hasil tes tidak masuk ke paket publik. Hanya empat nama artefak pada bagian awal dokumen ini yang diunggah; artefak sementara Actions disimpan selama tujuh hari.
 
-Pekerjaan terpisah memverifikasi checksum dan memastikan tag remote masih menunjuk commit yang dibangun, lalu membuat **draft release** menggunakan token GitHub dengan izin `contents: write`. Pekerjaan ini tidak menjalankan script repository atau executable hasil build. Tidak ada langkah untuk menimpa release/asset yang sudah ada. Jika pembuatan draft gagal atau sudah ada draft sebelumnya, periksa keadaan di GitHub sebelum menjalankan ulang.
+Pekerjaan terpisah memverifikasi checksum dan memastikan tag remote masih menunjuk commit yang dibangun, lalu membuat **draft release** menggunakan token GitHub dengan izin `contents: write`. Pekerjaan ini tidak menjalankan script repository atau executable hasil build. Tidak ada langkah untuk menimpa release/asset yang sudah ada.
+
+Isi draft tidak lagi berupa template yang sama untuk semua versi. Pekerjaan build — yang memang melakukan checkout tag — membaca `docs/en/RELEASE-NOTES-<versi>.md`, mengambil isi bagian `## Changes` sampai heading `##` berikutnya, mengubah tautan relatif menjadi URL absolut ke pohon tag, lalu meneruskannya sebagai job output. Pekerjaan pembuat draft menyisipkannya di bawah **What's new in <versi>**, tetap tanpa checkout. Karena itu **berkas catatan rilis bahasa Inggris beserta bagian `## Changes` wajib ada pada commit yang ditag**; bila tidak ada atau kosong, build sengaja gagal. Catatan Bahasa Indonesia tetap ditautkan dari draft. Jika pembuatan draft gagal atau sudah ada draft sebelumnya, periksa keadaan di GitHub sebelum menjalankan ulang.
 
 **Workflow tidak mempublikasikan release secara otomatis.** Maintainer harus menyelesaikan checklist Windows bersih, perangkat, privasi, dan kewajiban source/lisensi, memperbarui catatan dengan hasil nyata, lalu memilih **Publish release**. Pastikan pengaturan repository mengizinkan Actions dan pembuatan release oleh token workflow.
 
