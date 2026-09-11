@@ -80,7 +80,7 @@ Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefa
 
 ### Windows validation
 
-Workflow [Windows validation](../.github/workflows/ci.yml) berjalan pada push ke `main`, pull request, atau pemicu manual melalui tab **Actions**. Dua pekerjaan terpisah memeriksa:
+Workflow [Windows validation](../.github/workflows/ci.yml) berjalan pada push ke `main` atau `dev`, pull request, atau pemicu manual melalui tab **Actions**. Dua pekerjaan terpisah memeriksa:
 
 - Build manual **framework-dependent**, agar alur developer melalui `scripts/build.ps1` tetap tersedia.
 - Build distribusi **self-contained**, yang menyertakan runtime aplikasi.

@@ -80,7 +80,7 @@ Check an item only after completing it, and record results against the commit an
 
 ### Windows validation
 
-The [Windows validation](../../.github/workflows/ci.yml) workflow runs on pushes to `main`, pull requests, or a manual trigger in the **Actions** tab. Two separate jobs check:
+The [Windows validation](../../.github/workflows/ci.yml) workflow runs on pushes to `main` or `dev`, pull requests, or a manual trigger in the **Actions** tab. Two separate jobs check:
 
 - The manual **framework-dependent** build, preserving the developer workflow through `scripts/build.ps1`.
 - The **self-contained** distribution build, which includes the application runtime.
