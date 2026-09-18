@@ -23,10 +23,10 @@ Mirroring/kontrol tidak memerlukan aplikasi pendamping di perangkat, Mac, jailbr
 
 Unduh hanya dari [GitHub Releases repository proyek](https://github.com/samuelraindrwn/iphone-dock-windows/releases/latest). Pilih asset installer atau portable, **bukan** tautan otomatis **Source code** untuk penggunaan biasa. Jika versi yang disebut di panduan belum terbit, gunakan rilis yang tersedia atau tunggu paket berikutnya. [Build manual](DEVELOPMENT.md) tetap tersedia untuk developer; pengguna installer tidak perlu membangun aplikasi.
 
-Untuk versi 0.6.0, installer bernama `iDock-Setup-0.6.0-win-x64.exe`; gunakan contoh ini hanya jika versi tersebut sudah tersedia pada Releases. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
+Untuk versi 0.7.0, installer bernama `iDock-Setup-0.7.0-win-x64.exe`; gunakan contoh ini hanya jika versi tersebut sudah tersedia pada Releases. Unduh juga `SHA256SUMS.txt` dari rilis yang sama. Di PowerShell, sesuaikan folder unduhan lalu hitung hash:
 
 ```powershell
-Get-FileHash -LiteralPath '.\iDock-Setup-0.6.0-win-x64.exe' -Algorithm SHA256
+Get-FileHash -LiteralPath '.\iDock-Setup-0.7.0-win-x64.exe' -Algorithm SHA256
 Get-Content -LiteralPath '.\SHA256SUMS.txt'
 ```
 

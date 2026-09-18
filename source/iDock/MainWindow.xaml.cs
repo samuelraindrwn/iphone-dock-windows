@@ -297,7 +297,7 @@ public partial class MainWindow : Window
             else if (state == MirrorLifecycleEvent.ReceiverExited)
                 EndSession("Mirror.ReceiverEnded", "Log.ReceiverEnded");
             else
-                ApplyMirrorLayout(force: false);
+                ApplyMirrorPresentation(freshSnapshot: false, forceLayout: false, forcePin: false);
         }
         catch (Exception ex) { SetDiagnosticStatus("Diagnostic.Error", ex); AppendT("Log.MirrorWatchFailed", ex); }
     }

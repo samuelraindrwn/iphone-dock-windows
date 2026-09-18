@@ -8,6 +8,7 @@ internal sealed class EngineManager : IDisposable
     private ProcessJob? mirror;
     private ProcessJob? control;
     private Process? diagnostic;
+    private MirrorStreamGeometrySource? mirrorGeometry;
     private readonly string root;
     private readonly MirrorWindowLifecycle mirrorLifecycle = new();
     public EngineManager(string root) => this.root = root;
@@ -19,6 +20,7 @@ internal sealed class EngineManager : IDisposable
     public string BleLogPath => Path.Combine(UserStorage.Root, "data", "blehid", "logs", "blehid.log");
     // The last lifecycle sample, so window layout does not enumerate the desktop a second time.
     internal MirrorWindowSnapshot? LastMirrorSnapshot { get; private set; }
+    internal MirrorStreamGeometrySnapshot LastMirrorStreamGeometry { get; private set; }
 
     public static bool HasExistingControl()
     {
@@ -60,7 +62,16 @@ internal sealed class EngineManager : IDisposable
         mirror?.Dispose();
         var info = StartInfo(exe);
         info.WindowStyle = ProcessWindowStyle.Normal; // This is the interactive receiver the user just opened.
-        mirror = new ProcessJob(info);
+        mirrorGeometry?.Dispose();
+        mirrorGeometry = MirrorStreamGeometrySource.TryConfigure(info);
+        try { mirror = new ProcessJob(info); }
+        catch
+        {
+            mirrorGeometry?.Dispose();
+            mirrorGeometry = null;
+            throw;
+        }
+        LastMirrorStreamGeometry = default;
         mirrorLifecycle.Begin();
     }
     internal MirrorLifecycleEvent PollMirrorLifecycle()
@@ -69,12 +80,17 @@ internal sealed class EngineManager : IDisposable
         var session = mirrorLifecycle.Generation;
         var snapshot = mirrorLifecycle.Capture(mirror.ReadIsRunning, mirror.ContainsProcess);
         LastMirrorSnapshot = snapshot;
-        return mirrorLifecycle.Observe(session, snapshot,
-            TimeSpan.FromSeconds((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency));
+        var now = TimeSpan.FromSeconds((double)Stopwatch.GetTimestamp() / Stopwatch.Frequency);
+        LastMirrorStreamGeometry = mirrorGeometry?.ReadLatest(now) ?? LastMirrorStreamGeometry;
+        return mirrorLifecycle.Observe(session, snapshot, now);
     }
-    internal MirrorWindowSnapshot CaptureVideoWindows() => mirror is { } owned
-        ? mirrorLifecycle.Capture(owned.ReadIsRunning, owned.ContainsProcess)
-        : new(true, false, []);
+    internal MirrorWindowSnapshot CaptureVideoWindows()
+    {
+        LastMirrorStreamGeometry = mirrorGeometry?.ReadLatest() ?? LastMirrorStreamGeometry;
+        return mirror is { } owned
+            ? mirrorLifecycle.Capture(owned.ReadIsRunning, owned.ContainsProcess)
+            : new(true, false, []);
+    }
     internal Func<uint, bool> GetMirrorOwnershipCheck()
     {
         var owned = mirror;
@@ -138,18 +154,24 @@ internal sealed class EngineManager : IDisposable
     {
         mirrorLifecycle.Reset();
         LastMirrorSnapshot = null;
+        LastMirrorStreamGeometry = default;
         // Clear references before disposing so a queued refresh cannot inspect an
         // ended job. Always attempt all owned cleanup even if one disposal fails.
         var ownedControl = control; control = null;
         var ownedMirror = mirror; mirror = null;
+        var ownedGeometry = mirrorGeometry; mirrorGeometry = null;
         try { ownedControl?.Dispose(); }
         finally
         {
             try { ownedMirror?.Dispose(); }
             finally
             {
-                try { if (diagnostic is { HasExited: false }) diagnostic.Kill(); }
-                catch (InvalidOperationException) { }
+                try { ownedGeometry?.Dispose(); }
+                finally
+                {
+                    try { if (diagnostic is { HasExited: false }) diagnostic.Kill(); }
+                    catch (InvalidOperationException) { }
+                }
             }
         }
     }

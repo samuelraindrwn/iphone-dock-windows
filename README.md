@@ -41,9 +41,11 @@ Nama receiver yang muncul di perangkat belum membuktikan jalur video dapat tersa
 
 Pintasan alih target dapat diubah melalui **Ubah pintasan** di bagian Panduan; **Ctrl + Alt + Q** tetap dan tidak dapat diubah. Perubahan berlaku setelah kontrol dinonaktifkan lalu diaktifkan lagi; mirroring tidak perlu dihentikan. Lihat [mengubah pintasan](docs/USAGE.md#mengubah-pintasan).
 
-Pada **0.5.3**, tombol merah **Nonaktifkan kontrol** menghentikan mouse/keyboard tanpa menutup mirroring. **Ctrl + Alt + S** atau tombol **Ambil screenshot** menyimpan tampilan perangkat sebagai PNG lokal; lihat [cara pakai](docs/USAGE.md). Dokumentasi ini mengikuti source 0.6.0; periksa versi installer yang tersedia di Releases.
+Pada **0.5.3**, tombol merah **Nonaktifkan kontrol** menghentikan mouse/keyboard tanpa menutup mirroring. **Ctrl + Alt + S** atau tombol **Ambil screenshot** menyimpan tampilan perangkat sebagai PNG lokal; lihat [cara pakai](docs/USAGE.md). Periksa Releases untuk versi installer yang benar-benar tersedia.
 
 Pada **0.6.0**, **Pengaturan** menambahkan **Tampilan video** (biarkan UxPlay, windowed mengikuti bentuk perangkat, atau fullscreen), **Decoder video** (GPU bila probe Direct3D 11 mendukung, dengan fallback software dan cadangan `arguments.txt`), dan slider **Suara mirroring** dengan tombol **Bisukan**. Semuanya hanya menyentuh receiver milik sesi iDock, dan belum diverifikasi pada perangkat lain saat rilis; lihat [catatan 0.6.0](docs/RELEASE-NOTES-0.6.0.md).
+
+Pada **0.7.0**, opsi **Sematkan video di atas** menjaga jendela video milik sesi iDock di atas jendela biasa, termasuk aplikasi dengan fullscreen tanpa bingkai. Opsi ini mati secara default, tersimpan untuk sesi berikutnya, bekerja bersama semua pilihan **Tampilan video**, dan diterapkan tanpa mengaktifkan jendela video. Mode **Windowed** juga otomatis mengikuti perubahan bentuk portrait/landscape pada renderer D3D11/D3D12 tanpa menimpa perubahan ukuran manual pada orientasi yang sama. Windows tidak menjamin pin tetap terlihat di atas exclusive fullscreen, desktop aman seperti prompt UAC, atau aplikasi lain yang juga selalu di atas; lihat [catatan 0.7.0](docs/RELEASE-NOTES-0.7.0.md) serta [cara pakai dan batasnya](docs/USAGE.md#tampilan-jendela-video).
 
 Halaman pairing berada di **Settings**, bukan menu AssistiveTouch yang mengambang. Status Bluetooth umum `Connected` belum membuktikan mouse/keyboard HID tersambung. [Panduan penggunaan lengkap](docs/USAGE.md) menjelaskan status, hotkey, dan pemulihan koneksi.
 
@@ -51,6 +53,7 @@ Halaman pairing berada di **Settings**, bukan menu AssistiveTouch yang mengamban
 
 - Antarmuka terang satu halaman: **Panduan** di atas, diikuti kartu mirroring/kontrol, **Pengaturan**, dan **Diagnostik**. Semua bagian dapat dicapai dengan menggulir.
 - Mirroring AirPlay di jendela terpisah melalui UxPlay Windows.
+- Opsi **Sematkan video di atas** untuk jendela video milik sesi aktif, tanpa mengaktifkan jendela video tersebut.
 - Menutup jendela video **AirPlay Video Stream** mengakhiri sesi mirroring/kontrol setelah jeda singkat; minimize tidak. Lihat [perilaku penutupan sesi](docs/USAGE.md#mengakhiri-sesi).
 - Pointer relatif, klik, drag, scroll, dan keyboard melalui Bluetooth HID.
 - Pintasan alih target yang dapat diatur, dengan pintasan kembali ke Windows yang tetap.
@@ -78,7 +81,7 @@ Mirroring dan kontrol tidak membutuhkan aplikasi pendamping di perangkat, Mac, j
 
 Paket ditujukan untuk **Windows x64**; Windows 11 direkomendasikan. Kontrol memerlukan adapter/driver dengan **BLE peripheral/GATT advertising**, bukan sekadar Bluetooth untuk headset. Detail minimum sistem dan perbedaan paket ada di [persyaratan instalasi](docs/INSTALL.md#kebutuhan).
 
-Pointer tidak dipetakan langsung ke koordinat jendela video. Rotasi belum otomatis; sensitivitas mengatur jarak gerakan, bukan latensi. Multi-touch, biometrik, konten terlindungi, seluruh versi iOS/iPadOS, dan kontrol tanpa keterlambatan tidak dijamin. Catatan pengujian serta [kriteria kestabilan](docs/STABILITY-TESTS.md) membedakan hasil yang sudah diamati dari pekerjaan validasi yang masih diperlukan.
+Pointer tidak dipetakan langsung ke koordinat jendela video. **Arah pointer** setelah perangkat diputar tetap dipilih manual; mulai 0.7.0, mode video **Windowed** dapat mengikuti perubahan bentuk portrait/landscape secara otomatis. Sensitivitas mengatur jarak gerakan, bukan latensi. Multi-touch, biometrik, konten terlindungi, seluruh versi iOS/iPadOS, dan kontrol tanpa keterlambatan tidak dijamin. Catatan pengujian serta [kriteria kestabilan](docs/STABILITY-TESTS.md) membedakan hasil yang sudah diamati dari pekerjaan validasi yang masih diperlukan.
 
 ## Untuk developer
 
@@ -104,6 +107,7 @@ Gunakan **.NET 10 SDK x64** untuk membangun. Build default bersifat *framework-d
 - [Pilihan bahasa dan status pengembangan 0.5.2](docs/RELEASE-NOTES-0.5.2.md)
 - [Pintasan, nonaktifkan kontrol, dan screenshot 0.5.3](docs/RELEASE-NOTES-0.5.3.md)
 - [Tampilan jendela video dan suara mirroring 0.6.0](docs/RELEASE-NOTES-0.6.0.md)
+- [Pin video dan pelacakan orientasi otomatis 0.7.0](docs/RELEASE-NOTES-0.7.0.md)
 - [Arsitektur serta penyimpanan data](docs/ARCHITECTURE.md)
 - [Kriteria dan checklist kestabilan](docs/STABILITY-TESTS.md)
 - [Roadmap iOS/iPadOS, latensi, dan perbaikan bug](docs/ROADMAP.md)

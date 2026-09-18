@@ -133,7 +133,7 @@ Pada bagian **Pengaturan**, gunakan **Orientasi kontrol** untuk mengoreksi arah 
 
 Kembalikan input ke laptop, pilih orientasi, tunggu tersimpan, lalu pilih perangkat lagi. Pilihan ini memutar pemetaan gerakan, **bukan video**. Sensitivitas tetap dipertahankan.
 
-Rotasi belum otomatis. Setelah perangkat ditegakkan kembali, pilih Portrait lagi. Uji gerakan ke kanan dan ke atas sambil melihat layar perangkat asli. Transformasi arah sudah diperiksa otomatis, tetapi kecocokan orientasi/arah pada perangkat nyata tetap perlu dikonfirmasi. Jika koreksinya berlawanan, coba pilihan landscape satunya.
+Rotasi **arah pointer** belum otomatis. Setelah perangkat ditegakkan kembali, pilih Portrait lagi. Pengaturan ini terpisah dari mode **Windowed**, yang mulai 0.7.0 dapat mengikuti bentuk video portrait/landscape secara otomatis. Uji gerakan ke kanan dan ke atas sambil melihat layar perangkat asli. Transformasi arah sudah diperiksa otomatis, tetapi kecocokan orientasi/arah pada perangkat nyata tetap perlu dikonfirmasi. Jika koreksinya berlawanan, coba pilihan landscape satunya.
 
 ## Tampilan jendela video
 
@@ -141,15 +141,23 @@ Mulai **0.6.0**, bagian **Pengaturan** memiliki pilihan **Tampilan video** untuk
 
 | Pilihan | Perilaku |
 | --- | --- |
-| **Biarkan UxPlay · tanpa perubahan** | Default. iDock tidak menyentuh ukuran atau bingkai jendela video; perilaku sama seperti versi sebelumnya. |
+| **Biarkan UxPlay · tata letak asli** | Default. iDock tidak menyentuh ukuran atau bingkai jendela video; pin tetap dapat diaktifkan secara terpisah. |
 | **Windowed · mengikuti bentuk perangkat** | Jendela diubah mengikuti rasio stream perangkat (portrait atau landscape), diskalakan agar muat sekitar 85% area kerja monitor, lalu ditengahkan. Ukuran piksel asli tidak dipaksakan karena stream portrait 1080p lebih tinggi dari kebanyakan layar laptop. |
 | **Fullscreen · seluruh monitor** | Bingkai jendela dihilangkan dan jendela menutupi seluruh monitor tempat jendela berada. Rasio dipertahankan dengan bilah hitam. |
 
-Pilihan tersimpan otomatis dan diterapkan setelah jendela video terlihat, sekitar seperempat detik setelah muncul. Hanya jendela video dari proses receiver milik sesi ini yang diubah; jendela pengaturan/tray UxPlay dan aplikasi lain tidak disentuh. Rotasi perangkat biasanya membuat UxPlay membuat jendela video baru, dan jendela baru itu ditata lagi mengikuti pilihan.
+Pilihan tersimpan otomatis dan diterapkan setelah jendela video terlihat, sekitar seperempat detik setelah muncul. Hanya jendela video dari proses receiver milik sesi ini yang diubah; jendela pengaturan/tray UxPlay dan aplikasi lain tidak disentuh.
 
-Ukuran jendela yang Anda ubah manual **tidak** ditimpa selama jendela yang sama masih ada. Klik **Terapkan ulang** untuk menata kembali sesuai pilihan. Memilih kembali **Biarkan UxPlay** mengembalikan bingkai dan posisi jendela seperti sebelum diubah, selama jendela itu masih ada.
+Mulai 0.7.0, mode **Windowed** membaca metadata ukuran stream yang dinegosiasikan renderer GStreamer D3D11/D3D12 untuk sesi tersebut. Setelah metadata berhenti berubah selama sekitar 300 ms, perubahan bentuk portrait ↔ landscape memicu satu penataan ulang, baik UxPlay memakai HWND yang sama maupun membuat jendela pengganti. Perubahan resolusi/caps yang tetap pada orientasi sama dan perubahan pin tidak mengubah geometri manual. Jika bentuk area klien saat ini sudah sesuai dengan bentuk stream baru, ukuran/posisi saat ini dipertahankan.
 
-Pada satu monitor, mode fullscreen menutupi jendela iDock. Gunakan **Alt + Tab** untuk kembali ke iDock, lalu ubah pilihan; **Ctrl + Alt + Q** tetap mengembalikan input ke Windows. Pilihan ini berbeda dari checkbox **Force Fullscreen** pada jendela pengaturan UxPlay, yang memerlukan restart receiver dan tidak diubah oleh iDock.
+Ukuran jendela yang Anda ubah manual **tidak** ditimpa sampai Anda memilih mode lain, mengeklik **Terapkan ulang**, atau bentuk stream benar-benar berubah antara portrait dan landscape. Jika jendela awal sedang maximized, memilih **Windowed** memulihkannya tanpa mengaktifkan jendela video, lalu menata pada siklus berikutnya. Memilih kembali **Biarkan UxPlay** mengembalikan bingkai serta posisi awal; jika keadaan awalnya maximized, keadaan maximized itu juga dipulihkan.
+
+Pelacakan bentuk memakai file metadata sementara khusus sesi; iDock tidak menangkap piksel layar HP untuk keperluan ini dan menghapus file tersebut saat sesi berhenti normal. Jika proses mewarisi `GST_DEBUG` atau `GST_DEBUG_FILE` yang sudah berisi nilai, iDock tidak menimpa atau mengalihkan diagnostik tersebut. Pada kondisi itu **Windowed** tetap memakai ukuran area klien awal sebagai fallback, tetapi rotasi dengan HWND yang dipakai ulang mungkin tidak terdeteksi. **Terapkan ulang** dapat mencoba tata letak fallback lagi; untuk pelacakan rotasi same-HWND, hapus variabel debug kustom lalu mulai ulang sesi.
+
+Mulai 0.7.0, aktifkan **Sematkan video di atas** bila jendela video perlu tetap berada di depan jendela biasa. Opsi ini **mati secara default**, disimpan bersama pengaturan mirroring, dan tidak bergantung pada pilihan ukuran: pin dapat dipakai dengan **Biarkan UxPlay**, **Windowed**, maupun **Fullscreen**. Perubahan diterapkan ke jendela video yang sedang terlihat tanpa memindahkan ukuran/posisinya atau mengaktifkan jendela video. Mengeklik kontrol tetap memfokuskan launcher iDock seperti interaksi Windows biasa. Pilihan tersimpan tetap berlaku ketika UxPlay memakai HWND yang sama dan diterapkan juga ke jendela pengganti. Menonaktifkan pin menghentikan pemaksaan selalu-di-atas tanpa mengubah mode tampilan atau ukuran manual.
+
+Pin memakai perilaku *always on top* Windows. Jendela video semestinya tetap terlihat di atas aplikasi biasa, jendela yang dimaksimalkan, dan kebanyakan fullscreen tanpa bingkai. Ini bukan overlay yang dapat menembus **exclusive fullscreen**, desktop aman Windows seperti layar masuk atau prompt UAC, maupun aplikasi lain yang juga ditandai selalu di atas. Pada kasus tersebut, gunakan mode windowed/borderless aplikasi lain, **Alt + Tab**, atau layar kedua. Operasi pin tidak mengaktifkan jendela video dan tidak terus bertarung dengan urutan jendela aplikasi lain.
+
+Pada satu monitor, mode fullscreen menutupi jendela iDock. Jika pin mati, gunakan **Alt + Tab** untuk kembali ke iDock lalu ubah pilihan. Jika **Fullscreen** dan pin sama-sama aktif, Alt+Tab saja dapat memindahkan fokus sementara video tetap terlihat di atas launcher: fokuskan jendela video melalui taskbar/Alt+Tab lalu tekan **Win + Down** untuk minimize, atau hentikan Screen Mirroring dari perangkat. **Ctrl + Alt + Q** tetap mengembalikan input ke Windows. Pilihan ini berbeda dari checkbox **Force Fullscreen** pada jendela pengaturan UxPlay, yang memerlukan restart receiver dan tidak diubah oleh iDock.
 
 Perhitungan tata letak dan penyimpanan pilihan diperiksa otomatis. Hasil pada renderer, monitor, dan skala DPI tertentu belum diverifikasi pada perangkat nyata saat dokumen ini ditulis; ikuti [checklist kestabilan](STABILITY-TESTS.md) dan gunakan **Biarkan UxPlay** jika hasilnya tidak sesuai.
 
@@ -196,7 +204,7 @@ Untuk mencatat kestabilan pada konfigurasi perangkat Anda, ikuti [checklist manu
 
 ## Data dan batas penggunaan
 
-Untuk **installer**, pengaturan pointer tersimpan di `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, log launcher di `%LOCALAPPDATA%\iDock\logs\idock.log`, dan log backend di `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. Untuk **portable/build manual default**, path relatif `data\blehid` dan `logs` berada di folder paket. Lihat [tabel lokasi data](INSTALL.md#lokasi-data). Pilihan tampilan jendela video dan suara mirroring (0.6.0) tersimpan di `data\mirror-settings.json` pada basis yang sama; file ini baru dibuat setelah salah satu kontrol tersebut diubah.
+Untuk **installer**, pengaturan pointer tersimpan di `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, log launcher di `%LOCALAPPDATA%\iDock\logs\idock.log`, dan log backend di `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. Untuk **portable/build manual default**, path relatif `data\blehid` dan `logs` berada di folder paket. Lihat [tabel lokasi data](INSTALL.md#lokasi-data). Mode jendela video dan suara mirroring yang diperkenalkan pada 0.6.0, beserta pilihan **Sematkan video di atas** dari 0.7.0, tersimpan di `data\mirror-settings.json` pada basis yang sama; file ini baru dibuat setelah salah satu kontrol tersebut diubah.
 
 Tidak ada unggahan log otomatis. Periksa dan samarkan nama perangkat, alamat Bluetooth, path pengguna, dan informasi pribadi sebelum membagikan log.
 

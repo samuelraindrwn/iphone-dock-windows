@@ -14,6 +14,8 @@ Pada **0.5.3**, **Ubah pintasan** mengatur kombinasi alih target (default **Ctrl
 
 Pada **0.6.0**, **Pengaturan** menambahkan **Tampilan video** (biarkan UxPlay, windowed mengikuti bentuk perangkat, atau fullscreen), **Decoder video** (GPU bila didukung, dengan fallback software), dan slider **Suara mirroring** dengan tombol **Bisukan**. Semuanya hanya untuk receiver milik sesi iDock; lihat [catatan 0.6.0](docs/RELEASE-NOTES-0.6.0.md) untuk batas pengujiannya.
 
+Pada **0.7.0**, **Sematkan video di atas** dapat menjaga video sesi iDock di depan jendela biasa tanpa mengambil fokus, dan mode **Windowed** dapat mengikuti perubahan bentuk portrait/landscape secara otomatis. Arah pointer tetap dipilih manual. Lihat [catatan 0.7.0](docs/RELEASE-NOTES-0.7.0.md) serta [cara pakai](docs/USAGE.md#tampilan-jendela-video) untuk batas exclusive fullscreen dan detail fallback renderer.
+
 1. [Instalasi](docs/INSTALL.md): unduhan GitHub Releases, verifikasi file, installer, portable, upgrade, dan uninstall.
 2. [Cara menggunakan aplikasi](docs/USAGE.md): mirroring, pairing Bluetooth, target input, sensitivitas, dan orientasi.
 3. [Pemecahan masalah](docs/TROUBLESHOOTING.md): aplikasi tidak terbuka, kontrol belum terhubung, keterlambatan, dan pelaporan bug.

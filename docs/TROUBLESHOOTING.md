@@ -11,7 +11,7 @@ Pilih gejala yang sesuai:
 - [Build gagal atau aplikasi tidak terbuka](#build-atau-aplikasi-tidak-bisa-dibuka)
 - [Receiver tidak ditemukan atau video terputus](#receiver-tidak-muncul-atau-video-tidak-tersambung)
 - [Video berhenti saat layar perangkat mati](#video-berhenti-saat-layar-perangkat-mati)
-- [Tampilan jendela video atau suara mirroring tidak berubah](#tampilan-jendela-video-atau-suara-mirroring-tidak-berubah)
+- [Tampilan jendela video, pin, atau suara mirroring tidak berubah](#tampilan-jendela-video-pin-atau-suara-mirroring-tidak-berubah)
 - [Bluetooth Connected, tetapi kontrol belum terhubung](#bluetooth-connected-tetapi-kontrol-belum-terhubung)
 - [Bluetooth belum siap atau Aborted](#bluetooth-belum-siap-aborted-atau-akses-ditolak)
 - [Input tidak kembali ke Windows](#input-tidak-kembali-ke-windows)
@@ -68,21 +68,27 @@ Kontrol Bluetooth mengikuti jalur yang terpisah dari video dan tidak bergantung 
 
 Perilaku di atas diamati pada satu konfigurasi iPhone 11/Windows 11. Ambang waktu dan alur penutupan sesi diperiksa oleh pengujian otomatis; reaksi setiap versi iOS/iPadOS terhadap penguncian layar belum diverifikasi menyeluruh, dan iPad belum diuji secara fisik.
 
-## Tampilan jendela video atau suara mirroring tidak berubah
+## Tampilan jendela video, pin, atau suara mirroring tidak berubah
 
-Kedua pengaturan pada **0.6.0** hanya bekerja pada proses receiver yang dimulai oleh sesi iDock ini dan baru berlaku setelah ada sesuatu untuk diubah:
+Pengaturan tampilan, pin, dan suara hanya bekerja pada proses receiver yang dimulai oleh sesi iDock ini dan baru berlaku setelah ada sesuatu untuk diubah:
 
 - **Mode tampilan tidak diterapkan:** jendela video harus sudah terlihat dan tidak minimized; sebelum Screen Mirroring tersambung, tidak ada jendela yang bisa ditata. Status di bawah pilihan menunjukkan “Diterapkan pada 1 jendela video.” ketika berhasil. Jika jendela sudah pernah diubah manual, klik **Terapkan ulang**.
-- **Jendela kembali ke ukuran lama setelah rotasi:** UxPlay membuat jendela baru saat rotasi; iDock menatanya lagi dalam sekitar seperempat detik. Jika tidak, klik **Terapkan ulang**, lalu laporkan model perangkat dan renderer (D3D11/D3D12).
-- **Fullscreen menutupi iDock:** pada satu monitor ini perilaku yang diharapkan. **Alt + Tab** ke iDock lalu pilih mode lain, atau **Hentikan sesi**.
-- **Bingkai jendela tampak berbeda setelah kembali ke “Biarkan UxPlay”:** iDock mengembalikan gaya dan posisi yang direkam saat jendela pertama terlihat. Jika jendela sudah diganti UxPlay (misalnya setelah rotasi), tidak ada yang perlu dikembalikan.
+- **Jendela tidak mengikuti portrait/landscape:** mulai 0.7.0, **Windowed** membaca metadata ukuran stream D3D11/D3D12 khusus sesi. Setelah metadata stabil sekitar 300 ms, perubahan bentuk portrait ↔ landscape menata satu kali HWND yang sama ataupun jendela pengganti. Perubahan resolusi dengan orientasi sama, perubahan pin, dan area klien yang sudah memiliki bentuk baru tidak memindahkan geometri manual. Jika Anda memaksimalkan jendela setelah mode Windowed sudah aktif, rotasi saja sengaja tidak memulihkannya; pulihkan jendela atau klik **Terapkan ulang**.
+- **Rotasi same-HWND tetap tidak terdeteksi:** periksa apakah launcher dimulai dengan `GST_DEBUG` atau `GST_DEBUG_FILE` yang sudah berisi nilai. iDock sengaja tidak menimpa diagnostik developer tersebut, sehingga Windowed memakai fallback ukuran area klien awal. **Terapkan ulang** mencoba fallback lagi; hapus variabel kustom dan mulai sesi receiver baru agar metadata rotasi dapat dipantau. Sertakan renderer (D3D11/D3D12) saat melapor.
+- **Pin tidak bekerja:** **Sematkan video di atas** mati secara default. Aktifkan setelah jendela video terlihat dan pulihkan jendela jika sedang minimized. Pilihan tersimpan tetap berlaku pada HWND yang dipakai ulang dan diterapkan juga ke jendela pengganti. Pin tidak mengubah pilihan **Biarkan UxPlay**, **Windowed**, atau **Fullscreen**.
+- **Aplikasi fullscreen masih menutupi video:** pin Windows semestinya berada di atas jendela biasa, maximized, dan kebanyakan fullscreen tanpa bingkai. **Exclusive fullscreen**, desktop aman seperti layar masuk/prompt UAC, serta aplikasi lain yang juga selalu di atas dapat tetap menutupinya. Coba mode windowed/borderless aplikasi tersebut, **Alt + Tab**, atau monitor kedua; iDock tidak mencoba melewati batas sistem atau terus merebut urutan teratas.
+- **Jendela video mengambil fokus sendiri:** mengeklik checkbox atau tombol di iDock memang memfokuskan launcher seperti interaksi Windows biasa. Setelah kembali ke aplikasi lain, polling, penerapan ulang status pin, normalisasi awal dari maximized, maupun penataan HWND yang sama/jendela pengganti tidak seharusnya mengaktifkan jendela video. Jika itu terjadi, catat aplikasi yang sedang fokus, mode fullscreen, jumlah monitor, dan langkah reproduksi.
+- **Fullscreen menutupi iDock:** pada satu monitor ini perilaku yang diharapkan. Jika pin mati, **Alt + Tab** ke iDock lalu pilih mode lain. Jika **Fullscreen** dan pin aktif, Alt+Tab saja mungkin hanya memindahkan fokus: fokuskan video dari taskbar/Alt+Tab lalu tekan **Win + Down** untuk minimize, atau hentikan Screen Mirroring dari perangkat.
+- **Bingkai jendela tampak berbeda setelah kembali ke “Biarkan UxPlay”:** iDock mengembalikan gaya dan placement yang direkam untuk HWND saat pertama kali tata letaknya dikelola. Jika awalnya maximized, keadaan maximized juga dipulihkan. Jendela pengganti memiliki baseline sendiri; keadaan jendela lama yang sudah dihancurkan tidak dapat diterapkan ke HWND baru.
 - **Volume tidak berubah:** sesi audio receiver baru ada setelah perangkat mengirim suara. Putar sesuatu di perangkat, lalu tunggu sekitar satu detik. Status menunjukkan “Diterapkan pada 1 sesi audio receiver.” saat berhasil. Jika perangkat sendiri senyap, iDock tidak dapat menyalakan suaranya.
 - **Volume Mixer menampilkan nilai lain:** selama mirroring berjalan, iDock mengembalikan nilai tersimpan; ubah dari slider iDock, bukan dari Mixer.
 - **Video tidak muncul setelah decoder GPU aktif:** pilih **Decoder video → Software**, lalu **Hentikan sesi** dan **Buka mirroring** lagi; flag dihapus dari `arguments.txt`. Isi asli tersimpan di `arguments.txt.idock-backup` di folder yang sama. Laporkan model GPU/driver dan baris “Probe decoder D3D11” dari log launcher.
 - **arguments.txt gagal diperbarui:** mirroring tetap dibuka dengan isi lama. Periksa izin folder `%APPDATA%\leapbtw\uxplay-windows` atau apakah file sedang dibuka editor lain.
-- **Status “gagal diterapkan”:** lihat log launcher untuk detail dari Windows. Pilih **Biarkan UxPlay** atau kembalikan slider ke 100% untuk berhenti mengelola jendela/volume; sesi tetap berjalan.
+- **Status “gagal diterapkan”:** lihat log launcher untuk detail dari Windows. Matikan **Sematkan video di atas**, pilih **Biarkan UxPlay**, atau kembalikan slider ke 100% untuk berhenti mengelola pin/geometri/volume; sesi tetap berjalan.
 
-Perhitungan tata letak, validasi pengaturan, dan enumerasi read-only diperiksa otomatis. Perilaku pada renderer, driver GPU, skala DPI, dan perangkat audio tertentu belum diverifikasi pada perangkat nyata saat dokumen ini ditulis; sertakan renderer, jumlah monitor, dan skala DPI saat melapor.
+Perhitungan tata letak, keputusan urutan Z, validasi pengaturan, dan enumerasi read-only diperiksa otomatis. Pemeriksaan ini tidak membuktikan penumpukan jendela nyata terhadap setiap aplikasi. Sertakan renderer, mode jendela aplikasi yang menutupi (windowed/borderless/exclusive), jumlah monitor, dan skala DPI saat melapor.
+
+File sementara pelacakan bentuk hanya berisi metadata/lifecycle GStreamer yang dicakup secara sempit, bukan piksel layar HP, dan dihapus saat sesi berhenti normal. Crash atau penghentian paksa dapat meninggalkan file kecil di folder temp; jangan mengunggah log diagnostik tanpa meninjaunya.
 
 ## Bluetooth Connected, tetapi kontrol belum terhubung
 
@@ -148,7 +154,7 @@ Gerakkan mouse laptop sambil melihat **layar perangkat asli**:
 - **Perangkat responsif, laptop tertinggal:** periksa video, jaringan, dan decoding, bukan pairing Bluetooth.
 - **Pointer di perangkat asli juga tertinggal:** fokus pada input Bluetooth dan kondisi radio; menaikkan FPS receiver tidak memperbaiki keterlambatan di perangkat asli.
 - **Gerakan terlalu jauh/dekat tetapi langsung bereaksi:** atur sensitivitas, bukan FPS.
-- **Arah salah hanya saat landscape:** pilih orientasi kontrol yang sesuai. Rotasi belum otomatis.
+- **Arah salah hanya saat landscape:** pilih orientasi kontrol yang sesuai. Rotasi arah pointer belum otomatis; penataan otomatis mode video **Windowed** tidak mengubah pemetaan mouse.
 
 ### Uji latensi video
 

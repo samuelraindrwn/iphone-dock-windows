@@ -65,8 +65,8 @@ try {
     $null = Invoke-OwnedTestProcess -Executable $launcher -ArgumentLine ('--self-test "' + $launcherReport + '"') -LogPrefix 'launcher'
     if (-not (Test-Path -LiteralPath $launcherReport -PathType Leaf)) { throw 'Launcher did not create a test report.' }
     $launcherChecks = @(Get-Content -LiteralPath $launcherReport | Where-Object { $_ -like 'PASS *' }).Count
-    if ($launcherChecks -ne 433) {
-        throw "Expected 433 launcher checks; found $launcherChecks. Report: $launcherReport"
+    if ($launcherChecks -ne 465) {
+        throw "Expected 465 launcher checks; found $launcherChecks. Report: $launcherReport"
     }
     Write-Host "PASS: $launcherChecks launcher checks."
 

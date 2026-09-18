@@ -11,7 +11,7 @@
     <Product>iDock for Windows</Product>
     <AssemblyTitle>iDock for Windows</AssemblyTitle>
     <Description>iPhone and iPad mirroring and input control for Windows using AirPlay and Bluetooth LE HID.</Description>
-    <Version>0.6.0</Version>
+    <Version>0.7.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="Assets\iDock.ico" />

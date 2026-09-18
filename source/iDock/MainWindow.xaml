@@ -115,7 +115,9 @@
            </ComboBox>
           </DockPanel>
           <TextBlock Text="{DynamicResource Text.Display.Note}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,7,0,0" />
-          <TextBlock x:Name="DisplayStatus" Text="{DynamicResource Text.Display.AutoSaved}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0" AutomationProperties.LiveSetting="Polite" />
+          <CheckBox x:Name="PinDisplayCheckBox" Content="{DynamicResource Text.Display.Pin}" Checked="PinDisplay_Changed" Unchecked="PinDisplay_Changed" Margin="0,10,0,0" FontSize="12" FontWeight="SemiBold" VerticalContentAlignment="Center" AutomationProperties.Name="{DynamicResource Text.Display.PinAccessible}" />
+          <TextBlock Text="{DynamicResource Text.Display.PinNote}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="24,4,0,0" />
+          <TextBlock x:Name="DisplayStatus" Text="{DynamicResource Text.Display.AutoSaved}" Style="{StaticResource CaptionText}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0" AutomationProperties.LiveSetting="Polite" />
          </StackPanel>
         </Grid>
        </Border>

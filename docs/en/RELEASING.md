@@ -6,13 +6,13 @@
 
 This document is for maintainers. A public release contains a ready-to-use application and user instructions; publication does not turn untested device compatibility into confirmed support.
 
-## Release artifacts for 0.6.0
+## Release artifacts for 0.7.0
 
-- **`iDock-Setup-0.6.0-win-x64.exe`**: Windows x64 installer with the application runtime.
-- **`iDock-0.6.0-win-x64-portable.zip`**: complete self-contained package, without an installer marker at the application root.
+- **`iDock-Setup-0.7.0-win-x64.exe`**: Windows x64 installer with the application runtime.
+- **`iDock-0.7.0-win-x64-portable.zip`**: complete self-contained package, without an installer marker at the application root.
 - **`SHA256SUMS.txt`**: SHA-256 hashes of download artifacts.
 - **`installer-build.json`**: version, runtime, compiler, and installer build metadata.
-- [Release notes for 0.6.0](RELEASE-NOTES-0.6.0.md): features, requirements, changes, known limitations, and results of tests actually performed.
+- [Release notes for 0.7.0](RELEASE-NOTES-0.7.0.md): features, requirements, changes, known limitations, and results of tests actually performed.
 
 GitHub's automatically generated **Source code** archives are neither installers nor ready-to-use application packages. Project source remains available in the repository. `installer-build.json` is a packaging report, not certification that installation passed on a clean Windows system.
 
@@ -53,10 +53,10 @@ Check an item only after completing it, and record results against the commit an
 - [ ] Source, application version, documentation, installer name, and release tag agree.
 - [ ] **0.5.3:** test default/custom shortcuts, fixed release, repeats/key-ups, active versus pending settings, and the red **Disable control** button without interrupting mirroring. Preserve input recovery and pairing when restarting control.
 - [ ] **0.5.3 screenshots:** Ctrl + Alt + S and **Take screenshot** produce video-client PNGs with local/device input and mirroring only. Test closed/minimized/changed windows, hotkey conflicts, capture protection, and unwritable output folders. Confirm the desktop/other apps are not captured and screenshot data is excluded from packages.
-- [ ] **0.6.0 display and audio:** test **Windowed** and **Fullscreen** in portrait/landscape, across rotation (new window), on one and two monitors, at different DPI scales, **Apply again**, and returning to **Leave to UxPlay**; confirm the UxPlay settings window and other applications are unchanged. Test the **Mirroring audio** slider and **Mute** while the device plays sound: only the `uxplay-windows` volume in the Volume Mixer changes, without a receiver restart, and the value returns after being changed from the Mixer. Test **Video decoder** Automatic/Software: `arguments.txt` changes only in the `-vd d3d11h264dec` pair, the `arguments.txt.idock-backup` copy is created once, and video still appears with both choices.
+- [ ] **0.6.0–0.7.0 display and audio:** test **Windowed**, **Fullscreen**, and pinning in portrait/landscape, with a reused HWND and a replacement window, on one and two monitors, at different DPI scales, with **Apply again**, and when returning to **Leave to UxPlay**. Confirm an orientation change lays out once after the roughly 300 ms settle; same-orientation caps/pin changes preserve manual geometry; an already matching client shape remains; an initially maximized window is normalized without activation and Default restores its maximized state. Test fallback with an existing `GST_DEBUG`/`GST_DEBUG_FILE`: the variable is not overwritten, the receiver still opens, no phone pixels are present in the temporary metadata file, and the file is removed on normal teardown. Confirm pinning does not take focus or alter geometry and that the UxPlay settings window/other applications are unchanged. Test the **Mirroring audio** slider and **Mute** while the device plays sound: only the `uxplay-windows` volume in the Volume Mixer changes, without a receiver restart, and the value returns after being changed from the Mixer. Test **Video decoder** Automatic/Software: `arguments.txt` changes only in the `-vd d3d11h264dec` pair, the `arguments.txt.idock-backup` copy is created once, and video still appears with both choices.
 - [ ] Manual framework-dependent and self-contained packages build successfully.
 - [ ] Launcher/UI, data-path, backend, and application shutdown checks pass.
-- [ ] **Video closure on a real device:** after video appears, X ends video/control and returns input to Windows after the monitoring delay. Minimizing/hiding while preserving the window does not stop the session; a replacement window within two seconds cancels shutdown. Also test Stop Screen Mirroring from the device, rotation, and control without video. Pairing/settings remain intact and other applications' processes are untouched.
+- [ ] **Video closure on a real device:** after video appears, X ends video/control and returns input to Windows after the monitoring delay. Minimizing/hiding or rotating while preserving the HWND does not stop the session; a replacement window within two seconds cancels shutdown. Also test Stop Screen Mirroring from the device, rotation with both HWND behaviors, and control without video. Pairing/settings remain intact and other applications' processes are untouched.
 - [ ] The installer compiles; artifact hashes match `SHA256SUMS.txt`.
 - [ ] **Clean Windows without an SDK/runtime:** the installer installs successfully, and the application opens as a regular user.
 - [ ] **First connection:** test Bonjour, permission prompts, restricted network rules, AirPlay, and HID pairing with a real device.
@@ -101,8 +101,8 @@ Both use Windows x64 and the .NET 10 SDK, run installer checks without installat
 
 The [Build release draft](../../.github/workflows/release.yml) workflow supports two triggers:
 
-1. Push a version tag that points to the release merge commit on `main`, for example **`v0.6.0`**.
-2. Open **Actions → Build release draft → Run workflow**, then set the **tag** input to an **existing** tag, for example `v0.6.0`.
+1. Push a version tag that points to the release merge commit on `main`, for example **`v0.7.0`**.
+2. Open **Actions → Build release draft → Run workflow**, then set the **tag** input to an **existing** tag, for example `v0.7.0`.
 
 The tag must use `vMAJOR.MINOR.PATCH`, and its version must match `COMPONENTS.json` and the application project. The workflow does not create or move tags. Ensure that the tagged commit already includes all required source, scripts, documentation, and workflows.
 

@@ -14,7 +14,8 @@ public partial class MainWindow
     private readonly DispatcherTimer volumeSave = new() { Interval = TimeSpan.FromMilliseconds(200) };
     private readonly MirrorWindowPositioner positioner = new();
     private MirrorConfiguration mirrorConfiguration = MirrorConfiguration.Default;
-    private bool mirrorReady, mirrorPersisted, audioManaged, audioPending, displayPending, decoderPending, displayWarning, audioWarning;
+    private bool mirrorReady, mirrorPersisted, audioManaged, audioPending, displayPending, decoderPending,
+        displayWarning, displaySaveFailed, audioWarning;
     private string displayStatusKey = "Display.AutoSaved", audioStatusKey = "Audio.AutoSaved", decoderStatusKey = "Decoder.Probing";
     private object[] displayStatusArgs = [], audioStatusArgs = [], decoderStatusArgs = [];
     private VideoDecoderProbe.ProbeResult? decoderProbe;
@@ -52,6 +53,7 @@ public partial class MainWindow
         }
         VolumeSlider.Value = mirrorConfiguration.Volume;
         DisplayModeCombo.SelectedValue = MirrorSettings.ModeTag(mirrorConfiguration.WindowMode);
+        PinDisplayCheckBox.IsChecked = mirrorConfiguration.Pinned;
         DecoderCombo.SelectedValue = MirrorSettings.DecoderTag(mirrorConfiguration.Decoder);
         UpdateVolumeLabel();
         RenderMuteButton();
@@ -171,13 +173,26 @@ public partial class MainWindow
         mirrorConfiguration = mirrorConfiguration with { WindowMode = mode };
         displayPending = true;
         SaveMirrorSettings();
-        ApplyMirrorLayout(force: true);
+        ApplyMirrorPresentation(freshSnapshot: true, forceLayout: true, forcePin: false);
+    }
+
+    private void PinDisplay_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!mirrorReady || closing || applyingLanguage) return;
+        var pinned = PinDisplayCheckBox.IsChecked == true;
+        if (pinned == mirrorConfiguration.Pinned) return;
+        mirrorConfiguration = mirrorConfiguration with { Pinned = pinned };
+        displayPending = true;
+        SaveMirrorSettings();
+        // Pinning is independent of geometry. In particular, toggling it must not undo a
+        // manual resize by forcing the selected Windowed/Fullscreen layout again.
+        ApplyMirrorPresentation(freshSnapshot: true, forceLayout: false, forcePin: true);
     }
 
     private void ReapplyDisplay_Click(object sender, RoutedEventArgs e)
     {
         if (closing || closed) return;
-        ApplyMirrorLayout(force: true);
+        ApplyMirrorPresentation(freshSnapshot: true, forceLayout: true, forcePin: true);
     }
 
     private void SaveMirrorSettings()
@@ -191,21 +206,34 @@ public partial class MainWindow
         {
             audioPending = displayPending = decoderPending = false;
             if (savingAudio) SetAudioStatus("Audio.Preview");
-            if (savingDisplay) SetDisplayStatus("Display.Preview");
+            if (savingDisplay)
+            {
+                displaySaveFailed = false;
+                SetDisplayStatus("Display.Preview");
+            }
             if (savingDecoder) SetDecoderStatus("Decoder.Preview");
             return;
         }
         try
         {
+            var recoveringDisplaySave = displaySaveFailed;
             MirrorSettings.Save(mirrorSettingsPath, mirrorConfiguration);
             audioPending = displayPending = decoderPending = false;
             if (savingAudio) SetAudioStatus("Audio.Saved");
-            if (savingDisplay) SetDisplayStatus("Display.Saved");
+            if (savingDisplay || recoveringDisplaySave)
+            {
+                displaySaveFailed = false;
+                SetDisplayStatus("Display.Saved");
+            }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             if (savingAudio) SetAudioStatus("Audio.SaveFailed");
-            if (savingDisplay) SetDisplayStatus("Display.SaveFailed");
+            if (savingDisplay)
+            {
+                displaySaveFailed = true;
+                SetDisplayStatus("Display.SaveFailed");
+            }
             if (savingDecoder) SetDecoderStatus("Decoder.SaveFailed");
             AppendT("Log.MirrorSettingsSaveFailed", ex);
         }
@@ -213,24 +241,26 @@ public partial class MainWindow
 
     // Runs from the 250 ms lifecycle poll with the snapshot it already took, or on demand
     // with a fresh one. Only windows the lifecycle proved to be in this session's Job arrive.
-    private void ApplyMirrorLayout(bool force)
+    private void ApplyMirrorPresentation(bool freshSnapshot, bool forceLayout, bool forcePin)
     {
         if (previewMode || closing || closed || endingSession || !engines.MirrorRunning) return;
         try
         {
-            var snapshot = force ? engines.CaptureVideoWindows() : engines.LastMirrorSnapshot;
+            var snapshot = freshSnapshot ? engines.CaptureVideoWindows() : engines.LastMirrorSnapshot;
             if (snapshot is not { ReadSucceeded: true, ReceiverRunning: true } current) return;
-            var changed = positioner.Apply(current.Windows, mirrorConfiguration.WindowMode, force);
+            var changed = positioner.Apply(current.Windows, mirrorConfiguration.WindowMode,
+                mirrorConfiguration.Pinned, forceLayout, forcePin, engines.LastMirrorStreamGeometry);
             displayWarning = false;
             if (changed == 0) return;
-            SetDisplayStatus("Display.Applied", changed);
-            AppendT("Log.DisplayApplied", MirrorSettings.ModeTag(mirrorConfiguration.WindowMode));
+            if (!displaySaveFailed) SetDisplayStatus("Display.Applied", changed);
+            AppendT("Log.DisplayApplied", MirrorSettings.ModeTag(mirrorConfiguration.WindowMode),
+                UiText.T(mirrorConfiguration.Pinned ? "Display.PinOn" : "Display.PinOff"));
         }
         catch (Exception ex) when (ex is Win32Exception or InvalidOperationException or ArgumentOutOfRangeException)
         {
+            if (!displaySaveFailed) SetDisplayStatus("Display.ApplyFailed", ex);
             if (displayWarning) return;
             displayWarning = true;
-            SetDisplayStatus("Display.ApplyFailed", ex);
             AppendT("Display.ApplyFailed", ex);
         }
     }
