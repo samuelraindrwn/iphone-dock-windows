@@ -8,7 +8,7 @@ internal enum MirrorWindowMode { Default, Windowed, Fullscreen }
 internal enum VideoDecoderMode { Auto, Software }
 
 internal sealed record MirrorConfiguration(int Volume, bool Muted, MirrorWindowMode WindowMode,
-    VideoDecoderMode Decoder = VideoDecoderMode.Auto)
+    VideoDecoderMode Decoder = VideoDecoderMode.Auto, bool Pinned = false)
 {
     internal static readonly MirrorConfiguration Default = new(MirrorSettings.MaximumVolume, false, MirrorWindowMode.Default);
 }
@@ -76,7 +76,13 @@ internal static class MirrorSettings
             || !root.TryGetProperty("VideoDecoder", out var decoderValue) || decoderValue.ValueKind != JsonValueKind.String
             || !TryParseDecoder(decoderValue.GetString(), out var decoder))
             throw Invalid();
-        return new(level, muted.GetBoolean(), mode, decoder);
+        var pinned = false;
+        if (root.TryGetProperty("Pinned", out var pinnedValue))
+        {
+            if (pinnedValue.ValueKind is not (JsonValueKind.True or JsonValueKind.False)) throw Invalid();
+            pinned = pinnedValue.GetBoolean();
+        }
+        return new(level, muted.GetBoolean(), mode, decoder, pinned);
     }
 
     public static void Save(string path, MirrorConfiguration configuration)
@@ -90,7 +96,7 @@ internal static class MirrorSettings
         {
             File.WriteAllText(temporary, JsonSerializer.Serialize(new
             { configuration.Volume, configuration.Muted, WindowMode = ModeTag(configuration.WindowMode),
-              VideoDecoder = DecoderTag(configuration.Decoder) }));
+              VideoDecoder = DecoderTag(configuration.Decoder), configuration.Pinned }));
             File.Move(temporary, path, overwrite: true);
         }
         finally

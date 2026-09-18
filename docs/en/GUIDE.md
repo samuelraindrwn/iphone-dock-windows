@@ -14,6 +14,8 @@ In **0.5.3**, **Change shortcuts** sets the switch-target combination (default *
 
 In **0.6.0**, **Settings** adds **Video window** (leave to UxPlay, windowed following the device shape, or fullscreen), **Video decoder** (GPU when supported, with a software fallback), and a **Mirroring audio** slider with a **Mute** button. All of them apply only to the receiver owned by the iDock session; see the [0.6.0 notes](RELEASE-NOTES-0.6.0.md) for the testing limits.
 
+In **0.7.0**, **Keep video on top** can keep the session-owned video above ordinary windows without taking focus, and **Windowed** mode can follow portrait/landscape shape changes automatically. Pointer direction still requires a manual choice. See the [0.7.0 notes](RELEASE-NOTES-0.7.0.md) and [usage guide](USAGE.md#video-window-display-mode) for exclusive-fullscreen limits and renderer fallback details.
+
 1. [Installation](INSTALL.md): GitHub Releases downloads, file verification, installer, portable package, upgrades, and uninstall.
 2. [Using the app](USAGE.md): mirroring, Bluetooth pairing, input target, sensitivity, orientation, and language.
 3. [Troubleshooting](TROUBLESHOOTING.md): launch failures, disconnected control, latency, and bug reports.

@@ -2,12 +2,30 @@
 
 Bahasa Indonesia · [English](en/STABILITY-TESTS.md)
 
+## Pemeriksaan Sematkan video di atas 0.7.0
+
+Uji dengan konten non-sensitif dan catat mode jendela aplikasi pembanding (windowed, maximized, borderless fullscreen, atau exclusive fullscreen), jumlah monitor, serta skala DPI. Opsi pin mati secara default dan hanya menargetkan jendela video milik sesi iDock.
+
+- [ ] Pada pembukaan pertama atau file pengaturan lama tanpa nilai pin, **Sematkan video di atas** tidak aktif. Jendela video tidak dipaksa ke depan.
+- [ ] Aktifkan pin, lalu fokuskan aplikasi biasa atau maximized dan mulai mengetik. Tunggu beberapa siklus refresh; video tetap terlihat dan pengetikan tetap menuju aplikasi tersebut. Mengeklik kontrol iDock secara normal memfokuskan launcher, tetapi polling, penerapan ulang pin, dan jendela pengganti tidak boleh mengaktifkan jendela video.
+- [ ] Ulangi dengan aplikasi borderless fullscreen. Video tetap terlihat di depannya. Tandai exclusive fullscreen, desktop aman (masuk Windows/UAC), dan konflik dengan aplikasi topmost lain sebagai hasil/batas terpisah; jangan menyimpulkan pin dapat melewati ketiganya.
+- [ ] Uji pin bersama **Biarkan UxPlay**, **Windowed**, dan **Fullscreen**. Mengubah pin tidak memindahkan/mengubah ukuran jendela; mengubah mode atau memakai **Terapkan ulang** tidak menghilangkan pin.
+- [ ] Ubah ukuran secara manual, matikan pin, lalu pastikan geometri tetap. Aktifkan lagi dan putar perangkat; pin tetap berlaku pada HWND yang dipakai ulang dan diterapkan ke jendela pengganti tanpa memengaruhi jendela pengaturan/tray UxPlay, receiver lain, atau aplikasi lain.
+- [ ] Tutup sesi lalu mulai sesi baru. Pilihan pin tersimpan dan diterapkan setelah video baru terlihat; pairing, target input, volume, decoder, dan mode tampilan tidak berubah sendiri.
+- [ ] Pada satu monitor dengan **Fullscreen** dan pin aktif, pastikan jalur pemulihan aman: fokuskan jendela video melalui taskbar/Alt+Tab lalu minimize dengan **Win + Down**, atau hentikan Screen Mirroring dari perangkat. Alt+Tab saja dapat memindahkan fokus tanpa membuat launcher terlihat di atas video yang masih dipin.
+
+Hasil otomatis untuk penyimpanan dan keputusan urutan Z tidak membuktikan perilaku penumpukan nyata pada setiap aplikasi. Catat kasus yang tidak dapat diuji sebagai **Belum diuji**, bukan lulus.
+
 ## Pemeriksaan tampilan jendela dan suara mirroring 0.6.0
 
-Target uji perangkat nyata untuk dua pengaturan baru pada **Pengaturan**; belum ada hasil yang tercatat saat catatan 0.6.0 ditulis. Catat renderer (D3D11/D3D12), jumlah monitor, dan skala DPI pada setiap hasil.
+Target uji perangkat nyata untuk pengaturan tampilan/suara dari 0.6.0 dan pelacakan orientasi dari 0.7.0. Belum ada kelulusan formal seluruh matriks saat catatan 0.7.0 ditulis. Catat renderer (D3D11/D3D12), jumlah monitor, dan skala DPI pada setiap hasil.
 
-- **Windowed:** setelah Screen Mirroring tersambung, jendela video ditata mengikuti rasio perangkat, muat sekitar 85% area kerja, dan ditengahkan dalam sekitar seperempat detik. Rotasi perangkat menghasilkan jendela baru yang ditata lagi. Ukuran yang diubah manual tidak ditimpa sampai **Terapkan ulang**.
-- **Fullscreen:** jendela menutupi seluruh monitor tanpa bingkai, rasio dipertahankan dengan bilah hitam, dan **Alt + Tab** ke iDock tetap bekerja. Kembali ke **Biarkan UxPlay** mengembalikan bingkai/posisi jendela yang sama.
+- **Windowed awal:** setelah Screen Mirroring tersambung, jendela video ditata mengikuti rasio perangkat, muat sekitar 85% area kerja, dan ditengahkan. Uji D3D11 dan D3D12 bila tersedia.
+- **Rotasi 0.7.0:** mulai dari landscape lalu putar ke portrait, kemudian kembali lagi. Uji renderer yang memakai HWND yang sama dan, bila tersedia, jendela pengganti. Setelah metadata caps stabil sekitar 300 ms, setiap perubahan portrait ↔ landscape menata tepat satu kali tanpa mengaktifkan video.
+- **Geometri manual:** ubah ukuran/posisi secara manual. Perubahan resolusi/caps dengan orientasi sama dan perubahan pin tidak menimpanya. Rotasi nyata boleh menata ulang, tetapi jika area klien sudah memiliki bentuk stream baru, geometri tersebut tetap. **Terapkan ulang** dan pergantian mode tetap boleh menata eksplisit.
+- **Maximized dan Default:** mulai dengan video maximized, lalu pilih **Windowed**. Jendela dipulihkan tanpa mengambil fokus dan baru ditata setelah status maximized benar-benar lepas. Kembali ke **Biarkan UxPlay** memulihkan placement awal termasuk maximized. Setelah Windowed aktif, maximize manual lalu putar perangkat; rotasi saja tidak boleh memaksa restore.
+- **Metadata/fallback:** pastikan file sementara sesi hanya memuat metadata GStreamer yang diharapkan, bukan piksel HP, dan hilang setelah teardown normal. Ulangi dengan `GST_DEBUG` atau `GST_DEBUG_FILE` kustom: nilai tersebut tidak ditimpa, receiver tetap terbuka, dan Windowed memakai rasio area klien awal; catat bahwa rotasi same-HWND tidak dijanjikan pada fallback ini.
+- **Fullscreen:** jendela menutupi seluruh monitor tanpa bingkai dan rasio dipertahankan dengan bilah hitam. Dengan pin mati, **Alt + Tab** ke iDock tetap bekerja; dengan pin aktif, gunakan jalur pemulihan pada checklist pin di atas. Kembali ke **Biarkan UxPlay** mengembalikan bingkai/posisi jendela yang sama.
 - **Tidak menyentuh yang lain:** jendela pengaturan/tray UxPlay, receiver UxPlay lain yang tidak dimulai iDock, dan aplikasi lain tidak berubah ukuran atau gaya.
 - **Suara:** saat perangkat memutar suara, slider dan **Bisukan** mengubah hanya volume `uxplay-windows` di Volume Mixer dalam sekitar satu detik, tanpa restart receiver. Perubahan dari Mixer kembali ke nilai tersimpan selama mirroring berjalan. Volume sistem dan aplikasi lain tidak berubah. Sebelum slider disentuh, tidak ada file `mirror-settings.json` dan volume tidak diubah.
 - **Decoder:** dengan **Otomatis** dan probe positif, `arguments.txt` memuat `-vd d3d11h264dec` setelah **Buka mirroring**, opsi lain utuh, dan `arguments.txt.idock-backup` berisi file asli. **Software** menghapus pasangan itu pada pembukaan berikutnya. Video tetap muncul pada keduanya; catat GPU/driver dan baris probe dari log.
@@ -51,6 +69,7 @@ Kandidat dapat dinilai stabil **pada konfigurasi yang diuji** jika seluruh krite
 - Sesi 1–2 jam selesai tanpa crash, input tertahan, atau keterlambatan yang terus bertambah.
 - Gerakan, klik, drag, scroll, pengetikan, sensitivitas, dan orientasi sesuai hasil yang diharapkan.
 - Pengalihan kembali ke Windows serta pemulihan dari lock, sleep, dan koneksi terputus tidak meninggalkan input yang tidak diminta.
+- Jika pin dinilai pada konfigurasi ini, hasil untuk windowed/maximized/borderless fullscreen, fokus keyboard, pemulihan Fullscreen satu monitor, dan batas exclusive/secure/topmost sudah dicatat.
 - Status aplikasi sesuai kondisi sebenarnya; kasus yang belum diuji tetap ditandai belum diuji.
 
 Kriteria ini adalah sasaran pengujian, bukan sertifikasi produksi atau jaminan lintas perangkat. Fitur yang belum dapat diuji harus dicatat sebagai batasan sebelum menyimpulkan kesiapan.
@@ -163,7 +182,7 @@ Gunakan konten uji dan lepaskan tombol yang sedang ditahan. Pemantauan baru berl
 
 - [ ] Dengan video/kontrol aktif, kembalikan input ke Windows lalu klik X pada **AirPlay Video Stream**. Setelah jeda sekitar dua detik, proses video/kontrol milik sesi berhenti dan Windows menerima input. Catat waktu nyata dan kegagalan; jangan menganggap ada batas real-time ketika sistem macet.
 - [ ] Minimize jendela video, lalu pulihkan. Sesi tidak berhenti hanya karena minimize. Menutup jendela pengaturan UxPlay bukan pengganti tes X pada video.
-- [ ] Putar perangkat dan amati penggantian jendela. Jendela pengganti dalam dua detik tidak mengakhiri sesi; jika penggantian lebih lama dan sesi berhenti, catat sebagai batas/perilaku yang perlu dievaluasi.
+- [ ] Putar perangkat dan catat apakah renderer mempertahankan HWND atau membuat pengganti. HWND yang sama tidak boleh dianggap hilang. Jika ada pengganti, kemunculannya dalam dua detik tidak mengakhiri sesi; jika lebih lama dan sesi berhenti, catat sebagai batas/perilaku yang perlu dievaluasi.
 - [ ] Hentikan Screen Mirroring dari perangkat. Jika jendela video hilang selama jeda, kontrol juga berakhir; tidak perlu menghapus pairing untuk memulai sesi berikutnya.
 - [ ] Gunakan kontrol tanpa pernah membuka video. Tidak adanya jendela video tidak menyebabkan penghentian otomatis.
 - [ ] Setelah setiap penutupan, pairing, sensitivitas, orientasi, Bonjour, dan aplikasi lain tetap utuh. Memulai lagi tidak mengalihkan target input ke perangkat tanpa hotkey.

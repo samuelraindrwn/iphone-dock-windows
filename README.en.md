@@ -41,9 +41,11 @@ Seeing the receiver name does not prove the video connection is working. If the 
 
 The switch shortcut can be changed with **Change shortcuts** in the Guide section; **Ctrl + Alt + Q** is fixed and cannot be reassigned. Changes apply after disabling and enabling control; mirroring does not need to stop. See [changing the shortcuts](docs/en/USAGE.md#changing-the-shortcuts).
 
-In **0.5.3**, the red **Disable control** button stops mouse/keyboard control without closing mirroring. **Ctrl + Alt + S** or the **Take screenshot** button saves the mirrored display as a local PNG; see [Usage](docs/en/USAGE.md). This documentation describes the 0.6.0 source; check Releases for available installer versions.
+In **0.5.3**, the red **Disable control** button stops mouse/keyboard control without closing mirroring. **Ctrl + Alt + S** or the **Take screenshot** button saves the mirrored display as a local PNG; see [Usage](docs/en/USAGE.md). Check Releases for installer versions that are actually available.
 
 In **0.6.0**, **Settings** adds **Video window** (leave to UxPlay, windowed following the device shape, or fullscreen), **Video decoder** (GPU when a Direct3D 11 probe supports it, with a software fallback and an `arguments.txt` backup), and a **Mirroring audio** slider with a **Mute** button. All of them touch only the receiver owned by the iDock session, and had not been verified on other hardware at release time; see the [0.6.0 notes](docs/en/RELEASE-NOTES-0.6.0.md).
+
+In **0.7.0**, **Keep video on top** keeps the iDock session's video window above ordinary windows, including borderless-fullscreen applications. It is off by default, saved for later sessions, works with every **Video window** mode, and is applied without activating the video window. **Windowed** mode also follows D3D11/D3D12 portrait/landscape shape changes automatically without overriding same-orientation manual resizing. Windows does not guarantee visibility above exclusive fullscreen, a secure desktop such as a UAC prompt, or another always-on-top application; see the [0.7.0 notes](docs/en/RELEASE-NOTES-0.7.0.md) and [usage and limitations](docs/en/USAGE.md#video-window-display-mode).
 
 The pairing page is in **Settings**, not the floating AssistiveTouch menu. A general Bluetooth `Connected` status is not proof that HID mouse/keyboard control is connected. The [full user guide](docs/en/USAGE.md) explains connection status, shortcuts, and recovery.
 
@@ -57,6 +59,7 @@ Both documentation languages are available independently of your installed app v
 
 - A light, single-page interface: **Guide** first, followed by mirroring/control cards, **Settings**, and **Diagnostics**. Scroll to reach every section.
 - AirPlay mirroring in a separate window through UxPlay Windows.
+- **Keep video on top** for the active session's video window, without activating that video window.
 - Closing **AirPlay Video Stream** ends the mirroring/control session after a short grace period; minimizing does not. See [ending a session](docs/en/USAGE.md#ending-a-session).
 - Relative pointer movement, clicking, dragging, scrolling, and keyboard input over Bluetooth HID.
 - A configurable switch shortcut and a fixed return-to-Windows shortcut.
@@ -79,7 +82,7 @@ Mirroring and control do not require a companion app on the device, a Mac, jailb
 
 Packages target **Windows x64**; Windows 11 is recommended. Control needs an adapter/driver supporting **BLE peripheral mode / GATT advertising**, not just Bluetooth headset connectivity. See [system requirements](docs/en/INSTALL.md) for minimum requirements and package differences.
 
-The pointer is not mapped directly to the video window's coordinates. Rotation is manual, and sensitivity changes movement distance, not latency. Multi-touch, biometrics, protected content, every iOS/iPadOS version, and lag-free control are not guaranteed. Test records and the [stability criteria](docs/en/STABILITY-TESTS.md) distinguish observed results from validation still needed.
+The pointer is not mapped directly to the video window's coordinates. **Pointer direction** after device rotation still requires a manual choice; starting with 0.7.0, the **Windowed** video mode can follow portrait/landscape shape changes automatically. Sensitivity changes movement distance, not latency. Multi-touch, biometrics, protected content, every iOS/iPadOS version, and lag-free control are not guaranteed. Test records and the [stability criteria](docs/en/STABILITY-TESTS.md) distinguish observed results from validation still needed.
 
 ## For developers
 
@@ -106,6 +109,7 @@ Build with the **.NET 10 SDK x64**. The default build is *framework-dependent* a
 - [0.5.2 language support and development status](docs/en/RELEASE-NOTES-0.5.2.md)
 - [0.5.3 shortcuts, independent control stop, and screenshots](docs/en/RELEASE-NOTES-0.5.3.md)
 - [0.6.0 video window mode and mirroring audio](docs/en/RELEASE-NOTES-0.6.0.md)
+- [0.7.0 video pinning and automatic orientation tracking](docs/en/RELEASE-NOTES-0.7.0.md)
 - [Architecture and data storage](docs/en/ARCHITECTURE.md)
 - [Stability criteria and checklist](docs/en/STABILITY-TESTS.md)
 - [iOS/iPadOS compatibility, latency, and bug-fix roadmap](docs/en/ROADMAP.md)

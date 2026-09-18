@@ -22,9 +22,10 @@ internal readonly record struct MirrorWindowSnapshot(bool ReadSucceeded, bool Re
 internal enum MirrorLifecycleEvent { None, ReadFailed, VideoWindowClosed, ReceiverExited }
 
 // Read-only observation: no global hooks, title-based process termination, or messages
-// sent to another app. UxPlay may recreate a window during a renderer/rotation change.
-// Geometry changes are the one exception and live in MirrorWindowPositioner, which only
-// ever receives windows this class proved to be in the session's own Job.
+// sent to another app. UxPlay may reuse or recreate a window during renderer/rotation changes.
+// Presentation changes (geometry/frame and optional topmost z-order) are the one exception
+// and live in MirrorWindowPositioner, which only ever receives windows this class proved to
+// be in the session's own Job.
 internal sealed class MirrorWindowLifecycle
 {
     internal static readonly TimeSpan DisappearanceGrace = TimeSpan.FromSeconds(2);

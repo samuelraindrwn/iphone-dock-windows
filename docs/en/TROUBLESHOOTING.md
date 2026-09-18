@@ -11,7 +11,7 @@ Choose the matching symptom:
 - [Build fails or the app will not open](#build-fails-or-the-app-will-not-open)
 - [Receiver not found or video disconnects](#receiver-not-found-or-video-not-connecting)
 - [Video stops when the device screen turns off](#video-stops-when-the-device-screen-turns-off)
-- [Video window mode or audio volume does not apply](#video-window-mode-or-audio-volume-does-not-apply)
+- [Video window mode, pinning, or audio volume does not apply](#video-window-mode-pinning-or-audio-volume-does-not-apply)
 - [Bluetooth says Connected, but control is not connected](#bluetooth-says-connected-but-control-is-not-connected)
 - [Bluetooth is not ready or reports Aborted](#bluetooth-is-not-ready-aborted-or-access-is-denied)
 - [Input does not return to Windows](#input-does-not-return-to-windows)
@@ -68,21 +68,27 @@ Bluetooth control follows a path separate from video and does not depend on scre
 
 The behavior above was observed on one iPhone 11/Windows 11 configuration. The timing threshold and session-closure flow are covered by automated checks; how each iOS/iPadOS version reacts to screen locking has not been verified exhaustively, and iPad has not been physically tested.
 
-## Video window mode or audio volume does not apply
+## Video window mode, pinning, or audio volume does not apply
 
-Both **0.6.0** settings work only on the receiver process started by this iDock session and take effect only once there is something to change:
+Display, pinning, and audio settings work only on the receiver process started by this iDock session and take effect only once there is something to change:
 
 - **The display mode is not applied:** the video window must already be visible and not minimized; before Screen Mirroring connects there is no window to lay out. The status under the selector reads “Applied to 1 video window(s).” on success. If the window was resized manually, click **Apply again**.
-- **The window returns to its old size after rotation:** UxPlay creates a new window on rotation; iDock lays it out again within about a quarter of a second. If it does not, click **Apply again**, then report the device model and renderer (D3D11/D3D12).
-- **Fullscreen covers iDock:** on a single monitor this is expected. **Alt + Tab** to iDock and choose another mode, or **Stop session**.
-- **The frame looks different after returning to “Leave to UxPlay”:** iDock restores the style and position recorded when the window was first seen. If UxPlay has since replaced the window (for example after rotation), there is nothing to restore.
+- **The window does not follow portrait/landscape:** starting with 0.7.0, **Windowed** reads session-specific D3D11/D3D12 stream-size metadata. Once it has settled for about 300 ms, a portrait ↔ landscape shape change lays out the reused HWND or a replacement window once. Same-orientation resolution changes, pin changes, and a client area that already has the new shape do not move manual geometry. If you maximized the window after Windowed was already active, rotation alone deliberately does not restore it; restore the window or click **Apply again**.
+- **Rotation on a reused HWND is still not detected:** check whether the launcher was started with a non-empty `GST_DEBUG` or `GST_DEBUG_FILE`. iDock deliberately leaves those developer diagnostics untouched, so Windowed uses the initial-client-size fallback. **Apply again** retries that fallback; clear the custom variables and start a new receiver session to enable rotation metadata tracking. Include the renderer (D3D11/D3D12) when reporting the issue.
+- **Pinning does not work:** **Keep video on top** is off by default. Enable it after the video window is visible, and restore the window if it is minimized. The saved choice remains in effect on a reused HWND and is also applied to a replacement window. Pinning does not change **Leave to UxPlay**, **Windowed**, or **Fullscreen**.
+- **A fullscreen application still covers the video:** Windows pinning should remain above ordinary, maximized, and most borderless-fullscreen windows. **Exclusive fullscreen**, a secure desktop such as sign-in/a UAC prompt, and another always-on-top application can still cover it. Try that application's windowed/borderless mode, **Alt + Tab**, or a second monitor; iDock does not try to bypass system boundaries or continuously seize the highest Z order.
+- **The video window takes focus by itself:** clicking a checkbox or button in iDock naturally focuses the launcher like an ordinary Windows interaction. After returning to another application, polling, pin-state reapplication, initial normalization from maximized, and layout of either the reused HWND or a replacement window should not activate the video window. If that happens, record the focused application, fullscreen mode, monitor count, and reproduction steps.
+- **Fullscreen covers iDock:** on a single monitor this is expected. With pinning off, **Alt + Tab** to iDock and choose another mode. If **Fullscreen** and pinning are enabled, Alt+Tab alone may only move focus: focus the video from the taskbar/Alt+Tab and press **Win + Down** to minimize it, or stop Screen Mirroring on the device.
+- **The frame looks different after returning to “Leave to UxPlay”:** iDock restores the style and placement recorded for an HWND when its layout was first managed. If it was initially maximized, the maximized state is restored too. A replacement window has its own baseline; a destroyed predecessor's state cannot be applied to the new HWND.
 - **The volume does not change:** the receiver's audio session exists only after the device sends sound. Play something on the device, then wait about a second. The status reads “Applied to 1 receiver audio session(s).” on success. If the device itself is silent, iDock cannot turn its sound on.
 - **The Volume Mixer shows a different value:** while mirroring is running, iDock returns the saved value; change it from the iDock slider, not from the Mixer.
 - **Video does not appear after the GPU decoder was enabled:** choose **Video decoder → Software**, then **Stop session** and **Open mirroring** again; the flag is removed from `arguments.txt`. The original contents are kept in `arguments.txt.idock-backup` in the same folder. Report the GPU/driver model and the “D3D11 decoder probe” line from the launcher log.
 - **arguments.txt could not be updated:** mirroring still opens with the previous contents. Check permissions on `%APPDATA%\leapbtw\uxplay-windows` or whether another editor holds the file.
-- **A “could not apply” status:** see the launcher log for the Windows detail. Choose **Leave to UxPlay** or move the slider back to 100% to stop managing the window/volume; the session keeps running.
+- **A “could not apply” status:** see the launcher log for the Windows detail. Turn off **Keep video on top**, choose **Leave to UxPlay**, or move the slider back to 100% to stop managing pinning/geometry/volume; the session keeps running.
 
-Layout math, settings validation, and read-only enumeration are checked automatically. Behavior on specific renderers, GPU drivers, DPI scales, and audio devices has not been verified on real hardware at the time of writing; include the renderer, monitor count, and DPI scale when reporting.
+Layout math, Z-order decisions, settings validation, and read-only enumeration are checked automatically. Those checks do not prove real stacking behavior against every application. Include the renderer, the covering application's window mode (windowed/borderless/exclusive), monitor count, and DPI scale when reporting.
+
+The temporary shape-tracking file contains only narrowly scoped GStreamer metadata/lifecycle output, not phone-screen pixels, and is deleted when the session stops normally. A crash or forced termination can leave a small file in the temp directory; review diagnostic logs before sharing them.
 
 ## Bluetooth says Connected, but control is not connected
 
@@ -148,7 +154,7 @@ Move the laptop mouse while watching the **actual device screen**:
 - **The device is responsive, but the laptop lags:** investigate video, networking, and decoding, not Bluetooth pairing.
 - **The pointer on the actual device also lags:** focus on Bluetooth input and radio conditions; increasing receiver FPS does not fix a delay on the actual device.
 - **Movement is too far/short but reacts immediately:** adjust sensitivity, not FPS.
-- **Direction is wrong only in landscape:** choose the matching control orientation. Rotation is not automatic.
+- **Direction is wrong only in landscape:** choose the matching control orientation. Pointer-direction rotation is not automatic; automatic **Windowed** video layout does not change mouse mapping.
 
 ### Testing video latency
 

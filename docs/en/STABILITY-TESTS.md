@@ -2,12 +2,30 @@
 
 [Bahasa Indonesia](../STABILITY-TESTS.md) · English
 
+## Keep video on top checks for 0.7.0
+
+Use non-sensitive content and record the comparison application's window mode (windowed, maximized, borderless fullscreen, or exclusive fullscreen), monitor count, and DPI scale. Pinning is off by default and targets only the video window owned by the iDock session.
+
+- [ ] On first launch or with an older settings file that has no pin value, **Keep video on top** is off. The video window is not forced to the front.
+- [ ] Turn pinning on, then focus an ordinary or maximized application and start typing. Wait through several refresh cycles; the video remains visible and typing continues in that application. Clicking an iDock control normally focuses the launcher, but polling, pin-state reapplication, and a replacement window must not activate the video window.
+- [ ] Repeat with a borderless-fullscreen application. The video stays in front. Record exclusive fullscreen, a secure desktop (Windows sign-in/UAC), and conflict with another topmost application as separate results/limits; do not conclude that pinning can bypass them.
+- [ ] Test pinning with **Leave to UxPlay**, **Windowed**, and **Fullscreen**. Changing pinning does not move/resize the window; changing modes or using **Apply again** does not remove pinning.
+- [ ] Resize manually, turn pinning off, and confirm geometry remains. Turn it on again and rotate the device; pinning remains on a reused HWND and is applied to a replacement window without affecting the UxPlay settings/tray window, another receiver, or another application.
+- [ ] End the session and start another. The saved pin choice is applied once the new video appears; pairing, input target, volume, decoder, and display mode do not change by themselves.
+- [ ] On one monitor with **Fullscreen** and pinning enabled, verify a safe recovery path: focus the video window through the taskbar/Alt+Tab and minimize it with **Win + Down**, or stop Screen Mirroring on the device. Alt+Tab alone can change focus without making the launcher visible above a video that remains pinned.
+
+Automated persistence and Z-order decision checks do not prove real stacking behavior against every application. Record cases that cannot be tested as **Not tested**, not passed.
+
 ## Video window and mirroring audio checks for 0.6.0
 
-Real-device targets for the two new **Settings** controls; no results were recorded when the 0.6.0 notes were written. Record the renderer (D3D11/D3D12), monitor count, and DPI scale with every result.
+Real-device targets for the 0.6.0 display/audio settings and the 0.7.0 orientation tracking. No formal pass of the full matrix had been recorded when the 0.7.0 notes were written. Record the renderer (D3D11/D3D12), monitor count, and DPI scale with every result.
 
-- **Windowed:** after Screen Mirroring connects, the video window is laid out to the device aspect ratio, fits about 85% of the work area, and is centered within about a quarter of a second. Rotating the device produces a new window that is laid out again. A manual resize is not overridden until **Apply again**.
-- **Fullscreen:** the window covers the whole monitor without a frame, the aspect ratio is preserved with black bars, and **Alt + Tab** to iDock still works. Returning to **Leave to UxPlay** restores the same window's frame/position.
+- **Initial Windowed layout:** after Screen Mirroring connects, the video window is laid out to the device aspect ratio, fits about 85% of the work area, and is centered. Test D3D11 and D3D12 when available.
+- **0.7.0 rotation:** start in landscape, rotate to portrait, then rotate back. Test a renderer that reuses the same HWND and, when available, a replacement window. After caps metadata has settled for about 300 ms, each portrait ↔ landscape change causes exactly one relayout without activating the video.
+- **Manual geometry:** manually resize/reposition the window. Same-orientation resolution/caps changes and pin changes do not override it. A real orientation change may relayout it, but if the client already has the new stream shape, that geometry remains. **Apply again** and mode changes may still request an explicit layout.
+- **Maximized and Default:** start with the video maximized, then select **Windowed**. It is restored without taking focus and is laid out only after the maximized state has actually cleared. Returning to **Leave to UxPlay** restores the original placement, including maximized. Once Windowed is active, maximize manually and rotate; rotation alone must not force a restore.
+- **Metadata/fallback:** confirm the session temporary file contains only the expected GStreamer metadata, not phone pixels, and is gone after normal teardown. Repeat with a custom `GST_DEBUG` or `GST_DEBUG_FILE`: it is not overwritten, the receiver still opens, and Windowed uses the initial client-area ratio; record that same-HWND rotation is not promised under this fallback.
+- **Fullscreen:** the window covers the whole monitor without a frame and preserves the aspect ratio with black bars. With pinning off, **Alt + Tab** to iDock still works; with pinning enabled, use the recovery path in the pinning checklist above. Returning to **Leave to UxPlay** restores the same window's frame/position.
 - **Touches nothing else:** the UxPlay settings/tray window, other UxPlay receivers not started by iDock, and other applications do not change size or style.
 - **Audio:** while the device plays sound, the slider and **Mute** change only the `uxplay-windows` volume in the Volume Mixer within about a second, without a receiver restart. A change from the Mixer returns to the saved value while mirroring is running. The system volume and other applications do not change. Before the slider is touched, there is no `mirror-settings.json` and the volume is not changed.
 - **Decoder:** with **Automatic** and a positive probe, `arguments.txt` contains `-vd d3d11h264dec` after **Open mirroring**, other options are intact, and `arguments.txt.idock-backup` holds the original file. **Software** removes the pair on the next open. Video appears in both cases; record the GPU/driver and the probe line from the log.
@@ -51,6 +69,7 @@ A candidate can be considered stable **on the tested configuration** if every cr
 - A 1–2-hour session completes without crashes, stuck input, or continuously increasing delay.
 - Movement, clicks, dragging, scrolling, typing, sensitivity, and orientation behave as expected.
 - Switching back to Windows and recovering from lock, sleep, and disconnections leave no unintended input.
+- If pinning is assessed on this configuration, results are recorded for windowed/maximized/borderless fullscreen, keyboard focus, single-monitor Fullscreen recovery, and the exclusive/secure/topmost limits.
 - Application status matches the actual state; untested cases remain marked as untested.
 
 These criteria are testing goals, not production certification or a cross-device guarantee. Features that cannot yet be tested must be recorded as limitations before readiness is assessed.
@@ -163,7 +182,7 @@ Use test content and release held keys/buttons. Monitoring starts only after a v
 
 - [ ] With video/control active, return input to Windows and click X on **AirPlay Video Stream**. After roughly two seconds, the session-owned video/control processes stop and Windows accepts input. Record actual timing and failures; do not assume a real-time deadline when the system stalls.
 - [ ] Minimize the video window, then restore it. The session does not stop merely because of minimizing. Closing the UxPlay settings window is not a substitute for testing X on the video.
-- [ ] Rotate the device and observe window replacement. A replacement within two seconds does not end the session; if replacement takes longer and the session stops, record this as a limitation/behavior to evaluate.
+- [ ] Rotate the device and record whether the renderer keeps the HWND or creates a replacement. A reused HWND must not be treated as missing. If there is a replacement, one appearing within two seconds does not end the session; if it takes longer and the session stops, record this as a limitation/behavior to evaluate.
 - [ ] Stop Screen Mirroring on the device. If the video window is absent for the grace period, control also ends; pairing does not need to be deleted to start the next session.
 - [ ] Use control without ever opening video. The absence of a video window does not trigger automatic shutdown.
 - [ ] After each closure, pairing, sensitivity, orientation, Bonjour, and other applications remain intact. Restarting does not switch the input target to the device without a hotkey.

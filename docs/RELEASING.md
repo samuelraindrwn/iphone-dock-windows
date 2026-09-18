@@ -6,13 +6,13 @@ Bahasa Indonesia · [English](en/RELEASING.md)
 
 Dokumen ini untuk maintainer. Rilis publik berisi aplikasi siap pakai serta petunjuk pengguna; publikasi tidak mengubah status kompatibilitas perangkat yang belum diuji menjadi didukung.
 
-## Artefak rilis 0.6.0
+## Artefak rilis 0.7.0
 
-- **`iDock-Setup-0.6.0-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
-- **`iDock-0.6.0-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
+- **`iDock-Setup-0.7.0-win-x64.exe`**: installer Windows x64 dengan runtime aplikasi.
+- **`iDock-0.7.0-win-x64-portable.zip`**: seluruh paket self-contained, tanpa marker installer di root aplikasi.
 - **`SHA256SUMS.txt`**: SHA-256 artefak unduhan.
 - **`installer-build.json`**: versi, runtime, compiler, dan metadata penyusunan installer.
-- [Catatan rilis 0.6.0](RELEASE-NOTES-0.6.0.md): fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
+- [Catatan rilis 0.7.0](RELEASE-NOTES-0.7.0.md): fitur, kebutuhan, perubahan, batas yang diketahui, dan hasil pengujian yang benar-benar dilakukan.
 
 Arsip **Source code** yang dibuat GitHub otomatis bukan installer maupun paket aplikasi siap pakai. Source proyek tetap tersedia melalui repository. `installer-build.json` adalah laporan penyusunan paket, bukan sertifikat lolos instalasi pada Windows bersih.
 
@@ -53,10 +53,10 @@ Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefa
 - [ ] Source, versi aplikasi, dokumentasi, nama installer, dan tag rilis konsisten.
 - [ ] **0.5.3:** pintasan default/kustom, pelepasan tetap, repeat/key-up, pengaturan aktif versus tertunda, dan tombol merah **Nonaktifkan kontrol** diuji tanpa memutus mirroring. Pertahankan pemulihan input serta pairing pada restart kontrol.
 - [ ] **Screenshot 0.5.3:** Ctrl + Alt + S dan tombol **Ambil screenshot** menghasilkan PNG area video saat input lokal/perangkat dan mirroring saja. Uji jendela tertutup/minimize/berubah, konflik hotkey, proteksi capture, serta folder tidak dapat ditulis. Pastikan desktop/aplikasi lain tidak ikut tertangkap dan data screenshot tidak masuk paket.
-- [ ] **0.6.0 tampilan dan suara:** uji **Windowed** dan **Fullscreen** pada portrait/landscape, rotasi (jendela baru), satu dan dua monitor, skala DPI berbeda, **Terapkan ulang**, dan kembali ke **Biarkan UxPlay**; pastikan jendela pengaturan UxPlay dan aplikasi lain tidak berubah. Uji slider **Suara mirroring** dan **Bisukan** saat perangkat memutar suara: hanya volume `uxplay-windows` di Volume Mixer yang berubah, tanpa restart receiver, dan nilai kembali setelah diubah dari Mixer. Uji **Decoder video** Otomatis/Software: `arguments.txt` hanya berubah pada pasangan `-vd d3d11h264dec`, cadangan `arguments.txt.idock-backup` dibuat sekali, dan video tetap muncul pada kedua pilihan.
+- [ ] **Tampilan dan suara 0.6.0–0.7.0:** uji **Windowed**, **Fullscreen**, dan pin pada portrait/landscape, HWND yang dipakai ulang dan jendela pengganti, satu dan dua monitor, skala DPI berbeda, **Terapkan ulang**, serta kembali ke **Biarkan UxPlay**. Pastikan perubahan orientasi ditata satu kali setelah settle sekitar 300 ms; perubahan caps dengan orientasi sama/pin mempertahankan geometri manual; bentuk klien yang sudah cocok dipertahankan; jendela awal maximized dinormalisasi tanpa aktivasi dan keadaan maximized kembali pada Default. Uji fallback ketika `GST_DEBUG`/`GST_DEBUG_FILE` sudah diatur: variabel tidak ditimpa, receiver tetap terbuka, tidak ada piksel HP pada file metadata sementara, dan file dihapus pada teardown normal. Pastikan pin tidak mengambil fokus atau mengubah geometri dan jendela pengaturan UxPlay/aplikasi lain tidak berubah. Uji slider **Suara mirroring** dan **Bisukan** saat perangkat memutar suara: hanya volume `uxplay-windows` di Volume Mixer yang berubah, tanpa restart receiver, dan nilai kembali setelah diubah dari Mixer. Uji **Decoder video** Otomatis/Software: `arguments.txt` hanya berubah pada pasangan `-vd d3d11h264dec`, cadangan `arguments.txt.idock-backup` dibuat sekali, dan video tetap muncul pada kedua pilihan.
 - [ ] Build manual framework-dependent dan paket self-contained berhasil dibuat.
 - [ ] Pemeriksaan launcher/UI, data path, backend, dan penutupan aplikasi lulus.
-- [ ] **Penutupan video pada perangkat nyata:** sesudah video muncul, X mengakhiri video/kontrol serta mengembalikan input ke Windows setelah jeda pemantauan. Minimize/hide yang mempertahankan jendela tidak menghentikan sesi; jendela pengganti dalam dua detik membatalkan penghentian. Uji juga Stop Screen Mirroring dari perangkat, rotasi, dan kontrol tanpa video. Pairing/pengaturan tetap ada dan proses aplikasi lain tidak disentuh.
+- [ ] **Penutupan video pada perangkat nyata:** sesudah video muncul, X mengakhiri video/kontrol serta mengembalikan input ke Windows setelah jeda pemantauan. Minimize/hide atau rotasi yang mempertahankan HWND tidak menghentikan sesi; jendela pengganti dalam dua detik membatalkan penghentian. Uji juga Stop Screen Mirroring dari perangkat, rotasi pada kedua perilaku HWND, dan kontrol tanpa video. Pairing/pengaturan tetap ada dan proses aplikasi lain tidak disentuh.
 - [ ] Installer dikompilasi; hash artefak sesuai `SHA256SUMS.txt`.
 - [ ] **Windows bersih tanpa SDK/runtime:** installer dapat dipasang dan aplikasi terbuka sebagai pengguna biasa.
 - [ ] **Koneksi pertama:** Bonjour, prompt izin, aturan jaringan terbatas, AirPlay, serta pairing HID diuji dengan perangkat nyata.
@@ -76,11 +76,21 @@ Centang hanya setelah dilakukan dan simpan hasil sesuai commit serta hash artefa
 
 **Smoke test lokal 0.5.1 sudah mendapat konfirmasi pengguna:** mirroring dengan opsi Public Wi-Fi aktif tanpa aturan repair sementara, serta penutupan sesi lewat X. Versi/payload terpasang, aturan, dan kejadian penutupan diperiksa; lihat [hash artefak dan batas bukti](RELEASE-NOTES-0.5.1.md#smoke-test-lokal--8-september-2026). Ini belum menyelesaikan uji fresh Windows, upgrade/uninstall lengkap, matriks pilihan jaringan, atau penutupan saat target input masih di perangkat. Checklist majemuk di atas tetap tidak boleh dicentang hanya berdasarkan smoke test. Build ulang CI perlu verifikasi tersendiri; [checklist perangkat nyata](STABILITY-TESTS.md) memiliki kriteria terpisah untuk reconnect, sesi panjang, dan keselamatan input.
 
+## Alur branch untuk rilis
+
+Pekerjaan harian berlangsung di branch `dev`; `main` hanya berisi rilis. Sebelum membuat tag:
+
+1. Pastikan semua perubahan yang akan dirilis sudah ada di `dev`, termasuk kenaikan versi di `COMPONENTS.json`, project aplikasi, dan dokumentasi, serta `docs/en/RELEASE-NOTES-<versi>.md` dengan bagian `## Changes`.
+2. Buka pull request dari `dev` ke `main`, tunggu **Windows validation** hijau, lalu gabungkan. Gunakan merge biasa agar riwayat `dev` dan `main` tetap sama, bukan squash yang membuat keduanya menyimpang.
+3. Buat tag `vMAJOR.MINOR.PATCH` pada commit merge di `main`, lalu push tag tersebut.
+
+Tag tidak dibuat dari `dev`, dan `main` tidak menerima commit di luar merge rilis. Perbaikan darurat pun masuk ke `dev` dulu, lalu digabungkan ke `main` lewat pull request yang sama. Rincian branch ada di [panduan developer](DEVELOPMENT.md#alur-branch).
+
 ## GitHub Actions
 
 ### Windows validation
 
-Workflow [Windows validation](../.github/workflows/ci.yml) berjalan pada push ke `main`, pull request, atau pemicu manual melalui tab **Actions**. Dua pekerjaan terpisah memeriksa:
+Workflow [Windows validation](../.github/workflows/ci.yml) berjalan pada push ke `main` atau `dev`, pull request, atau pemicu manual melalui tab **Actions**. Dua pekerjaan terpisah memeriksa:
 
 - Build manual **framework-dependent**, agar alur developer melalui `scripts/build.ps1` tetap tersedia.
 - Build distribusi **self-contained**, yang menyertakan runtime aplikasi.
@@ -91,8 +101,8 @@ Keduanya memakai Windows x64 dan .NET 10 SDK, menjalankan pemeriksaan installer 
 
 Workflow [Build release draft](../.github/workflows/release.yml) menyediakan dua cara pemicu:
 
-1. Push tag versi yang sudah menunjuk commit siap rilis, misalnya **`v0.6.0`**.
-2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.6.0`.
+1. Push tag versi yang sudah menunjuk commit merge rilis di `main`, misalnya **`v0.7.0`**.
+2. Buka **Actions → Build release draft → Run workflow**, lalu isi input **tag** dengan tag yang **sudah ada**, misalnya `v0.7.0`.
 
 Tag wajib berbentuk `vMAJOR.MINOR.PATCH`, dan versinya harus sama dengan `COMPONENTS.json` serta project aplikasi. Workflow tidak membuat atau memindahkan tag. Pastikan commit yang ditag sudah menyertakan seluruh source, script, dokumentasi, dan workflow yang diperlukan.
 
@@ -108,7 +118,7 @@ Isi draft tidak lagi berupa template yang sama untuk semua versi. Pekerjaan buil
 
 Tujuan publikasi adalah [Releases repository iDock](https://github.com/samuelraindrwn/iphone-dock-windows/releases). Gunakan **draft release** untuk meninjau catatan dan artefak sebelum dipublikasikan.
 
-1. Pastikan commit yang diuji sudah berada di repository dan tag menunjuk commit yang benar.
+1. Pastikan commit yang diuji sudah digabungkan dari `dev` ke `main` dan tag menunjuk commit merge tersebut.
 2. Siapkan installer, ZIP portable, dan checksum dari build yang sama. Checksum harus mencakup file final yang akan diunggah.
 3. Jalankan **Build release draft**, atau unggah ke draft secara manual jika build dilakukan lokal. Jangan menyamakan workflow sukses dengan persetujuan publikasi.
 4. Periksa nama/versi, ukuran file, isi paket, checksum, lisensi/source, dan catatan hasil uji.

@@ -133,7 +133,7 @@ Under **Pengaturan / Settings** (**Pengaturan pointer** in 0.5.1), use **Orienta
 
 Return input to the laptop, select an orientation, wait for it to save, then select the device again. This option rotates the movement mapping, **not the video**. Sensitivity is preserved.
 
-Rotation is not automatic. Select Portrait again after returning the device upright. Test rightward and upward movement while watching the actual device screen. Direction transformations have automated checks, but the matching orientation/direction on real hardware still needs confirmation. If the correction is reversed, try the other landscape option.
+**Pointer-direction** rotation is not automatic. Select Portrait again after returning the device upright. This setting is separate from **Windowed** mode, which can automatically follow the video's portrait/landscape shape starting with 0.7.0. Test rightward and upward movement while watching the actual device screen. Direction transformations have automated checks, but the matching orientation/direction on real hardware still needs confirmation. If the correction is reversed, try the other landscape option.
 
 ## Video window display mode
 
@@ -141,15 +141,23 @@ Starting with **0.6.0**, **Pengaturan / Settings** has a **Tampilan video / Vide
 
 | Option | Behavior |
 | --- | --- |
-| **Leave to UxPlay · no changes** | Default. iDock does not touch the video window's size or frame; behavior matches earlier versions. |
+| **Leave to UxPlay · original layout** | Default. iDock does not touch the video window's size or frame; pinning can still be enabled separately. |
 | **Windowed · follows the device shape** | The window is reshaped to the device stream's aspect ratio (portrait or landscape), scaled to fit about 85% of the monitor work area, and centered. The native pixel size is not forced, because a 1080p portrait stream is taller than most laptop displays. |
 | **Fullscreen · entire monitor** | The window frame is removed and the window covers the whole monitor it is on. The aspect ratio is preserved with black bars. |
 
-The choice is saved automatically and applied once the video window is visible, about a quarter of a second after it appears. Only the video window of the receiver process owned by this session is changed; the UxPlay settings/tray window and other applications are not touched. Rotating the device usually makes UxPlay create a new video window, and that new window is laid out again according to the choice.
+The choice is saved automatically and applied once the video window is visible, about a quarter of a second after it appears. Only the video window of the receiver process owned by this session is changed; the UxPlay settings/tray window and other applications are not touched.
 
-A size you change manually is **not** overridden while the same window exists. Click **Terapkan ulang / Apply again** to lay it out again. Selecting **Leave to UxPlay** again restores the frame and position recorded before the change, as long as that window still exists.
+Starting with 0.7.0, **Windowed** reads the stream-size metadata negotiated by the session's GStreamer D3D11/D3D12 renderer. Once that metadata has stopped changing for about 300 ms, an actual portrait ↔ landscape shape change triggers one relayout, whether UxPlay reuses the same HWND or creates a replacement window. Resolution/caps changes that stay in the same orientation and pin changes do not alter manual geometry. If the current client area already has the new stream shape, its current size and position are kept.
 
-On a single monitor, fullscreen covers the iDock window. Use **Alt + Tab** to return to iDock and change the option; **Ctrl + Alt + Q** still returns input to Windows. This option is different from the **Force Fullscreen** checkbox in the UxPlay settings window, which requires a receiver restart and is not changed by iDock.
+A size you change manually is **not** overridden until you select another mode, click **Terapkan ulang / Apply again**, or the stream really changes between portrait and landscape. If the initial window is maximized, selecting **Windowed** restores it without activating the video window, then applies the layout on a later cycle. Selecting **Leave to UxPlay** again restores the original frame and position; if the original state was maximized, that maximized state is restored too.
+
+Shape tracking uses a session-specific temporary metadata file; iDock does not capture phone-screen pixels for this purpose and deletes that file when the session stops normally. If the process inherits a non-empty `GST_DEBUG` or `GST_DEBUG_FILE`, iDock leaves those developer diagnostics untouched instead of redirecting them. **Windowed** then falls back to the initial client-area size, but rotation on a reused HWND may not be detected. **Apply again** can retry the fallback layout; for same-HWND rotation tracking, clear the custom debug variables and restart the session.
+
+Starting with 0.7.0, enable **Keep video on top** when the video window needs to remain in front of ordinary windows. It is **off by default**, saved with the mirroring settings, and independent of size: pinning works with **Leave to UxPlay**, **Windowed**, and **Fullscreen**. A change is applied to the visible video window without moving/resizing or activating that video window. Clicking the control still focuses the iDock launcher like an ordinary Windows interaction. The saved choice remains in effect when UxPlay reuses the same HWND and is also applied to a replacement window. Turning pinning off stops forcing always-on-top without changing the display mode or a manual size.
+
+Pinning uses Windows' *always on top* behavior. The video should remain visible above ordinary applications, maximized windows, and most borderless-fullscreen windows. It is not an overlay that can bypass **exclusive fullscreen**, a Windows secure desktop such as sign-in or a UAC prompt, or another application that is also always on top. In those cases, use the other application's windowed/borderless mode, **Alt + Tab**, or a second display. Pin operations do not activate the video window or continuously fight another application's window order.
+
+On a single monitor, fullscreen covers the iDock window. With pinning off, use **Alt + Tab** to return to iDock and change the option. If **Fullscreen** and pinning are both enabled, Alt+Tab alone can move focus while the video remains visible above the launcher: focus the video through the taskbar/Alt+Tab and press **Win + Down** to minimize it, or stop Screen Mirroring on the device. **Ctrl + Alt + Q** still returns input to Windows. This option is different from the **Force Fullscreen** checkbox in the UxPlay settings window, which requires a receiver restart and is not changed by iDock.
 
 Layout math and preference storage are checked automatically. Results on specific renderers, monitors, and DPI scales have not been verified on real hardware at the time of writing; follow the [stability checklist](STABILITY-TESTS.md) and use **Leave to UxPlay** if the result is not right.
 
@@ -196,7 +204,7 @@ To record stability on your device configuration, follow the [manual checklist](
 
 ## Data and usage limitations
 
-For an **installer installation**, the 0.5.2 language preference is stored at `%LOCALAPPDATA%\iDock\data\ui-settings.json`, pointer settings at `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, the launcher log at `%LOCALAPPDATA%\iDock\logs\idock.log`, and the backend log at `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. For the **portable/default manual build**, the relative `data\ui-settings.json`, `data\blehid`, and `logs` paths are inside the package folder. See the [data-location table](INSTALL.md). The video window mode and mirroring audio choices (0.6.0) are stored in `data\mirror-settings.json` under the same root; the file is created only after one of those controls is changed.
+For an **installer installation**, the 0.5.2 language preference is stored at `%LOCALAPPDATA%\iDock\data\ui-settings.json`, pointer settings at `%LOCALAPPDATA%\iDock\data\blehid\pointer-settings.json`, the launcher log at `%LOCALAPPDATA%\iDock\logs\idock.log`, and the backend log at `%LOCALAPPDATA%\iDock\data\blehid\logs\blehid.log`. For the **portable/default manual build**, the relative `data\ui-settings.json`, `data\blehid`, and `logs` paths are inside the package folder. See the [data-location table](INSTALL.md). The video window mode and mirroring audio choices introduced in 0.6.0, together with the 0.7.0 **Keep video on top** choice, are stored in `data\mirror-settings.json` under the same root; the file is created only after one of those controls is changed.
 
 Logs are not uploaded automatically. Review and redact device names, Bluetooth addresses, user paths, and personal information before sharing logs.
 
